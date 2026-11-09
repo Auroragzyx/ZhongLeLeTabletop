@@ -4,18 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>众乐乐桌游 - PARTY TABLETOP</title>
-  <!-- 离线本地 Tailwind CSS，备用 CDN 降级 -->
-  <script src="assets/tailwind.min.js"></script>
-  <script>
-    if (!window.tailwind) {
-      document.write('<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"><\/script>');
-    }
-  </script>
+  <!-- 100% 纯原生自包含 CSS，零外部 CDN 依赖，保证在离线本地与 Steam 客户端中 100% 完美呈现 -->
   <style>
-    @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-    @keyframes pulseSoft { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.9; } }
+    /* ========== 全局基础重置与盒模型 ========== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+      background-color: #F8F5EE;
+      color: #292524;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* 严控所有 SVG 尺寸，坚决杜绝未加载样式时图标无限膨胀问题 */
+    svg {
+      width: 20px;
+      height: 20px;
+      max-width: 100%;
+      max-height: 100%;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* ========== 动画体系 ========== */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-7px); }
+    }
     @keyframes diceRoll {
-      0% { transform: rotate(0deg) scale(0.8); }
+      0% { transform: rotate(0deg) scale(0.85); }
       25% { transform: rotate(180deg) scale(1.15); }
       50% { transform: rotate(360deg) scale(0.9); }
       75% { transform: rotate(540deg) scale(1.1); }
@@ -23,44 +49,24 @@
     }
     @keyframes hop {
       0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-14px) scale(1.15); }
+      50% { transform: translateY(-12px) scale(1.12); }
     }
-    @keyframes glowPulse {
-      0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
-      50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.9); }
+    @keyframes pulseSoft {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
     }
+
     .animate-float { animation: floatSlow 3.8s ease-in-out infinite; }
     .animate-dice-roll { animation: diceRoll 0.65s cubic-bezier(0.2, 0.8, 0.3, 1); }
     .animate-hop { animation: hop 0.35s ease-in-out; }
-    .animate-glow { animation: glowPulse 2s infinite; }
+    .animate-pulse { animation: pulseSoft 2s infinite ease-in-out; }
 
-    body {
-      background-color: #F8F5EE;
-      color: #292524;
-      transition: background-color 0.35s ease, color 0.35s ease;
-      overflow-x: hidden;
-    }
-    .theme-default .glass-panel {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(234, 179, 8, 0.35);
-      box-shadow: 0 16px 36px -8px rgba(180, 83, 9, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
-    }
-    .theme-default .glass-btn {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(254, 243, 199, 0.82) 100%);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      color: #451a03;
-      box-shadow: 0 4px 12px -2px rgba(217, 119, 6, 0.15);
-      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .theme-default .glass-btn:hover {
-      background: linear-gradient(135deg, #FFFBEB 0%, #FDE68A 100%);
-      border-color: rgba(217, 119, 6, 0.7);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px -4px rgba(217, 119, 6, 0.25);
-    }
-    .theme-default .ambient-board-grid {
+    /* ========== 经典暖阳黄白皮肤 (默认) ========== */
+    .ambient-board-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
       background-image: 
         radial-gradient(#d9770618 1.5px, transparent 1.5px),
         linear-gradient(to right, #e2d9c820 1px, transparent 1px),
@@ -68,30 +74,154 @@
       background-size: 32px 32px, 64px 64px, 64px 64px;
     }
 
-    /* 夜间模式深色主题 */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(234, 179, 8, 0.35);
+      border-radius: 18px;
+      box-shadow: 0 16px 36px -8px rgba(180, 83, 9, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    }
+
+    .menu-card-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #FFFFFF 0%, #FEF9EE 100%);
+      border: 1.5px solid rgba(245, 158, 11, 0.35);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: 0 4px 14px -2px rgba(217, 119, 6, 0.12);
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: left;
+      outline: none;
+    }
+    .menu-card-btn:hover {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FDE68A 100%);
+      border-color: #D97706;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px -4px rgba(217, 119, 6, 0.25);
+    }
+    .menu-card-btn:active {
+      transform: translateY(0px);
+    }
+
+    .menu-icon-box {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      max-width: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #D97706;
+      flex-shrink: 0;
+    }
+    .menu-icon-box svg {
+      width: 22px;
+      height: 22px;
+    }
+    .menu-arrow-icon {
+      width: 18px;
+      height: 18px;
+      color: #F59E0B;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .menu-card-btn:hover .menu-arrow-icon {
+      transform: translateX(3px);
+    }
+
+    /* 通用玻璃按钮 */
+    .glass-btn {
+      background: #FFFFFF;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #451A03;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .glass-btn:hover {
+      background: #FFFBEB;
+      border-color: #F59E0B;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+      transform: translateY(-1px);
+    }
+
+    /* 黄金主操作按钮 */
+    .primary-gold-btn {
+      background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+      border: 1px solid #D97706;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #FFFFFF;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .primary-gold-btn:hover {
+      background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
+      box-shadow: 0 8px 20px rgba(234, 88, 12, 0.4);
+      transform: translateY(-1px);
+    }
+    .primary-gold-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ========== 夜间护眼深空模式 ========== */
     body.theme-night-dark {
       background-color: #0F172A !important;
       color: #F8FAFC !important;
     }
+    body.theme-night-dark .ambient-board-grid {
+      background-image: radial-gradient(#94a3b830 1.2px, transparent 1.2px) !important;
+      background-size: 28px 28px !important;
+    }
     body.theme-night-dark .glass-panel {
       background: rgba(30, 41, 59, 0.94) !important;
-      border: 1px solid rgba(148, 163, 184, 0.3) !important;
+      border-color: rgba(148, 163, 184, 0.3) !important;
       box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
     }
-    body.theme-night-dark .glass-btn {
+    body.theme-night-dark .menu-card-btn {
       background: linear-gradient(135deg, rgba(51, 65, 85, 0.85) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
-      border: 1px solid rgba(148, 163, 184, 0.4) !important;
+      border-color: rgba(148, 163, 184, 0.35) !important;
       color: #FFFFFF !important;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
     }
-    body.theme-night-dark .glass-btn:hover {
+    body.theme-night-dark .menu-card-btn:hover {
       background: linear-gradient(135deg, rgba(71, 85, 105, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%) !important;
       border-color: #F59E0B !important;
       box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25) !important;
     }
-    body.theme-night-dark .ambient-board-grid {
-      background-image: radial-gradient(#94a3b830 1.2px, transparent 1.2px) !important;
-      background-size: 28px 28px !important;
+    body.theme-night-dark .glass-btn {
+      background: rgba(51, 65, 85, 0.8) !important;
+      border-color: rgba(148, 163, 184, 0.4) !important;
+      color: #F1F5F9 !important;
+    }
+    body.theme-night-dark .glass-btn:hover {
+      background: rgba(71, 85, 105, 0.95) !important;
+      border-color: #F59E0B !important;
     }
     body.theme-night-dark .night-title {
       background: linear-gradient(to right, #FDE68A, #F59E0B, #FBBF24) !important;
@@ -100,15 +230,17 @@
     }
     body.theme-night-dark .night-subtext { color: #94A3B8 !important; }
     body.theme-night-dark .night-card-bg {
-      background-color: rgba(15, 23, 42, 0.8) !important;
+      background-color: rgba(15, 23, 42, 0.85) !important;
       border-color: rgba(71, 85, 105, 0.6) !important;
     }
     body.theme-night-dark .night-text-main { color: #FFFFFF !important; }
 
-    /* 方正 UI 模式 */
+    /* 方方正正切角 UI 模式 */
     body.ui-square *,
     body.ui-square .glass-panel,
+    body.ui-square .menu-card-btn,
     body.ui-square .glass-btn,
+    body.ui-square .primary-gold-btn,
     body.ui-square button,
     body.ui-square input,
     body.ui-square select,
@@ -116,6 +248,7 @@
       border-radius: 0px !important;
     }
 
+    /* 烟花粒子画布 */
     #fireworks-canvas {
       position: fixed;
       inset: 0;
@@ -125,119 +258,174 @@
       z-index: 1;
     }
 
-    /* 飞行棋盘样式体系 */
+    /* ========== 飞行棋主盘与棋格专属样式 ========== */
+    .flight-board-box {
+      position: relative;
+      width: 560px;
+      height: 560px;
+      border-radius: 24px;
+      background: #FFFFFF;
+      border: 2px solid #F59E0B;
+      box-shadow: 0 20px 48px -10px rgba(180, 83, 9, 0.2);
+      overflow: hidden;
+    }
+
     .board-tile {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      position: absolute;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: absolute;
-      border-radius: 50%;
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.14), inset 0 2px 3px rgba(255,255,255,0.7);
-      user-select: none;
+      font-size: 11px;
+      font-weight: 900;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15), inset 0 2px 2px rgba(255,255,255,0.7);
+      transition: transform 0.2s ease;
+      cursor: default;
     }
     .board-tile:hover {
       transform: scale(1.15);
-      z-index: 30;
+      z-index: 35;
     }
 
-    /* 对应 4 种鸟禽的配色体系 */
+    /* 灵禽 4 色棋格 */
     .tile-blue {
-      background: radial-gradient(circle at 35% 35%, #60A5FA 0%, #2563EB 70%, #1D4ED8 100%);
-      border: 2px solid #93C5FD;
-      color: #EFF6FF;
+      background: radial-gradient(circle at 35% 35%, #93C5FD 0%, #3B82F6 70%, #1D4ED8 100%);
+      border: 2px solid #BFDBFE;
+      color: #FFFFFF;
     }
     .tile-yellow {
-      background: radial-gradient(circle at 35% 35%, #FDE047 0%, #F59E0B 70%, #D97706 100%);
-      border: 2px solid #FEF08A;
-      color: #78350F;
+      background: radial-gradient(circle at 35% 35%, #FEF08A 0%, #F59E0B 70%, #B45309 100%);
+      border: 2px solid #FEF9C3;
+      color: #451A03;
     }
     .tile-purple {
-      background: radial-gradient(circle at 35% 35%, #C084FC 0%, #9333EA 70%, #7E22CE 100%);
-      border: 2px solid #E9D5FF;
-      color: #FAF5FF;
+      background: radial-gradient(circle at 35% 35%, #D8B4FE 0%, #9333EA 70%, #6B21A8 100%);
+      border: 2px solid #F3E8FF;
+      color: #FFFFFF;
     }
     .tile-pink {
-      background: radial-gradient(circle at 35% 35%, #F472B6 0%, #DB2777 70%, #BE185D 100%);
-      border: 2px solid #FBCFE8;
-      color: #FFF1F2;
+      background: radial-gradient(circle at 35% 35%, #FBCFE8 0%, #EC4899 70%, #9D174D 100%);
+      border: 2px solid #FCE7F3;
+      color: #FFFFFF;
     }
 
-    /* 终点冲刺格 */
+    /* 直线冲刺跑道格 */
     .runway-tile {
-      width: 32px;
-      height: 32px;
-      position: absolute;
+      width: 30px;
+      height: 30px;
       border-radius: 8px;
+      position: absolute;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 10px;
       font-weight: 900;
-      font-size: 11px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.6);
-      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
 
-    /* 棋子精良悬浮图层 */
-    .active-meeple {
+    /* 棋子精美立绘渲染 */
+    .bird-piece-sprite {
       position: absolute;
-      width: 44px;
-      height: 52px;
-      top: -18px;
+      width: 42px;
+      height: 50px;
+      top: -16px;
       left: -2px;
       z-index: 40;
-      filter: drop-shadow(0 6px 8px rgba(0,0,0,0.45));
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
       cursor: pointer;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .active-meeple:hover {
-      transform: scale(1.28) translateY(-6px);
+    .bird-piece-sprite:hover {
+      transform: scale(1.25) translateY(-5px);
       z-index: 50;
     }
     .active-turn-meeple {
       animation: hop 0.5s infinite alternate;
       filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.95));
     }
+
+    /* 通用隐藏工具类 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* ========== 模态弹窗系统 ========== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-backdrop.hidden {
+      display: none !important;
+    }
+    .modal-card {
+      background: #FFFFFF;
+      border: 2px solid #F59E0B;
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      width: 100%;
+    }
+    body.theme-night-dark .modal-card {
+      background: #1E293B !important;
+      border-color: rgba(148, 163, 184, 0.4) !important;
+      color: #FFFFFF !important;
+    }
   </style>
 </head>
-<body id="app-body" class="theme-default min-h-screen select-none overflow-x-hidden font-sans relative flex flex-col justify-between">
+<body id="app-body" class="theme-default">
 
   <canvas id="fireworks-canvas"></canvas>
-  <div class="fixed inset-0 pointer-events-none z-0 ambient-board-grid"></div>
+  <div class="ambient-board-grid"></div>
 
   <!-- ======================== 视图 1：主选单与大厅 ======================== -->
-  <div id="view-menu" class="relative z-10 min-h-screen flex flex-col justify-between">
-    <header class="w-full px-8 py-5 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 border border-amber-500/30">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-ping"></span>
+  <div id="view-menu" style="position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
+    
+    <!-- 顶部状态栏 -->
+    <header style="width: 100%; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.3);">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; margin-right: 8px; display: inline-block;"></span>
           Steam 客户端架构就绪
         </span>
-        <span class="text-xs text-stone-500 font-mono night-subtext">v0.5.2 • PC Executable Edition</span>
+        <span class="night-subtext" style="font-size: 12px; color: #78716C; font-family: monospace;">v0.5.3 • PC Native Standalone</span>
       </div>
 
-      <div class="flex items-center space-x-4">
-        <div class="flex items-center space-x-2 bg-amber-50/80 px-3.5 py-1.5 rounded-full border border-amber-300/60 shadow-sm night-card-bg">
-          <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-xs font-black text-amber-950">我</div>
-          <span class="text-xs font-bold text-stone-700 night-text-main">桌游大师 (Host)</span>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="night-card-bg" style="display: flex; align-items: center; gap: 8px; background: rgba(254, 243, 199, 0.8); padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(245, 158, 11, 0.4);">
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #FBBF24, #F97316); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #451A03;">我</div>
+          <span class="night-text-main" style="font-size: 12px; font-weight: 700; color: #44403C;">桌游大师 (Host)</span>
         </div>
-        <button onclick="openModal('modal-settings')" class="p-2.5 rounded-full glass-btn text-stone-700 hover:text-amber-800" title="打开系统设置">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <button onclick="openModal('modal-settings')" class="glass-btn" style="padding: 8px; border-radius: 50%; width: 38px; height: 38px;" title="打开系统设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </button>
       </div>
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center px-4 my-2">
-      <div class="text-center mb-8 animate-float">
-        <div class="inline-flex items-center justify-center mb-3 relative">
-          <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 p-0.5 shadow-xl shadow-amber-500/30">
-            <div class="w-full h-full bg-amber-50 rounded-[14px] flex items-center justify-center relative overflow-hidden night-card-bg">
-              <svg class="w-11 h-11 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+    <!-- 主标题与四大功能入口 -->
+    <main style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 16px; margin: 10px 0;">
+      
+      <!-- 游戏 LOGO 标牌 -->
+      <div class="animate-float" style="text-align: center; margin-bottom: 28px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+          <div style="width: 76px; height: 76px; border-radius: 20px; background: linear-gradient(135deg, #FBBF24, #F97316); padding: 2px; box-shadow: 0 12px 28px rgba(245, 158, 11, 0.35);">
+            <div class="night-card-bg" style="width: 100%; height: 100%; background: #FFFBEB; border-radius: 18px; display: flex; align-items: center; justify-content: center;">
+              <svg style="width: 42px; height: 42px; color: #D97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="4"></rect>
                 <circle cx="8" cy="8" r="1.5" fill="currentColor"></circle>
                 <circle cx="16" cy="16" r="1.5" fill="currentColor"></circle>
@@ -249,402 +437,462 @@
           </div>
         </div>
 
-        <h1 class="text-5xl md:text-6xl font-black tracking-wider bg-gradient-to-r from-amber-800 via-orange-700 to-amber-900 bg-clip-text text-transparent drop-shadow-sm night-title">
+        <h1 class="night-title" style="font-size: 48px; font-weight: 900; letter-spacing: 2px; background: linear-gradient(to right, #92400E, #C2410C, #78350F); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
           众乐乐桌游
         </h1>
-        <p class="text-xs md:text-sm font-black tracking-widest text-amber-700 mt-2 uppercase night-subtext">
+        <p class="night-subtext" style="font-size: 13px; font-weight: 800; letter-spacing: 3px; color: #B45309; margin-top: 6px; text-transform: uppercase;">
           PARTY TABLETOP • 多元桌游工坊
         </p>
       </div>
 
-      <div class="w-full max-w-sm space-y-3.5">
-        <button onclick="startWizard()" class="w-full group relative px-6 py-4 rounded-xl glass-panel glass-btn flex items-center justify-between text-left">
-          <div class="flex items-center space-x-4">
-            <div class="w-11 h-11 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      <!-- 四个功能入口卡片 -->
+      <div style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- 1. 开始游戏 (向导弹窗) -->
+        <button onclick="startWizard()" class="menu-card-btn">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="menu-icon-box" style="background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.4); color: #D97706;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
             </div>
             <div>
-              <div class="text-base font-black text-stone-900 group-hover:text-amber-500 transition-colors night-text-main">开始游戏</div>
-              <div class="text-xs text-stone-600 night-subtext">单人人机 / 局域网开房 / 创建多人联机</div>
+              <div class="night-text-main" style="font-size: 16px; font-weight: 900; color: #1C1917;">开始游戏</div>
+              <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">单人人机 / 局域网开房 / 创建多人联机</div>
             </div>
           </div>
-          <svg class="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path>
+          <svg class="menu-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
 
-        <button onclick="openModal('modal-online-lobby')" class="w-full group relative px-6 py-4 rounded-xl glass-panel glass-btn flex items-center justify-between text-left">
-          <div class="flex items-center space-x-4">
-            <div class="w-11 h-11 rounded-lg bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+        <!-- 2. 多人联机大厅 -->
+        <button onclick="openModal('modal-online-lobby')" class="menu-card-btn">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="menu-icon-box" style="background: rgba(234, 88, 12, 0.15); border-color: rgba(234, 88, 12, 0.35); color: #EA580C;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
             </div>
             <div>
-              <div class="text-base font-black text-stone-900 group-hover:text-amber-500 transition-colors night-text-main">多人联机大厅</div>
-              <div class="text-xs text-stone-600 night-subtext">公共网络房间 / 好友对弈</div>
+              <div class="night-text-main" style="font-size: 16px; font-weight: 900; color: #1C1917;">多人联机大厅</div>
+              <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">公共网络房间 / 好友对弈</div>
             </div>
           </div>
-          <svg class="w-5 h-5 text-stone-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path>
+          <svg class="menu-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
 
-        <button onclick="openModal('modal-lan-lobby')" class="w-full group relative px-6 py-4 rounded-xl glass-panel glass-btn flex items-center justify-between text-left">
-          <div class="flex items-center space-x-4">
-            <div class="w-11 h-11 rounded-lg bg-amber-600/20 border border-amber-600/40 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        <!-- 3. 局域网联机 -->
+        <button onclick="openModal('modal-lan-lobby')" class="menu-card-btn">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="menu-icon-box" style="background: rgba(217, 119, 6, 0.15); border-color: rgba(217, 119, 6, 0.35); color: #B45309;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
               </svg>
             </div>
             <div>
-              <div class="text-base font-black text-stone-900 group-hover:text-amber-500 transition-colors night-text-main">局域网联机</div>
-              <div class="text-xs text-stone-600 night-subtext">搜索同一 WiFi 房间 / 快速直连</div>
+              <div class="night-text-main" style="font-size: 16px; font-weight: 900; color: #1C1917;">局域网联机</div>
+              <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">搜索同一 WiFi 房间 / 快速直连</div>
             </div>
           </div>
-          <svg class="w-5 h-5 text-stone-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path>
+          <svg class="menu-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
 
-        <button onclick="openModal('modal-settings')" class="w-full group relative px-6 py-3.5 rounded-xl glass-panel glass-btn flex items-center justify-between text-left">
-          <div class="flex items-center space-x-4">
-            <div class="w-10 h-10 rounded-lg bg-stone-200 border border-stone-300 flex items-center justify-center text-stone-600 group-hover:scale-110 transition-transform night-card-bg">
-              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+        <!-- 4. 游戏设置 -->
+        <button onclick="openModal('modal-settings')" class="menu-card-btn" style="padding: 12px 18px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="menu-icon-box" style="width: 38px; height: 38px; min-width: 38px; background: rgba(120, 113, 108, 0.15); border-color: rgba(120, 113, 108, 0.3); color: #78716C;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
               </svg>
             </div>
-            <span class="text-sm font-black text-stone-800 group-hover:text-amber-500 transition-colors night-text-main">游戏设置</span>
+            <span class="night-text-main" style="font-size: 15px; font-weight: 800; color: #292524;">游戏设置</span>
           </div>
-          <span class="text-xs text-stone-400 font-mono night-subtext">Options</span>
+          <span class="night-subtext" style="font-size: 12px; font-family: monospace; color: #A8A29E;">Options</span>
         </button>
       </div>
     </main>
 
-    <footer class="w-full px-8 py-4 flex flex-col md:flex-row items-center justify-between text-xs text-stone-500 border-t border-amber-200/60 night-subtext">
-      <div class="flex items-center space-x-2">
-        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-        <span>PC 客户端引擎 (支持 Steamworks API 与 DLC .pck 模块)</span>
+    <!-- 底部版权栏 -->
+    <footer style="width: 100%; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #78716C; border-top: 1px solid rgba(245, 158, 11, 0.2);">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
+        <span>PC 客户端引擎 (支持 Steamworks API 与 DLC .pck 扩展模组)</span>
       </div>
       <div>© 2026 《众乐乐桌游：多元桌游工坊》 • 原创商业保护架构</div>
     </footer>
   </div>
 
   <!-- ======================== 视图 2：日夜飞行棋完整对战棋盘 ======================== -->
-  <div id="view-game-aero" class="relative z-10 min-h-screen flex flex-col justify-between hidden p-3 md:p-6">
-    <header class="glass-panel rounded-2xl p-3 md:px-6 flex items-center justify-between shadow-lg mb-3">
-      <div class="flex items-center space-x-3">
-        <button onclick="returnToMainMenu()" class="px-3.5 py-1.5 rounded-xl glass-btn text-xs font-black text-stone-800 flex items-center space-x-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  <div id="view-game-aero" class="hidden" style="position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 24px;">
+    
+    <!-- 棋盘对战顶栏 -->
+    <header class="glass-panel" style="padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <button onclick="returnToMainMenu()" class="glass-btn" style="padding: 6px 14px; font-size: 12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
           <span>退出至主菜单</span>
         </button>
-        <span class="text-xs font-black text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded-full border border-amber-300">
+        <span style="font-size: 13px; font-weight: 900; color: #B45309; background: #FEF3C7; padding: 4px 12px; border-radius: 999px; border: 1px solid #FCD34D;">
           《日夜飞行棋》天象对局
         </span>
       </div>
 
       <!-- 昼夜天象实时指示牌 -->
-      <div class="flex items-center space-x-3 bg-white/80 px-4 py-1.5 rounded-full border border-amber-200 shadow-sm night-card-bg">
-        <span id="game-daynight-icon" class="text-2xl animate-pulse">☀️</span>
+      <div class="night-card-bg" style="display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.9); padding: 6px 18px; border-radius: 999px; border: 1.5px solid #FCD34D; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+        <span id="game-daynight-icon" class="animate-pulse" style="font-size: 24px;">☀️</span>
         <div>
-          <div id="game-daynight-status" class="text-xs font-black text-amber-800 night-text-main">白昼晴空 (顺风气流)</div>
-          <div id="game-round-counter" class="text-[11px] text-stone-500 night-subtext">昼夜轮换: 第 1 / 4 大回合</div>
+          <div id="game-daynight-status" class="night-text-main" style="font-size: 13px; font-weight: 900; color: #92400E;">白昼晴空 (顺风气流)</div>
+          <div id="game-round-counter" class="night-subtext" style="font-size: 11px; color: #78716C;">昼夜轮换: 第 1 / 4 大回合</div>
         </div>
       </div>
 
-      <div class="flex items-center space-x-2">
-        <span class="text-xs font-bold text-stone-600 night-subtext">当前行动:</span>
-        <span id="lbl-active-player" class="px-3.5 py-1 rounded-full text-xs font-black bg-blue-500 text-white shadow-md flex items-center space-x-1">
-          <span>玩家 1P (蓝羽夜鸮)</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="night-subtext" style="font-size: 12px; font-weight: 700; color: #78716C;">当前行动:</span>
+        <span id="lbl-active-player" style="padding: 6px 16px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #3B82F6; color: #FFFFFF; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);">
+          玩家 1P (蓝羽夜鸮)
         </span>
       </div>
     </header>
 
-    <div class="flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 my-2">
-      <!-- 左看板：蓝羽夜鸮 & 霞光粉鹦 -->
-      <div class="flex lg:flex-col gap-3 w-full lg:w-56">
-        <div id="card-player-blue" class="flex-1 glass-panel p-3 rounded-2xl border-2 border-blue-400 shadow-md bg-blue-50/50">
-          <div class="flex items-center space-x-2.5 mb-2">
-            <img src="assets/piece_blue_owl.png" class="w-10 h-12 object-contain" alt="蓝鸮">
+    <!-- 赛场主体：左看板 + 棋盘核心 + 右看板与骰子台 -->
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 24px; margin: 4px 0;">
+      
+      <!-- 左侧灵禽看板 (1P 蓝鸮 & 4P 粉鹦) -->
+      <div style="width: 220px; display: flex; flex-direction: column; gap: 14px;">
+        
+        <div id="card-player-blue" class="glass-panel" style="padding: 14px; border: 2px solid #60A5FA; background: rgba(239, 246, 255, 0.7);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <img src="assets/piece_blue_owl.png" style="width: 36px; height: 44px; object-fit: contain;" alt="蓝鸮">
             <div>
-              <div class="text-xs font-black text-blue-900">1P 蓝羽夜鸮 (你)</div>
-              <div class="text-[11px] text-blue-600 font-bold">凯旋加冕: <span id="cnt-blue-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #1E3A8A;">1P 蓝羽夜鸮 (你)</div>
+              <div style="font-size: 11px; font-weight: 700; color: #2563EB;">凯旋加冕: <span id="cnt-blue-done">0</span>/4</div>
             </div>
           </div>
-          <div class="flex items-center justify-between text-[11px] text-stone-600 bg-white/70 px-2.5 py-1 rounded-lg">
-            <span>机库待命: <strong id="cnt-blue-home">4</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
+            <span>鸟巢待命: <strong id="cnt-blue-home">4</strong></span>
             <span>航道竞逐: <strong id="cnt-blue-active">0</strong></span>
           </div>
         </div>
 
-        <div id="card-player-pink" class="flex-1 glass-panel p-3 rounded-2xl border border-pink-300 shadow-sm bg-pink-50/40">
-          <div class="flex items-center space-x-2.5 mb-2">
-            <img src="assets/piece_pink_cockatoo.png" class="w-10 h-12 object-contain" alt="粉鹦">
+        <div id="card-player-pink" class="glass-panel" style="padding: 14px; border: 1.5px solid #F472B6; background: rgba(253, 242, 248, 0.6);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <img src="assets/piece_pink_cockatoo.png" style="width: 36px; height: 44px; object-fit: contain;" alt="粉鹦">
             <div>
-              <div class="text-xs font-black text-pink-900">4P 霞光粉鹦 (AI)</div>
-              <div class="text-[11px] text-pink-600 font-bold">凯旋加冕: <span id="cnt-pink-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #831843;">4P 霞光粉鹦 (AI)</div>
+              <div style="font-size: 11px; font-weight: 700; color: #DB2777;">凯旋加冕: <span id="cnt-pink-done">0</span>/4</div>
             </div>
           </div>
-          <div class="flex items-center justify-between text-[11px] text-stone-600 bg-white/70 px-2.5 py-1 rounded-lg">
-            <span>机库待命: <strong id="cnt-pink-home">4</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
+            <span>鸟巢待命: <strong id="cnt-pink-home">4</strong></span>
             <span>航道竞逐: <strong id="cnt-pink-active">0</strong></span>
           </div>
         </div>
       </div>
 
-      <!-- 棋盘核心主赛场 (以灵禽插画风格重构的专属棋盘) -->
-      <div class="relative glass-panel rounded-3xl p-5 shadow-2xl border-2 border-amber-300 flex items-center justify-center bg-white/95 night-card-bg">
-        <div id="flight-board-arena" class="relative w-[560px] h-[560px] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-50/60 to-orange-50/40 night-card-bg border border-amber-200/50">
+      <!-- 棋盘核心主赛场 -->
+      <div class="glass-panel" style="padding: 18px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.98);">
+        <div id="flight-board-arena" class="flight-board-box">
           
           <!-- 1P 蓝羽之巢 (左上) -->
-          <div class="absolute top-2 left-2 w-32 h-32 rounded-2xl bg-blue-100/90 border-2 border-blue-400 p-2 shadow-inner flex flex-col justify-between">
-            <div class="text-[11px] font-black text-blue-900 flex items-center justify-between">
+          <div style="position: absolute; top: 8px; left: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(219, 234, 254, 0.95); border: 2px solid #3B82F6; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #1E40AF;">
               <span>蓝羽之巢</span>
-              <span class="text-[10px] bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded font-mono">1P</span>
+              <span style="background: #93C5FD; color: #1E3A8A; padding: 2px 6px; border-radius: 4px; font-size: 10px;">1P</span>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 p-1">
-              <div id="nest-slot-blue-0" class="w-10 h-10 rounded-full bg-blue-200/90 border-2 border-dashed border-blue-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-blue-1" class="w-10 h-10 rounded-full bg-blue-200/90 border-2 border-dashed border-blue-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-blue-2" class="w-10 h-10 rounded-full bg-blue-200/90 border-2 border-dashed border-blue-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-blue-3" class="w-10 h-10 rounded-full bg-blue-200/90 border-2 border-dashed border-blue-400 flex items-center justify-center relative"></div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+              <div id="nest-slot-blue-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
+              <div id="nest-slot-blue-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
+              <div id="nest-slot-blue-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
+              <div id="nest-slot-blue-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
             </div>
           </div>
 
           <!-- 2P 晨雀之巢 (右上) -->
-          <div class="absolute top-2 right-2 w-32 h-32 rounded-2xl bg-amber-100/90 border-2 border-amber-400 p-2 shadow-inner flex flex-col justify-between">
-            <div class="text-[11px] font-black text-amber-900 flex items-center justify-between">
+          <div style="position: absolute; top: 8px; right: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(254, 243, 199, 0.95); border: 2px solid #F59E0B; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #92400E;">
               <span>晨雀之巢</span>
-              <span class="text-[10px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-mono">2P</span>
+              <span style="background: #FDE68A; color: #78350F; padding: 2px 6px; border-radius: 4px; font-size: 10px;">2P</span>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 p-1">
-              <div id="nest-slot-yellow-0" class="w-10 h-10 rounded-full bg-amber-200/90 border-2 border-dashed border-amber-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-yellow-1" class="w-10 h-10 rounded-full bg-amber-200/90 border-2 border-dashed border-amber-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-yellow-2" class="w-10 h-10 rounded-full bg-amber-200/90 border-2 border-dashed border-amber-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-yellow-3" class="w-10 h-10 rounded-full bg-amber-200/90 border-2 border-dashed border-amber-400 flex items-center justify-center relative"></div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+              <div id="nest-slot-yellow-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
+              <div id="nest-slot-yellow-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
+              <div id="nest-slot-yellow-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
+              <div id="nest-slot-yellow-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
             </div>
           </div>
 
           <!-- 3P 紫鸦之巢 (右下) -->
-          <div class="absolute bottom-2 right-2 w-32 h-32 rounded-2xl bg-purple-100/90 border-2 border-purple-400 p-2 shadow-inner flex flex-col justify-between">
-            <div class="text-[11px] font-black text-purple-900 flex items-center justify-between">
+          <div style="position: absolute; bottom: 8px; right: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(243, 232, 255, 0.95); border: 2px solid #9333EA; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #6B21A8;">
               <span>紫鸦之巢</span>
-              <span class="text-[10px] bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded font-mono">3P</span>
+              <span style="background: #E9D5FF; color: #581C87; padding: 2px 6px; border-radius: 4px; font-size: 10px;">3P</span>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 p-1">
-              <div id="nest-slot-purple-0" class="w-10 h-10 rounded-full bg-purple-200/90 border-2 border-dashed border-purple-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-purple-1" class="w-10 h-10 rounded-full bg-purple-200/90 border-2 border-dashed border-purple-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-purple-2" class="w-10 h-10 rounded-full bg-purple-200/90 border-2 border-dashed border-purple-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-purple-3" class="w-10 h-10 rounded-full bg-purple-200/90 border-2 border-dashed border-purple-400 flex items-center justify-center relative"></div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+              <div id="nest-slot-purple-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
+              <div id="nest-slot-purple-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
+              <div id="nest-slot-purple-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
+              <div id="nest-slot-purple-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
             </div>
           </div>
 
           <!-- 4P 粉鹦之巢 (左下) -->
-          <div class="absolute bottom-2 left-2 w-32 h-32 rounded-2xl bg-pink-100/90 border-2 border-pink-400 p-2 shadow-inner flex flex-col justify-between">
-            <div class="text-[11px] font-black text-pink-900 flex items-center justify-between">
+          <div style="position: absolute; bottom: 8px; left: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(252, 231, 243, 0.95); border: 2px solid #EC4899; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #9D174D;">
               <span>粉鹦之巢</span>
-              <span class="text-[10px] bg-pink-200 text-pink-800 px-1.5 py-0.5 rounded font-mono">4P</span>
+              <span style="background: #FBCFE8; color: #831843; padding: 2px 6px; border-radius: 4px; font-size: 10px;">4P</span>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 p-1">
-              <div id="nest-slot-pink-0" class="w-10 h-10 rounded-full bg-pink-200/90 border-2 border-dashed border-pink-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-pink-1" class="w-10 h-10 rounded-full bg-pink-200/90 border-2 border-dashed border-pink-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-pink-2" class="w-10 h-10 rounded-full bg-pink-200/90 border-2 border-dashed border-pink-400 flex items-center justify-center relative"></div>
-              <div id="nest-slot-pink-3" class="w-10 h-10 rounded-full bg-pink-200/90 border-2 border-dashed border-pink-400 flex items-center justify-center relative"></div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+              <div id="nest-slot-pink-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
+              <div id="nest-slot-pink-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
+              <div id="nest-slot-pink-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
+              <div id="nest-slot-pink-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
             </div>
           </div>
 
-          <!-- 各色专属冲刺直线跑道 (每色通向中央终点) -->
-          <div id="runways-container" class="absolute inset-0 pointer-events-none"></div>
+          <!-- 直线冲刺航道容器 -->
+          <div id="runways-container" style="position: absolute; inset: 0; pointer-events: none;"></div>
 
           <!-- 中央天穹终点神坛 (嵌入4款皇冠终点徽标) -->
-          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-gradient-to-tr from-amber-200 via-orange-100 to-amber-300 border-4 border-amber-400 shadow-2xl p-2 flex items-center justify-center z-20">
-            <div class="w-full h-full rounded-full bg-white/95 night-card-bg p-1.5 grid grid-cols-2 gap-1 items-center justify-center shadow-inner">
-              <div class="flex items-center justify-center relative group" title="蓝羽夜鸮加冕区">
-                <img src="assets/token_blue_owl_goal.png" class="w-14 h-14 object-contain filter drop-shadow hover:scale-110 transition-transform" alt="蓝鸮王冠">
-                <span id="badge-done-blue" class="absolute bottom-0 right-1 bg-blue-600 text-white text-[9px] font-black rounded-full px-1.5">0/4</span>
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 148px; height: 148px; border-radius: 50%; background: linear-gradient(135deg, #FEF08A, #F59E0B); border: 4px solid #D97706; padding: 4px; box-shadow: 0 10px 24px rgba(0,0,0,0.25); z-index: 25;">
+            <div style="width: 100%; height: 100%; border-radius: 50%; background: #FFFFFF; display: grid; grid-template-columns: repeat(2, 1fr); align-items: center; justify-items: center; padding: 8px;">
+              <div style="position: relative;" title="蓝羽夜鸮加冕区">
+                <img src="assets/token_blue_owl_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="蓝鸮王冠">
+                <span id="badge-done-blue" style="position: absolute; bottom: -2px; right: -2px; background: #2563EB; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
               </div>
-              <div class="flex items-center justify-center relative group" title="晨曦黄雀加冕区">
-                <img src="assets/token_yellow_finch_goal.png" class="w-14 h-14 object-contain filter drop-shadow hover:scale-110 transition-transform" alt="晨雀王冠">
-                <span id="badge-done-yellow" class="absolute bottom-0 right-1 bg-amber-600 text-white text-[9px] font-black rounded-full px-1.5">0/4</span>
+              <div style="position: relative;" title="晨曦黄雀加冕区">
+                <img src="assets/token_yellow_finch_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="晨雀王冠">
+                <span id="badge-done-yellow" style="position: absolute; bottom: -2px; right: -2px; background: #D97706; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
               </div>
-              <div class="flex items-center justify-center relative group" title="霞光粉鹦加冕区">
-                <img src="assets/token_pink_cockatoo_goal.png" class="w-14 h-14 object-contain filter drop-shadow hover:scale-110 transition-transform" alt="粉鹦王冠">
-                <span id="badge-done-pink" class="absolute bottom-0 right-1 bg-pink-600 text-white text-[9px] font-black rounded-full px-1.5">0/4</span>
+              <div style="position: relative;" title="霞光粉鹦加冕区">
+                <img src="assets/token_pink_cockatoo_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="粉鹦王冠">
+                <span id="badge-done-pink" style="position: absolute; bottom: -2px; right: -2px; background: #DB2777; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
               </div>
-              <div class="flex items-center justify-center relative group" title="冥夜紫鸦加冕区">
-                <img src="assets/token_purple_raven_goal.png" class="w-14 h-14 object-contain filter drop-shadow hover:scale-110 transition-transform" alt="紫鸦王冠">
-                <span id="badge-done-purple" class="absolute bottom-0 right-1 bg-purple-600 text-white text-[9px] font-black rounded-full px-1.5">0/4</span>
+              <div style="position: relative;" title="冥夜紫鸦加冕区">
+                <img src="assets/token_purple_raven_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="紫鸦王冠">
+                <span id="badge-done-purple" style="position: absolute; bottom: -2px; right: -2px; background: #9333EA; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
               </div>
             </div>
           </div>
 
-          <!-- 环形主航道 52 格容器 -->
-          <div id="board-tracks-container" class="absolute inset-0 pointer-events-none"></div>
+          <!-- 环形 52 格主航道 -->
+          <div id="board-tracks-container" style="position: absolute; inset: 0; pointer-events: none;"></div>
 
-          <!-- 动态在途战棋渲染层 -->
-          <div id="meeple-overlay-layer" class="absolute inset-0 pointer-events-none z-30"></div>
+          <!-- 动态棋子立绘渲染层 -->
+          <div id="meeple-overlay-layer" style="position: absolute; inset: 0; pointer-events: none; z-index: 30;"></div>
         </div>
       </div>
 
-      <!-- 右看板与骰子天命台 -->
-      <div class="flex lg:flex-col gap-3 w-full lg:w-56">
-        <div id="card-player-yellow" class="flex-1 glass-panel p-3 rounded-2xl border border-amber-300 shadow-sm bg-amber-50/40">
-          <div class="flex items-center space-x-2.5 mb-2">
-            <img src="assets/piece_yellow_finch.png" class="w-10 h-12 object-contain" alt="晨雀">
+      <!-- 右侧灵禽看板 (2P 黄雀 & 3P 紫鸦) & 骰子天命台 -->
+      <div style="width: 220px; display: flex; flex-direction: column; gap: 14px;">
+        
+        <div id="card-player-yellow" class="glass-panel" style="padding: 14px; border: 1.5px solid #FBBF24; background: rgba(254, 252, 232, 0.6);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <img src="assets/piece_yellow_finch.png" style="width: 36px; height: 44px; object-fit: contain;" alt="晨雀">
             <div>
-              <div class="text-xs font-black text-amber-900">2P 晨曦黄雀 (AI)</div>
-              <div class="text-[11px] text-amber-600 font-bold">凯旋加冕: <span id="cnt-yellow-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #78350F;">2P 晨曦黄雀 (AI)</div>
+              <div style="font-size: 11px; font-weight: 700; color: #D97706;">凯旋加冕: <span id="cnt-yellow-done">0</span>/4</div>
             </div>
           </div>
-          <div class="flex items-center justify-between text-[11px] text-stone-600 bg-white/70 px-2.5 py-1 rounded-lg">
-            <span>机库待命: <strong id="cnt-yellow-home">4</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
+            <span>鸟巢待命: <strong id="cnt-yellow-home">4</strong></span>
             <span>航道竞逐: <strong id="cnt-yellow-active">0</strong></span>
           </div>
         </div>
 
-        <div id="card-player-purple" class="flex-1 glass-panel p-3 rounded-2xl border border-purple-300 shadow-sm bg-purple-50/40">
-          <div class="flex items-center space-x-2.5 mb-2">
-            <img src="assets/piece_purple_raven.png" class="w-10 h-12 object-contain" alt="紫鸦">
+        <div id="card-player-purple" class="glass-panel" style="padding: 14px; border: 1.5px solid #C084FC; background: rgba(250, 245, 255, 0.6);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <img src="assets/piece_purple_raven.png" style="width: 36px; height: 44px; object-fit: contain;" alt="紫鸦">
             <div>
-              <div class="text-xs font-black text-purple-900">3P 冥夜紫鸦 (AI)</div>
-              <div class="text-[11px] text-purple-600 font-bold">凯旋加冕: <span id="cnt-purple-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #581C87;">3P 冥夜紫鸦 (AI)</div>
+              <div style="font-size: 11px; font-weight: 700; color: #9333EA;">凯旋加冕: <span id="cnt-purple-done">0</span>/4</div>
             </div>
           </div>
-          <div class="flex items-center justify-between text-[11px] text-stone-600 bg-white/70 px-2.5 py-1 rounded-lg">
-            <span>机库待命: <strong id="cnt-purple-home">4</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
+            <span>鸟巢待命: <strong id="cnt-purple-home">4</strong></span>
             <span>航道竞逐: <strong id="cnt-purple-active">0</strong></span>
           </div>
         </div>
 
         <!-- 骰子操作台 -->
-        <div class="glass-panel p-4 rounded-2xl border-2 border-amber-400 shadow-xl bg-amber-50/90 flex flex-col items-center justify-center space-y-2.5 night-card-bg">
-          <div class="text-xs font-black text-stone-800 night-text-main">骰子天命台</div>
-          <div id="dice-cube" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg flex items-center justify-center text-4xl text-stone-950 font-black cursor-pointer border-2 border-amber-200 select-none hover:scale-105 transition-transform" onclick="playerRollDice()">
+        <div class="glass-panel" style="padding: 16px; border: 2px solid #F59E0B; background: rgba(254, 243, 199, 0.9); display: flex; flex-direction: column; align-items: center; gap: 10px;">
+          <div class="night-text-main" style="font-size: 13px; font-weight: 900; color: #451A03;">骰子天命台</div>
+          <div id="dice-cube" onclick="playerRollDice()" style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #FBBF24, #EA580C); box-shadow: 0 8px 18px rgba(234, 88, 12, 0.35); display: flex; align-items: center; justify-content: center; font-size: 38px; color: #FFFFFF; font-weight: 900; cursor: pointer; border: 2px solid #FEF08A; transition: transform 0.15s ease;">
             🎲
           </div>
-          <div id="dice-result-text" class="text-xs font-bold text-amber-800 night-subtext">点击掷骰投掷！</div>
-          <button id="btn-roll-dice" onclick="playerRollDice()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-black text-xs hover:shadow-md transition-all shadow-amber-500/30">
+          <div id="dice-result-text" class="night-subtext" style="font-size: 12px; font-weight: 800; color: #92400E;">点击或按 SPACE 投掷！</div>
+          <button id="btn-roll-dice" onclick="playerRollDice()" class="primary-gold-btn" style="width: 100%; padding: 8px 12px; font-size: 12px;">
             掷骰行棋 (SPACE)
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 底部事件战报流水 -->
-    <div class="glass-panel py-2 px-6 rounded-xl flex items-center justify-between text-xs text-stone-600 shadow-sm border border-amber-200 night-card-bg">
-      <div class="flex items-center space-x-2">
-        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-        <span id="game-event-log" class="font-bold text-stone-800 night-text-main">【开局就绪】请蓝羽夜鸮 (1P) 掷骰！满足点数即可起飞！</span>
+    <!-- 底部事件流水 -->
+    <div class="glass-panel" style="padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #57534E;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #F59E0B;" class="animate-pulse"></span>
+        <span id="game-event-log" class="night-text-main" style="font-weight: 800; color: #292524;">【开局就绪】请蓝羽夜鸮 (1P) 掷骰！满足点数即可出鸟巢！</span>
       </div>
-      <div class="text-[11px] text-stone-400 font-mono night-subtext">日夜奖惩律: 顺风/夜袭 8% | 逆风/迷航 2%</div>
+      <div class="night-subtext" style="font-size: 11px; font-family: monospace; color: #A8A29E;">日夜机制: 顺风/夜袭 8% | 逆风/迷航 2%</div>
     </div>
   </div>
 
-  <!-- ======================== 模态弹窗系统 ======================== -->
+  <!-- ======================== 模态弹窗系统 (原生居中独立浮层) ======================== -->
 
   <!-- 1. 开房与规则自定义向导 -->
-  <div id="modal-wizard" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-2xl glass-panel rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col max-h-[92vh]">
-      <div class="pb-4 border-b border-amber-200/80">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-2">
-            <span id="step-badge" class="px-2.5 py-0.5 rounded bg-amber-500 text-stone-950 text-xs font-black">第 1 步</span>
-            <h2 id="wizard-title" class="text-lg font-black text-stone-800 night-text-main">选择房间类型</h2>
+  <div id="modal-wizard" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 620px;">
+      <div style="padding-bottom: 14px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="step-badge" style="padding: 3px 10px; border-radius: 6px; background: #F59E0B; color: #451A03; font-size: 12px; font-weight: 900;">第 1 步</span>
+            <h2 id="wizard-title" class="night-text-main" style="font-size: 18px; font-weight: 900; color: #292524;">选择房间类型</h2>
           </div>
-          <button onclick="closeModal('modal-wizard')" class="text-stone-400 hover:text-stone-700 p-1 rounded-lg night-text-main text-lg font-bold">✕</button>
+          <button onclick="closeModal('modal-wizard')" style="background: none; border: none; font-size: 20px; font-weight: 900; color: #A8A29E; cursor: pointer; padding: 4px;" class="night-text-main">✕</button>
         </div>
-        <div class="grid grid-cols-3 gap-2">
-          <div id="prog-1" class="h-2 rounded-full bg-amber-500 transition-all"></div>
-          <div id="prog-2" class="h-2 rounded-full bg-amber-200 transition-all"></div>
-          <div id="prog-3" class="h-2 rounded-full bg-amber-200 transition-all"></div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+          <div id="prog-1" style="height: 6px; border-radius: 999px; background: #F59E0B; transition: all 0.3s ease;"></div>
+          <div id="prog-2" style="height: 6px; border-radius: 999px; background: #FDE68A; transition: all 0.3s ease;"></div>
+          <div id="prog-3" style="height: 6px; border-radius: 999px; background: #FDE68A; transition: all 0.3s ease;"></div>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto py-5 pr-1">
+      <div style="flex: 1; overflow-y: auto; padding: 18px 4px;">
         <!-- 步骤 1: 房间类型 -->
-        <div id="wizard-step-1" class="space-y-3">
-          <p class="text-xs font-bold text-stone-600 mb-2 night-subtext">请决定这次对局的接入类型：</p>
-          <label class="block cursor-pointer">
-            <input type="radio" name="room-type" value="ai" class="peer sr-only" checked>
-            <div class="p-4 rounded-xl border border-amber-200 bg-white/70 peer-checked:border-amber-500 peer-checked:bg-amber-100/70 peer-checked:ring-2 peer-checked:ring-amber-400/40 transition-all flex items-center space-x-4 night-card-bg">
-              <div class="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-400 flex-shrink-0 flex items-center justify-center text-amber-800 text-2xl">🤖</div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between"><h3 class="text-sm font-black text-stone-800 night-text-main">单人人机房间</h3><span class="text-xs text-amber-700 font-bold">离线单机 / 随时暂停</span></div>
-                <p class="text-xs text-stone-500 mt-0.5 night-subtext">与不同策略性格的 3 位 AI 灵禽对弈，磨练技巧，零网络要求。</p>
+        <div id="wizard-step-1" style="display: flex; flex-direction: column; gap: 12px;">
+          <p class="night-subtext" style="font-size: 12px; font-weight: 700; color: #78716C;">请决定这次对局的接入类型：</p>
+          
+          <label style="cursor: pointer;">
+            <input type="radio" name="room-type" value="ai" checked style="display: none;">
+            <div class="menu-card-btn" style="padding: 14px; background: #FFFBEB; border-color: #F59E0B;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="menu-icon-box" style="font-size: 22px;">🤖</div>
+                <div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">单人人机房间 <span style="font-size: 11px; color: #D97706; margin-left: 8px;">离线单机 / 随时暂停</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">与不同性格的 3 位 AI 灵禽对弈，磨练技巧，零网络要求。</div>
+                </div>
               </div>
             </div>
           </label>
-          <label class="block cursor-pointer">
-            <input type="radio" name="room-type" value="lan" class="peer sr-only">
-            <div class="p-4 rounded-xl border border-amber-200 bg-white/70 peer-checked:border-amber-500 peer-checked:bg-amber-100/70 peer-checked:ring-2 peer-checked:ring-amber-400/40 transition-all flex items-center space-x-4 night-card-bg">
-              <div class="w-12 h-12 rounded-lg bg-orange-500/20 border border-orange-400 flex-shrink-0 flex items-center justify-center text-orange-800 text-2xl">📶</div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between"><h3 class="text-sm font-black text-stone-800 night-text-main">创建局域网房间</h3><span class="text-xs text-orange-700 font-bold">LAN / 局域网直连</span></div>
-                <p class="text-xs text-stone-500 mt-0.5 night-subtext">在同一 WiFi 或交换机下建立房主主机，朋友一键搜到即连。</p>
+
+          <label style="cursor: pointer;">
+            <input type="radio" name="room-type" value="lan" style="display: none;">
+            <div class="menu-card-btn" style="padding: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="menu-icon-box" style="font-size: 22px;">📶</div>
+                <div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">创建局域网房间 <span style="font-size: 11px; color: #EA580C; margin-left: 8px;">LAN / 局域网直连</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">在同一 WiFi 下建立主机，房客一键搜到即连。</div>
+                </div>
               </div>
             </div>
           </label>
-          <label class="block cursor-pointer">
-            <input type="radio" name="room-type" value="online" class="peer sr-only">
-            <div class="p-4 rounded-xl border border-amber-200 bg-white/70 peer-checked:border-amber-500 peer-checked:bg-amber-100/70 peer-checked:ring-2 peer-checked:ring-amber-400/40 transition-all flex items-center space-x-4 night-card-bg">
-              <div class="w-12 h-12 rounded-lg bg-amber-600/20 border border-amber-500 flex-shrink-0 flex items-center justify-center text-amber-900 text-2xl">🌐</div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between"><h3 class="text-sm font-black text-stone-800 night-text-main">创建多人联机房间</h3><span class="text-xs text-amber-800 font-bold">Steam P2P / 互联网大厅</span></div>
-                <p class="text-xs text-stone-500 mt-0.5 night-subtext">在公共网络大厅开房，可设密码，与远距离好友一同联机。</p>
+
+          <label style="cursor: pointer;">
+            <input type="radio" name="room-type" value="online" style="display: none;">
+            <div class="menu-card-btn" style="padding: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="menu-icon-box" style="font-size: 22px;">🌐</div>
+                <div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">创建多人联机房间 <span style="font-size: 11px; color: #B45309; margin-left: 8px;">Steam P2P / 互联网大厅</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">在公共网络大厅开房，与远距离好友一同联机。</div>
+                </div>
               </div>
             </div>
           </label>
         </div>
 
-        <!-- 步骤 2: 游戏模式 -->
-        <div id="wizard-step-2" class="space-y-3 hidden">
-          <p class="text-xs font-bold text-stone-600 mb-2 night-subtext">挑选本局想要玩的棋类模式：</p>
-          <label class="block cursor-pointer">
-            <input type="radio" name="wizard-game-mode" value="aero" class="peer sr-only" checked onchange="onWizardModeChange()">
-            <div class="p-4 rounded-xl border border-amber-200 bg-white/70 peer-checked:border-amber-500 peer-checked:bg-amber-100/70 peer-checked:ring-2 peer-checked:ring-amber-400/40 transition-all flex items-start space-x-4 night-card-bg">
-              <div class="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-400 flex-shrink-0 flex items-center justify-center text-amber-700 text-2xl">✈️</div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between"><h3 class="text-sm font-black text-stone-800 night-text-main">日夜飞行棋 (首发力作)</h3><span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500 text-stone-950 font-black">独家昼夜奖惩机制</span></div>
-                <p class="text-xs text-stone-600 mt-1 night-subtext">昼夜更替律动！白天顺风突击加步/逆风滞留，黑夜夜袭出动/迷航坠落。支持自定义起飞点数与触发点数。</p>
+        <!-- 步骤 2: 游戏模式挑选 -->
+        <div id="wizard-step-2" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+          <p class="night-subtext" style="font-size: 12px; font-weight: 700; color: #78716C;">挑选本局想要玩的棋类模式：</p>
+          
+          <label style="cursor: pointer;">
+            <input type="radio" name="wizard-game-mode" value="aero" checked onchange="onWizardModeChange()" style="display: none;">
+            <div class="menu-card-btn" style="padding: 14px; background: #FFFBEB; border-color: #F59E0B;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="menu-icon-box" style="font-size: 22px;">✈️</div>
+                <div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">日夜飞行棋 (首发力作) <span style="background: #F59E0B; color: #451A03; font-size: 10px; padding: 2px 8px; border-radius: 999px; margin-left: 6px;">独家昼夜奖惩机制</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">昼夜律动更替！白天顺风突击加步/逆风滞留，黑夜夜袭出动/迷航坠落。</div>
+                </div>
               </div>
             </div>
           </label>
-          <label class="block cursor-pointer">
-            <input type="radio" name="wizard-game-mode" value="tycoon" class="peer sr-only" onchange="onWizardModeChange()">
-            <div class="p-4 rounded-xl border border-amber-200 bg-white/70 peer-checked:border-amber-500 peer-checked:bg-amber-100/70 peer-checked:ring-2 peer-checked:ring-amber-400/40 transition-all flex items-start space-x-4 night-card-bg">
-              <div class="w-12 h-12 rounded-lg bg-orange-500/20 border border-orange-400 flex-shrink-0 flex items-center justify-center text-orange-700 text-2xl">⚙️</div>
-              <div class="flex-1"><h3 class="text-sm font-black text-stone-800 night-text-main">机械大亨 (Gear Tycoon)</h3><p class="text-xs text-stone-600 mt-1 night-subtext">发条齿轮工坊圈地！升级建筑、收取过路费。（研发中）</p></div>
+
+          <label style="cursor: pointer;">
+            <input type="radio" name="wizard-game-mode" value="tycoon" onchange="onWizardModeChange()" style="display: none;">
+            <div class="menu-card-btn" style="padding: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="menu-icon-box" style="font-size: 22px;">⚙️</div>
+                <div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">机械大亨 (Gear Tycoon) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(工坊模块开发中)</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">发条齿轮圈地！升级建筑、收取过路费。</div>
+                </div>
+              </div>
             </div>
           </label>
-          <label class="block cursor-pointer">
-            <input type="radio" name="wizard-game-mode" value="gomoku" class="peer sr-only" onchange="onWizardModeChange()">
-            <div class="p-4 rounded-xl border border-amber-200 bg-white/70 peer-checked:border-amber-500 peer-checked:bg-amber-100/70 peer-checked:ring-2 peer-checked:ring-amber-400/40 transition-all flex items-start space-x-4 night-card-bg">
-              <div class="w-12 h-12 rounded-lg bg-indigo-500/20 border border-indigo-400 flex-shrink-0 flex items-center justify-center text-indigo-700 text-2xl">✨</div>
-              <div class="flex-1"><h3 class="text-sm font-black text-stone-800 night-text-main">星轨五子棋 (Astral Gomoku)</h3><p class="text-xs text-stone-600 mt-1 night-subtext">黑洞与恒星交错，三子连珠星轨共振。（研发中）</p></div>
+
+          <label style="cursor: pointer;">
+            <input type="radio" name="wizard-game-mode" value="gomoku" onchange="onWizardModeChange()" style="display: none;">
+            <div class="menu-card-btn" style="padding: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="menu-icon-box" style="font-size: 22px;">✨</div>
+                <div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">星轨五子棋 (Astral Gomoku) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(工坊模块开发中)</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">黑洞与恒星交错，三子连珠星轨共振。</div>
+                </div>
+              </div>
             </div>
           </label>
         </div>
 
         <!-- 步骤 3: 玩家自定义选项 -->
-        <div id="wizard-step-3" class="space-y-4 hidden">
-          <div id="custom-panel-aero" class="space-y-3.5">
-            <div class="bg-white/80 p-4 rounded-xl border border-amber-200 space-y-2 shadow-sm night-card-bg">
-              <div class="flex items-center justify-between"><span class="text-xs font-black text-stone-800 night-text-main">🛫 起飞点数自定义</span><span class="text-xs text-stone-500 night-subtext">满足点数即可出鸟巢</span></div>
-              <div class="grid grid-cols-4 gap-2 pt-1">
-                <button type="button" onclick="selectTakeoff(this, '6')" class="btn-takeoff px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 night-card-bg night-text-main">仅 6 点 (经典)</button>
-                <button type="button" onclick="selectTakeoff(this, '5,6')" class="btn-takeoff px-3 py-2 rounded-lg bg-amber-500 text-xs font-black text-stone-950 border border-amber-600 shadow-sm">5 或 6 点 (推荐)</button>
-                <button type="button" onclick="selectTakeoff(this, '4,5,6')" class="btn-takeoff px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 night-card-bg night-text-main">4, 5, 6 点 (激战)</button>
-                <button type="button" onclick="selectTakeoff(this, 'all')" class="btn-takeoff px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 night-card-bg night-text-main">任意点数起飞</button>
+        <div id="wizard-step-3" class="hidden" style="display: flex; flex-direction: column; gap: 14px;">
+          <div id="custom-panel-aero" style="display: flex; flex-direction: column; gap: 12px;">
+            
+            <!-- 起飞点数自定义 -->
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #292524;">🛫 起飞点数自定义</span>
+                <span class="night-subtext" style="font-size: 11px; color: #78716C;">满足点数即可出鸟巢</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                <button type="button" onclick="selectTakeoff(this, '6')" class="btn-takeoff glass-btn" style="font-size: 11px; padding: 6px;">仅 6 点 (经典)</button>
+                <button type="button" onclick="selectTakeoff(this, '5,6')" class="btn-takeoff primary-gold-btn" style="font-size: 11px; padding: 6px;">5 或 6 点 (推荐)</button>
+                <button type="button" onclick="selectTakeoff(this, '4,5,6')" class="btn-takeoff glass-btn" style="font-size: 11px; padding: 6px;">4, 5, 6 点 (激战)</button>
+                <button type="button" onclick="selectTakeoff(this, 'all')" class="btn-takeoff glass-btn" style="font-size: 11px; padding: 6px;">任意点数起飞</button>
               </div>
             </div>
 
-            <div class="bg-white/80 p-4 rounded-xl border border-amber-200 flex items-center justify-between shadow-sm night-card-bg">
-              <div><div class="text-xs font-black text-stone-800 night-text-main">🌓 昼夜轮替律</div><div class="text-xs text-stone-500 mt-0.5 night-subtext">全场玩家合计完成大回合数后天色切换</div></div>
-              <div class="flex items-center space-x-2">
-                <span class="text-xs text-amber-800 font-bold">每</span>
-                <select id="sel-round-cycle" class="bg-amber-50 border border-amber-300 rounded px-3 py-1 text-xs text-amber-900 font-black focus:outline-none focus:border-amber-500 night-card-bg night-text-main">
+            <!-- 昼夜轮换大回合数 -->
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div class="night-text-main" style="font-size: 13px; font-weight: 900; color: #292524;">🌓 昼夜轮替律</div>
+                <div class="night-subtext" style="font-size: 11px; color: #78716C; margin-top: 2px;">全场玩家合计完成大回合后天色切换</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 12px; font-weight: 700; color: #B45309;">每</span>
+                <select id="sel-round-cycle" style="background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 900; color: #78350F; outline: none;">
                   <option value="4" selected>4 个大回合 (推荐标准)</option>
                   <option value="2">2 个大回合 (急速更替)</option>
                   <option value="6">6 个大回合 (长周期运营)</option>
@@ -652,13 +900,13 @@
               </div>
             </div>
 
-            <!-- 白昼机制 -->
-            <div class="bg-white/80 p-4 rounded-xl border border-amber-200 space-y-3 shadow-sm night-card-bg">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-black text-amber-900 flex items-center space-x-1.5 night-text-main"><span>☀️</span><span>白昼机制：【奖】与【惩】独立开关</span></span>
-                <div class="flex items-center space-x-1.5 bg-amber-50/90 border border-amber-300 rounded-lg px-2.5 py-1 night-card-bg">
-                  <span class="text-xs font-bold text-amber-800 night-subtext">触发点数:</span>
-                  <select id="sel-day-trigger" onchange="changeDayTrigger(this.value)" class="bg-transparent text-xs font-black text-amber-700 focus:outline-none cursor-pointer">
+            <!-- 白昼机制开关 -->
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #92400E;">☀️ 白昼机制：【奖】与【惩】独立开关</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; font-weight: 700; color: #78716C;">触发点数:</span>
+                  <select id="sel-day-trigger" onchange="changeDayTrigger(this.value)" style="background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 900; color: #78350F; outline: none;">
                     <option value="1" selected>摇到 1 点</option>
                     <option value="2">摇到 2 点</option>
                     <option value="3">摇到 3 点</option>
@@ -668,23 +916,29 @@
                   </select>
                 </div>
               </div>
-              <div class="flex items-center justify-between p-3 rounded-lg bg-amber-50/80 border border-amber-300 night-card-bg">
-                <div><div class="text-xs font-black text-amber-950 night-text-main">【奖】顺风突击 (8% 概率)</div><div class="text-xs text-stone-600 mt-0.5 night-subtext">摇到 <strong class="lbl-day-trigger text-amber-700 font-black">1</strong> 时额外增加 2 步（共前行 3 步）</div></div>
-                <input type="checkbox" id="chk-day-reward" checked class="w-5 h-5 accent-amber-500 cursor-pointer">
+              <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(254, 243, 199, 0.7); padding: 8px 12px; border-radius: 8px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 900; color: #78350F;">【奖】顺风突击 (8% 概率)</div>
+                  <div style="font-size: 11px; color: #92400E;">摇到 <strong class="lbl-day-trigger">1</strong> 时额外增加 2 步（共前行 3 步）</div>
+                </div>
+                <input type="checkbox" id="chk-day-reward" checked style="width: 18px; height: 18px; accent-color: #F59E0B; cursor: pointer;">
               </div>
-              <div class="flex items-center justify-between p-3 rounded-lg bg-stone-50 border border-stone-200 night-card-bg">
-                <div><div class="text-xs font-black text-stone-800 night-text-main">【惩】逆风滞留 (2% 概率)</div><div class="text-xs text-stone-500 mt-0.5 night-subtext">摇到 <strong class="lbl-day-trigger text-stone-800 font-black">1</strong> 时遭遇逆风强气流，本回合原地不动</div></div>
-                <input type="checkbox" id="chk-day-penalty" checked class="w-5 h-5 accent-orange-500 cursor-pointer">
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; padding: 8px 12px; border-radius: 8px; border: 1px solid #E7E5E4;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 900; color: #44403C;">【惩】逆风滞留 (2% 概率)</div>
+                  <div style="font-size: 11px; color: #78716C;">摇到 <strong class="lbl-day-trigger">1</strong> 时遭遇强风，本回合原地不动</div>
+                </div>
+                <input type="checkbox" id="chk-day-penalty" checked style="width: 18px; height: 18px; accent-color: #EA580C; cursor: pointer;">
               </div>
             </div>
 
-            <!-- 黑夜机制 -->
-            <div class="bg-white/80 p-4 rounded-xl border border-indigo-200 space-y-3 shadow-sm night-card-bg">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-black text-indigo-950 flex items-center space-x-1.5 night-text-main"><span>🌙</span><span>黑夜机制：【奖】与【惩】独立开关</span></span>
-                <div class="flex items-center space-x-1.5 bg-indigo-50/90 border border-indigo-300 rounded-lg px-2.5 py-1 night-card-bg">
-                  <span class="text-xs font-bold text-indigo-800 night-subtext">触发点数:</span>
-                  <select id="sel-night-trigger" onchange="changeNightTrigger(this.value)" class="bg-transparent text-xs font-black text-indigo-700 focus:outline-none cursor-pointer">
+            <!-- 黑夜机制开关 -->
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(147, 51, 234, 0.3); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #6B21A8;">🌙 黑夜机制：【奖】与【惩】独立开关</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; font-weight: 700; color: #78716C;">触发点数:</span>
+                  <select id="sel-night-trigger" onchange="changeNightTrigger(this.value)" style="background: #FAF5FF; border: 1px solid #9333EA; border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 900; color: #6B21A8; outline: none;">
                     <option value="1" selected>摇到 1 点</option>
                     <option value="2">摇到 2 点</option>
                     <option value="3">摇到 3 点</option>
@@ -694,26 +948,35 @@
                   </select>
                 </div>
               </div>
-              <div class="flex items-center justify-between p-3 rounded-lg bg-indigo-50/80 border border-indigo-300 night-card-bg">
-                <div><div class="text-xs font-black text-indigo-950 night-text-main">【奖】夜袭出动 (8% 概率)</div><div class="text-xs text-stone-600 mt-0.5 night-subtext">摇到 <strong class="lbl-night-trigger text-indigo-700 font-black">1</strong> 时从机库额外无消耗起飞 1 架新战机</div></div>
-                <input type="checkbox" id="chk-night-reward" checked class="w-5 h-5 accent-indigo-600 cursor-pointer">
+              <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(243, 232, 255, 0.7); padding: 8px 12px; border-radius: 8px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 900; color: #581C87;">【奖】夜袭出动 (8% 概率)</div>
+                  <div style="font-size: 11px; color: #6B21A8;">摇到 <strong class="lbl-night-trigger">1</strong> 时从机巢额外免费起飞 1 架新战鸟</div>
+                </div>
+                <input type="checkbox" id="chk-night-reward" checked style="width: 18px; height: 18px; accent-color: #9333EA; cursor: pointer;">
               </div>
-              <div class="flex items-center justify-between p-3 rounded-lg bg-stone-50 border border-stone-200 night-card-bg">
-                <div><div class="text-xs font-black text-rose-950 night-text-main">【惩】迷航失联 (2% 概率)</div><div class="text-xs text-stone-500 mt-0.5 night-subtext">摇到 <strong class="lbl-night-trigger text-rose-700 font-black">1</strong> 时夜间迷雾干扰，该战机迷失被迫返回基地机库</div></div>
-                <input type="checkbox" id="chk-night-penalty" checked class="w-5 h-5 accent-rose-500 cursor-pointer">
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; padding: 8px 12px; border-radius: 8px; border: 1px solid #E7E5E4;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 900; color: #881337;">【惩】迷航失联 (2% 概率)</div>
+                  <div style="font-size: 11px; color: #78716C;">摇到 <strong class="lbl-night-trigger">1</strong> 时遭遇夜雾，在途 1 架战鸟被迫返巢</div>
+                </div>
+                <input type="checkbox" id="chk-night-penalty" checked style="width: 18px; height: 18px; accent-color: #E11D48; cursor: pointer;">
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="pt-4 border-t border-amber-200/80 flex items-center justify-between">
-        <button id="btn-wizard-prev" onclick="wizardPrev()" class="px-5 py-2.5 rounded-xl glass-btn text-xs font-bold text-stone-700 hover:text-stone-950 hidden night-text-main">上一步</button>
-        <div class="flex items-center space-x-3 ml-auto">
-          <button onclick="closeModal('modal-wizard')" class="px-4 py-2.5 rounded-xl glass-btn text-xs text-stone-600 night-subtext">取消</button>
-          <button id="btn-wizard-next" onclick="wizardNext()" class="px-7 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-black text-xs hover:shadow-lg hover:shadow-amber-500/30 transition-all flex items-center space-x-1.5">
+      <!-- 向导底栏操作按钮 -->
+      <div style="padding-top: 14px; border-top: 1.5px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: space-between;">
+        <button id="btn-wizard-prev" onclick="wizardPrev()" class="glass-btn hidden">上一步</button>
+        <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+          <button onclick="closeModal('modal-wizard')" class="glass-btn">取消</button>
+          <button id="btn-wizard-next" onclick="wizardNext()" class="primary-gold-btn">
             <span>下一步：选择游戏模式</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
         </div>
       </div>
@@ -721,109 +984,138 @@
   </div>
 
   <!-- 2. 多人联机大厅弹窗 -->
-  <div id="modal-online-lobby" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-4xl glass-panel rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col h-[82vh]">
-      <div class="flex items-center justify-between pb-4 border-b border-amber-200/80">
-        <h2 class="text-xl font-black text-stone-800 night-text-main">网络游戏大厅 (Steamworks P2P)</h2>
-        <button onclick="closeModal('modal-online-lobby')" class="text-stone-400 hover:text-stone-700 p-2 rounded-lg night-text-main text-lg font-bold">✕</button>
+  <div id="modal-online-lobby" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 680px; height: 75vh;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <h2 class="night-text-main" style="font-size: 18px; font-weight: 900; color: #292524;">网络游戏大厅 (Steamworks P2P)</h2>
+        <button onclick="closeModal('modal-online-lobby')" style="background: none; border: none; font-size: 20px; font-weight: 900; color: #A8A29E; cursor: pointer;" class="night-text-main">✕</button>
       </div>
-      <div class="flex-1 overflow-y-auto my-3 pr-1">
-        <table class="w-full text-left text-xs">
-          <thead class="text-stone-500 border-b border-amber-200/80 sticky top-0 bg-white/95 backdrop-blur z-10 night-card-bg night-subtext">
-            <tr><th class="py-2.5 px-3">房间名称</th><th class="py-2.5 px-3">游戏模式</th><th class="py-2.5 px-3">人数</th><th class="py-2.5 px-3">延迟</th><th class="py-2.5 px-3 text-right">操作</th></tr>
-          </thead>
-          <tbody class="divide-y divide-amber-100 text-stone-700 font-medium night-text-main">
-            <tr class="hover:bg-amber-50/70">
-              <td class="py-3 px-3 font-bold text-stone-900 night-text-main">周末灵禽飞行棋！速来2人</td>
-              <td class="py-3 px-3 text-amber-600 font-bold">日夜飞行棋</td>
-              <td class="py-3 px-3">2 / 4</td>
-              <td class="py-3 px-3 font-mono text-emerald-500">22 ms</td>
-              <td class="py-3 px-3 text-right"><button onclick="joinRoom('周末灵禽飞行棋')" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-black">加入</button></td>
+      <div style="flex: 1; overflow-y: auto; margin: 12px 0;">
+        <table style="width: 100%; text-align: left; font-size: 12px; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1.5px solid #E7E5E4; color: #78716C;">
+              <th style="padding: 8px;">房间名称</th>
+              <th style="padding: 8px;">模式</th>
+              <th style="padding: 8px;">人数</th>
+              <th style="padding: 8px;">延迟</th>
+              <th style="padding: 8px; text-align: right;">操作</th>
             </tr>
-            <tr class="hover:bg-amber-50/70">
-              <td class="py-3 px-3 font-bold text-stone-900 night-text-main">【高手房】极夜迷雾激战</td>
-              <td class="py-3 px-3 text-amber-600 font-bold">日夜飞行棋</td>
-              <td class="py-3 px-3">3 / 4</td>
-              <td class="py-3 px-3 font-mono text-emerald-500">35 ms</td>
-              <td class="py-3 px-3 text-right"><button onclick="joinRoom('极夜迷雾激战')" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-black">加入</button></td>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid #F5F5F4;">
+              <td style="padding: 10px 8px; font-weight: 800;">周末灵禽飞行棋！速来2人</td>
+              <td style="padding: 10px 8px; color: #D97706; font-weight: 700;">日夜飞行棋</td>
+              <td style="padding: 10px 8px;">2 / 4</td>
+              <td style="padding: 10px 8px; color: #10B981; font-family: monospace;">22 ms</td>
+              <td style="padding: 10px 8px; text-align: right;"><button onclick="joinRoom('周末灵禽飞行棋')" class="primary-gold-btn" style="padding: 4px 12px; font-size: 11px;">加入</button></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #F5F5F4;">
+              <td style="padding: 10px 8px; font-weight: 800;">【高手房】极夜迷雾激战</td>
+              <td style="padding: 10px 8px; color: #D97706; font-weight: 700;">日夜飞行棋</td>
+              <td style="padding: 10px 8px;">3 / 4</td>
+              <td style="padding: 10px 8px; color: #10B981; font-family: monospace;">35 ms</td>
+              <td style="padding: 10px 8px; text-align: right;"><button onclick="joinRoom('极夜迷雾激战')" class="primary-gold-btn" style="padding: 4px 12px; font-size: 11px;">加入</button></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between pt-3 border-t border-amber-200/80">
-        <span class="text-xs text-stone-500 night-subtext">已连接到 Steam P2P 匹配集群 (中继就绪)</span>
-        <button onclick="closeModal('modal-online-lobby')" class="px-4 py-2 rounded-xl glass-btn text-xs text-stone-700 night-text-main">返回</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <span class="night-subtext" style="font-size: 12px; color: #78716C;">已连接到 Steam P2P 匹配集群</span>
+        <button onclick="closeModal('modal-online-lobby')" class="glass-btn">返回</button>
       </div>
     </div>
   </div>
 
   <!-- 3. 局域网联机弹窗 -->
-  <div id="modal-lan-lobby" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-3xl glass-panel rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col h-[75vh]">
-      <div class="flex items-center justify-between pb-4 border-b border-amber-200/80">
-        <h2 class="text-xl font-black text-stone-800 night-text-main">局域网对局 (LAN)</h2>
-        <button onclick="closeModal('modal-lan-lobby')" class="text-stone-400 hover:text-stone-700 p-2 night-text-main text-lg font-bold">✕</button>
+  <div id="modal-lan-lobby" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 580px; height: 65vh;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <h2 class="night-text-main" style="font-size: 18px; font-weight: 900; color: #292524;">局域网对局 (LAN)</h2>
+        <button onclick="closeModal('modal-lan-lobby')" style="background: none; border: none; font-size: 20px; font-weight: 900; color: #A8A29E; cursor: pointer;" class="night-text-main">✕</button>
       </div>
-      <div class="space-y-3 mt-4 flex-1">
-        <div class="p-4 rounded-xl border border-amber-200 bg-white/80 flex items-center justify-between shadow-sm night-card-bg">
-          <div class="flex items-center space-x-3"><span class="text-2xl">✈️</span><div><div class="text-sm font-black text-stone-800 night-text-main">客厅 PC - 灵禽日夜飞行棋</div><div class="text-xs text-stone-500 night-subtext">IP: 192.168.1.102:7777 • 延迟: 2ms</div></div></div>
-          <button onclick="joinRoom('客厅 PC')" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black">直连加入</button>
+      <div style="flex: 1; padding: 16px 0;">
+        <div class="menu-card-btn" style="padding: 14px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span style="font-size: 24px;">✈️</span>
+            <div>
+              <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">客厅 PC - 灵禽日夜飞行棋</div>
+              <div class="night-subtext" style="font-size: 11px; color: #78716C;">IP: 192.168.1.102:7777 • 延迟: 2ms</div>
+            </div>
+          </div>
+          <button onclick="joinRoom('客厅 PC')" class="primary-gold-btn" style="padding: 6px 14px; font-size: 12px;">直连加入</button>
         </div>
       </div>
-      <div class="flex items-center justify-between pt-3 border-t border-amber-200/80">
-        <button onclick="playSound('click')" class="px-3.5 py-1.5 rounded-lg border border-amber-300 text-xs font-bold text-amber-800 night-text-main">🔄 刷新局域网广播</button>
-        <button onclick="closeModal('modal-lan-lobby')" class="px-4 py-2 rounded-xl glass-btn text-xs text-stone-700 night-text-main">关闭</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <button onclick="playSound('click')" class="glass-btn">🔄 刷新局域网广播</button>
+        <button onclick="closeModal('modal-lan-lobby')" class="glass-btn">关闭</button>
       </div>
     </div>
   </div>
 
   <!-- 4. 系统设置弹窗 -->
-  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-xl glass-panel rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col">
-      <div class="flex items-center justify-between pb-4 border-b border-amber-200/80">
-        <h2 class="text-xl font-black text-stone-800 night-text-main">系统设置</h2>
-        <button onclick="closeModal('modal-settings')" class="text-stone-400 hover:text-stone-700 p-2 night-text-main text-lg font-bold">✕</button>
+  <div id="modal-settings" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 520px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <h2 class="night-text-main" style="font-size: 18px; font-weight: 900; color: #292524;">系统设置</h2>
+        <button onclick="closeModal('modal-settings')" style="background: none; border: none; font-size: 20px; font-weight: 900; color: #A8A29E; cursor: pointer;" class="night-text-main">✕</button>
       </div>
-      <div class="py-4 space-y-4 text-xs">
-        <div class="bg-white/70 p-4 rounded-xl border border-amber-200 space-y-3.5 shadow-sm night-card-bg">
-          <h3 class="text-xs font-black text-amber-800 uppercase tracking-wider night-title">界面形态与视觉主题</h3>
-          <div class="flex items-center justify-between">
-            <div><div class="text-stone-800 font-bold night-text-main">UI 边角风格</div><div class="text-stone-500 text-xs night-subtext">现代圆角 或 方方正正切角</div></div>
-            <div class="flex items-center space-x-1.5 bg-stone-100 p-1 rounded-lg border border-stone-200 night-card-bg">
-              <button id="btn-ui-round" onclick="setUiShape('round')" class="px-3 py-1 rounded bg-amber-500 text-stone-950 font-black text-xs">现代圆角</button>
-              <button id="btn-ui-square" onclick="setUiShape('square')" class="px-3 py-1 rounded text-stone-600 hover:text-stone-900 text-xs font-bold night-subtext">方方正正</button>
+      
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 16px 0;">
+        <div class="night-card-bg" style="background: #F8F5EE; padding: 14px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column; gap: 12px;">
+          <h3 class="night-title" style="font-size: 12px; font-weight: 900; color: #92400E; text-transform: uppercase;">界面形态与视觉主题</h3>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="night-text-main" style="font-size: 13px; font-weight: 800; color: #292524;">UI 边角风格</div>
+              <div class="night-subtext" style="font-size: 11px; color: #78716C;">圆角柔和 或 方方正正切角</div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button id="btn-ui-round" onclick="setUiShape('round')" class="primary-gold-btn" style="padding: 4px 10px; font-size: 11px;">现代圆角</button>
+              <button id="btn-ui-square" onclick="setUiShape('square')" class="glass-btn" style="padding: 4px 10px; font-size: 11px;">方方正正</button>
             </div>
           </div>
-          <div class="flex items-center justify-between pt-2 border-t border-amber-100">
-            <div><div class="text-stone-800 font-bold night-text-main">日夜模式主题</div><div class="text-stone-500 text-xs night-subtext">暖阳黄白经典，或夜间深空护眼蓝黑</div></div>
-            <div class="flex items-center space-x-1.5 bg-stone-100 p-1 rounded-lg border border-stone-200 night-card-bg">
-              <button id="btn-theme-yellow" onclick="setThemeMode('yellow')" class="px-3 py-1 rounded bg-amber-500 text-stone-950 font-black text-xs">☀️ 暖阳黄白</button>
-              <button id="btn-theme-night" onclick="setThemeMode('night')" class="px-3 py-1 rounded text-stone-600 hover:text-stone-900 text-xs font-bold night-subtext">🌙 夜间护眼</button>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(245, 158, 11, 0.2);">
+            <div>
+              <div class="night-text-main" style="font-size: 13px; font-weight: 800; color: #292524;">日夜模式主题</div>
+              <div class="night-subtext" style="font-size: 11px; color: #78716C;">暖阳黄白经典，或夜间深空护眼蓝黑</div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button id="btn-theme-yellow" onclick="setThemeMode('yellow')" class="primary-gold-btn" style="padding: 4px 10px; font-size: 11px;">☀️ 暖阳黄白</button>
+              <button id="btn-theme-night" onclick="setThemeMode('night')" class="glass-btn" style="padding: 4px 10px; font-size: 11px;">🌙 夜间护眼</button>
             </div>
           </div>
-          <div class="pt-2 border-t border-amber-100">
-            <div class="flex justify-between text-stone-800 font-bold mb-1.5 night-text-main">
-              <span>🔆 游戏画面亮度 (Brightness)</span>
-              <span id="val-brightness" class="font-mono text-amber-600 font-black">100%</span>
+
+          <div style="padding-top: 8px; border-top: 1px solid rgba(245, 158, 11, 0.2);">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; margin-bottom: 6px;">
+              <span class="night-text-main">🔆 游戏画面亮度</span>
+              <span id="val-brightness" style="color: #D97706; font-family: monospace;">100%</span>
             </div>
-            <input type="range" min="60" max="140" value="100" id="slider-brightness" oninput="setBrightness(this.value)" class="w-full accent-amber-500 cursor-pointer">
+            <input type="range" min="60" max="140" value="100" id="slider-brightness" oninput="setBrightness(this.value)" style="width: 100%; accent-color: #F59E0B; cursor: pointer;">
           </div>
         </div>
-        <div class="bg-white/70 p-4 rounded-xl border border-amber-200 space-y-3 shadow-sm night-card-bg">
-          <h3 class="text-xs font-black text-amber-800 uppercase tracking-wider night-title">音频与声效</h3>
-          <div><div class="flex justify-between text-stone-700 font-bold mb-1 night-text-main"><span>主音量</span><span id="val-master">80%</span></div><input type="range" min="0" max="100" value="80" class="w-full accent-amber-500"></div>
-          <div><div class="flex justify-between text-stone-700 font-bold mb-1 night-text-main"><span>背景音乐</span><span id="val-bgm">70%</span></div><input type="range" min="0" max="100" value="70" class="w-full accent-amber-500"></div>
+
+        <div class="night-card-bg" style="background: #F8F5EE; padding: 14px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column; gap: 10px;">
+          <h3 class="night-title" style="font-size: 12px; font-weight: 900; color: #92400E; text-transform: uppercase;">音频与声效</h3>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #44403C; margin-bottom: 4px;">
+              <span class="night-text-main">主音量</span>
+              <span id="val-master">80%</span>
+            </div>
+            <input type="range" min="0" max="100" value="80" style="width: 100%; accent-color: #F59E0B;">
+          </div>
         </div>
       </div>
-      <div class="flex items-center justify-end space-x-2 pt-3 border-t border-amber-200/80">
-        <button onclick="closeModal('modal-settings')" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs">保存设置</button>
+
+      <div style="display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1.5px solid rgba(245, 158, 11, 0.3);">
+        <button onclick="closeModal('modal-settings')" class="primary-gold-btn">保存设置</button>
       </div>
     </div>
   </div>
 
-  <!-- ======================== 核心游戏逻辑与引擎脚本 ======================== -->
+  <!-- ======================== 核心游戏引擎与对战逻辑 ======================== -->
   <script>
-    // --- 极速安全的音频合成引擎 (免音频资源文件，带完整容错与静音降级) ---
+    // --- 极速安全的音频合成引擎 (免任何外部音频文件，零报错风险) ---
     let audioCtx = null;
     function getAudioContext() {
       try {
@@ -879,7 +1171,7 @@
           osc.start(now); osc.stop(now + 0.4);
         }
       } catch (e) {
-        // 音频异常静默降级，绝不影响UI交互
+        // 音频异常静默降级
       }
     }
 
@@ -941,25 +1233,25 @@
       const p1 = document.getElementById('prog-1');
       const p2 = document.getElementById('prog-2');
       const p3 = document.getElementById('prog-3');
-      if (p1) p1.className = 'h-2 rounded-full transition-all ' + (currentStep >= 1 ? 'bg-amber-500' : 'bg-amber-200');
-      if (p2) p2.className = 'h-2 rounded-full transition-all ' + (currentStep >= 2 ? 'bg-amber-500' : 'bg-amber-200');
-      if (p3) p3.className = 'h-2 rounded-full transition-all ' + (currentStep >= 3 ? 'bg-amber-500' : 'bg-amber-200');
+      if (p1) p1.style.background = currentStep >= 1 ? '#F59E0B' : '#FDE68A';
+      if (p2) p2.style.background = currentStep >= 2 ? '#F59E0B' : '#FDE68A';
+      if (p3) p3.style.background = currentStep >= 3 ? '#F59E0B' : '#FDE68A';
 
       if (currentStep === 1) {
         if (badge) badge.innerText = '第 1 步 / 共 3 步';
         if (title) title.innerText = '选择房间类型 (联机/单人)';
         if (btnPrev) btnPrev.classList.add('hidden');
-        if (btnNext) btnNext.innerHTML = '<span>下一步：选择游戏模式</span><svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path></svg>';
+        if (btnNext) btnNext.innerHTML = '<span>下一步：选择游戏模式</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>';
       } else if (currentStep === 2) {
         if (badge) badge.innerText = '第 2 步 / 共 3 步';
         if (title) title.innerText = '挑选游戏模式';
         if (btnPrev) btnPrev.classList.remove('hidden');
-        if (btnNext) btnNext.innerHTML = '<span>下一步：配置自定义规则</span><svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path></svg>';
+        if (btnNext) btnNext.innerHTML = '<span>下一步：配置自定义规则</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>';
       } else if (currentStep === 3) {
         if (badge) badge.innerText = '第 3 步 / 共 3 步';
         if (title) title.innerText = '配置玩家自定义专属规则';
         if (btnPrev) btnPrev.classList.remove('hidden');
-        if (btnNext) btnNext.innerHTML = '<span>创建房间并开战！</span><svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>';
+        if (btnNext) btnNext.innerHTML = '<span>创建房间并开战！</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>';
         onWizardModeChange();
       }
     }
@@ -996,9 +1288,9 @@
       playSound('click');
       takeoffOption = val;
       document.querySelectorAll('.btn-takeoff').forEach(b => {
-        b.className = 'btn-takeoff px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 night-card-bg night-text-main';
+        b.className = 'btn-takeoff glass-btn';
       });
-      btn.className = 'btn-takeoff px-3 py-2 rounded-lg bg-amber-500 text-xs font-black text-stone-950 border border-amber-600 shadow-sm';
+      btn.className = 'btn-takeoff primary-gold-btn';
     }
 
     function setUiShape(shape) {
@@ -1006,12 +1298,12 @@
       const body = document.getElementById('app-body');
       if (shape === 'square') {
         body.classList.add('ui-square');
-        document.getElementById('btn-ui-square').className = 'px-3 py-1 rounded bg-amber-500 text-stone-950 font-black text-xs';
-        document.getElementById('btn-ui-round').className = 'px-3 py-1 rounded text-stone-600 hover:text-stone-900 text-xs font-bold night-subtext';
+        document.getElementById('btn-ui-square').className = 'primary-gold-btn';
+        document.getElementById('btn-ui-round').className = 'glass-btn';
       } else {
         body.classList.remove('ui-square');
-        document.getElementById('btn-ui-round').className = 'px-3 py-1 rounded bg-amber-500 text-stone-950 font-black text-xs';
-        document.getElementById('btn-ui-square').className = 'px-3 py-1 rounded text-stone-600 hover:text-stone-900 text-xs font-bold night-subtext';
+        document.getElementById('btn-ui-round').className = 'primary-gold-btn';
+        document.getElementById('btn-ui-square').className = 'glass-btn';
       }
     }
 
@@ -1021,13 +1313,13 @@
       if (theme === 'night') {
         body.classList.remove('theme-default');
         body.classList.add('theme-night-dark');
-        document.getElementById('btn-theme-night').className = 'px-3 py-1 rounded bg-amber-500 text-stone-950 font-black text-xs';
-        document.getElementById('btn-theme-yellow').className = 'px-3 py-1 rounded text-stone-400 hover:text-white text-xs font-bold';
+        document.getElementById('btn-theme-night').className = 'primary-gold-btn';
+        document.getElementById('btn-theme-yellow').className = 'glass-btn';
       } else {
         body.classList.remove('theme-night-dark');
         body.classList.add('theme-default');
-        document.getElementById('btn-theme-yellow').className = 'px-3 py-1 rounded bg-amber-500 text-stone-950 font-black text-xs';
-        document.getElementById('btn-theme-night').className = 'px-3 py-1 rounded text-stone-600 hover:text-stone-900 text-xs font-bold';
+        document.getElementById('btn-theme-yellow').className = 'primary-gold-btn';
+        document.getElementById('btn-theme-night').className = 'glass-btn';
       }
     }
 
@@ -1065,7 +1357,6 @@
     let lastDiceValue = 1;
     let isDiceRolling = false;
 
-    // 棋子状态结构: state: 'home' | 'active' | 'runway' | 'done', pos: number
     let gameState = {
       blue: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }],
       yellow: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }],
@@ -1073,22 +1364,22 @@
       pink: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }]
     };
 
-    // 起飞跑道口与凯旋冲刺入口对应位置
     const playerTrackConfig = {
-      blue:   { startTile: 0,  homeStretchTile: 50, runwayAngle: -Math.PI/2 },
-      yellow: { startTile: 13, homeStretchTile: 11, runwayAngle: 0 },
-      purple: { startTile: 26, homeStretchTile: 24, runwayAngle: Math.PI/2 },
-      pink:   { startTile: 39, homeStretchTile: 37, runwayAngle: Math.PI }
+      blue:   { startTile: 0,  runwayAngle: -Math.PI/2 },
+      yellow: { startTile: 13, runwayAngle: 0 },
+      purple: { startTile: 26, runwayAngle: Math.PI/2 },
+      pink:   { startTile: 39, runwayAngle: Math.PI }
     };
 
-    // 主环形跑道 52 格几何坐标缓存
     const trackCoords = [];
     const runwayCoords = { blue: [], yellow: [], purple: [], pink: [] };
 
     function launchFlightChessGame() {
       playSound('open');
-      document.getElementById('view-menu').classList.add('hidden');
-      document.getElementById('view-game-aero').classList.remove('hidden');
+      const vMenu = document.getElementById('view-menu');
+      const vGame = document.getElementById('view-game-aero');
+      if (vMenu) vMenu.classList.add('hidden');
+      if (vGame) vGame.classList.remove('hidden');
       buildBoardLayout();
       resetGameData();
       renderAllMeeples();
@@ -1097,8 +1388,10 @@
 
     function returnToMainMenu() {
       playSound('click');
-      document.getElementById('view-game-aero').classList.add('hidden');
-      document.getElementById('view-menu').classList.remove('hidden');
+      const vMenu = document.getElementById('view-menu');
+      const vGame = document.getElementById('view-game-aero');
+      if (vGame) vGame.classList.add('hidden');
+      if (vMenu) vMenu.classList.remove('hidden');
     }
 
     function resetGameData() {
@@ -1119,7 +1412,6 @@
       updateTurnIndicator();
     }
 
-    // 构建棋盘 52 个主航道格与 4 组内冲刺直线航道
     function buildBoardLayout() {
       const container = document.getElementById('board-tracks-container');
       const runwayContainer = document.getElementById('runways-container');
@@ -1127,17 +1419,17 @@
       runwayContainer.innerHTML = '';
       trackCoords.length = 0;
 
-      const cx = 280; // 棋盘中心
+      const cx = 280;
       const cy = 280;
-      const rOuter = 224; // 外环半径
+      const rOuter = 222;
       const tileColors = ['blue', 'yellow', 'purple', 'pink'];
 
-      // 1. 生成 52 格主外环航道
+      // 1. 生成 52 格外围大环线
       for (let i = 0; i < 52; i++) {
         const angle = (i / 52) * Math.PI * 2 - Math.PI / 2;
-        const x = cx + Math.cos(angle) * rOuter - 20;
-        const y = cy + Math.sin(angle) * rOuter - 20;
-        trackCoords[i] = { x: x + 20, y: y + 20 };
+        const x = cx + Math.cos(angle) * rOuter - 19;
+        const y = cy + Math.sin(angle) * rOuter - 19;
+        trackCoords[i] = { x: x + 19, y: y + 19 };
 
         const color = tileColors[i % 4];
         const div = document.createElement('div');
@@ -1146,29 +1438,28 @@
         div.style.left = `${x}px`;
         div.style.top = `${y}px`;
 
-        // 特殊天象或起飞点标记
-        let innerHtml = `<span class="text-[10px] font-black">${i + 1}</span>`;
-        if (i === 0) innerHtml = `<span class="text-xs">🦉</span>`;
-        else if (i === 13) innerHtml = `<span class="text-xs">🐤</span>`;
-        else if (i === 26) innerHtml = `<span class="text-xs">🦅</span>`;
-        else if (i === 39) innerHtml = `<span class="text-xs">🦜</span>`;
+        let innerHtml = `<span>${i + 1}</span>`;
+        if (i === 0) innerHtml = `<span>🦉</span>`;
+        else if (i === 13) innerHtml = `<span>🐤</span>`;
+        else if (i === 26) innerHtml = `<span>🦅</span>`;
+        else if (i === 39) innerHtml = `<span>🦜</span>`;
 
         div.innerHTML = innerHtml;
         container.appendChild(div);
       }
 
-      // 2. 生成 4 组凯旋冲刺直线航道 (每色 6 格走向中央神坛)
+      // 2. 生成 4 组冲刺跑道 (每组 6 格直接射向中央神坛)
       players.forEach(p => {
         runwayCoords[p] = [];
         const baseAngle = playerTrackConfig[p].runwayAngle;
-        const startR = 175;
+        const startR = 172;
         const endR = 95;
 
         for (let step = 0; step < 6; step++) {
           const r = startR - (step / 5) * (startR - endR);
-          const rx = cx + Math.cos(baseAngle) * r - 16;
-          const ry = cy + Math.sin(baseAngle) * r - 16;
-          runwayCoords[p].push({ x: rx + 16, y: ry + 16 });
+          const rx = cx + Math.cos(baseAngle) * r - 15;
+          const ry = cy + Math.sin(baseAngle) * r - 15;
+          runwayCoords[p].push({ x: rx + 15, y: ry + 15 });
 
           const rTile = document.createElement('div');
           rTile.id = `runway-${p}-${step}`;
@@ -1181,9 +1472,8 @@
       });
     }
 
-    // 渲染所有棋子 (包含家巢、主航道、冲刺航道)
     function renderAllMeeples() {
-      // 1. 刷新家巢插槽
+      // 1. 鸟巢待命插槽
       players.forEach(color => {
         for (let i = 0; i < 4; i++) {
           const slot = document.getElementById(`nest-slot-${color}-${i}`);
@@ -1193,9 +1483,9 @@
           if (bird.state === 'home') {
             const img = document.createElement('img');
             img.src = playerPieceAssets[color];
-            img.className = 'w-9 h-11 object-contain active-meeple';
-            img.style.top = '-8px';
-            img.style.left = '1px';
+            img.className = 'bird-piece-sprite';
+            img.style.top = '-6px';
+            img.style.left = '2px';
             if (color === 'blue' && activePlayerIdx === 0 && canTakeoff(lastDiceValue)) {
               img.classList.add('active-turn-meeple');
             }
@@ -1205,7 +1495,7 @@
         }
       });
 
-      // 2. 刷新航道棋子
+      // 2. 航线与冲刺中的战棋
       const overlay = document.getElementById('meeple-overlay-layer');
       overlay.innerHTML = '';
 
@@ -1216,9 +1506,10 @@
             if (coord) {
               const img = document.createElement('img');
               img.src = playerPieceAssets[color];
-              img.className = 'active-meeple pointer-events-auto';
-              img.style.left = `${coord.x - 22}px`;
-              img.style.top = `${coord.y - 34}px`;
+              img.className = 'bird-piece-sprite';
+              img.style.pointerEvents = 'auto';
+              img.style.left = `${coord.x - 21}px`;
+              img.style.top = `${coord.y - 32}px`;
               if (color === players[activePlayerIdx]) {
                 img.classList.add('active-turn-meeple');
               }
@@ -1230,9 +1521,10 @@
             if (coord) {
               const img = document.createElement('img');
               img.src = playerPieceAssets[color];
-              img.className = 'active-meeple pointer-events-auto';
-              img.style.left = `${coord.x - 22}px`;
-              img.style.top = `${coord.y - 34}px`;
+              img.className = 'bird-piece-sprite';
+              img.style.pointerEvents = 'auto';
+              img.style.left = `${coord.x - 21}px`;
+              img.style.top = `${coord.y - 32}px`;
               if (color === players[activePlayerIdx]) {
                 img.classList.add('active-turn-meeple');
               }
@@ -1250,7 +1542,6 @@
       return dice === 6;
     }
 
-    // 掷骰天命触发
     function playerRollDice() {
       if (isDiceRolling) return;
       isDiceRolling = true;
@@ -1272,7 +1563,6 @@
       }, 650);
     }
 
-    // 回合核心结算 (包含白昼顺风/逆风，黑夜夜袭/迷航专属机制)
     function processTurnStep(dice) {
       const curColor = players[activePlayerIdx];
       const pName = playerNames[curColor];
@@ -1291,7 +1581,7 @@
           extraSteps = 2;
           log += ` 🌟白昼神恩！触发【顺风突击】(8%几率)，额外赠送 2 步（共前行 ${dice + 2} 步）！`;
         } else if (rand >= 8 && rand < 10 && chkPenalty && chkPenalty.checked) {
-          log += ` 💨触发白昼【逆风滞留】(2%几率)，强对流空气紊乱，本回合原地休整！`;
+          log += ` 💨触发白昼【逆风滞留】(2%几率)，遇对流风紊乱，原地休整！`;
           document.getElementById('game-event-log').innerText = log;
           endTurn();
           return;
@@ -1301,10 +1591,10 @@
         const chkReward = document.getElementById('chk-night-reward');
         const chkPenalty = document.getElementById('chk-night-penalty');
         if (rand < 8 && chkReward && chkReward.checked) {
-          log += ` 🌙黑夜狂啸！触发【夜袭出动】(8%几率)，感应暗夜月辉，免费额外出击 1 架战机！`;
+          log += ` 🌙黑夜狂啸！触发【夜袭出动】(8%几率)，感应暗夜月辉，免费额外起飞 1 架！`;
           forceLaunchFreeBird(curColor);
         } else if (rand >= 8 && rand < 10 && chkPenalty && chkPenalty.checked) {
-          log += ` ⚠️黑夜浓雾！触发【迷航失联】(2%几率)，航标被黑夜遮蔽，在途 1 架战机被迫飞回基地！`;
+          log += ` ⚠️黑夜浓雾！触发【迷航失联】(2%几率)，航标被夜雾遮蔽，在途 1 架战鸟被迫返巢！`;
           forceReturnLostBird(curColor);
           document.getElementById('game-event-log').innerText = log;
           endTurn();
@@ -1317,9 +1607,8 @@
       const homeBirds = birds.filter(b => b.state === 'home');
 
       if (curColor === 'blue') {
-        // 玩家 (1P) 行动
         if (canTakeoff(dice) && homeBirds.length > 0) {
-          log += ` 🛫 满足起飞条件！可点击鸟巢起飞新战鸟，或点击航道上已有战机前行！`;
+          log += ` 🛫 满足起飞条件！可点击鸟巢起飞新战鸟，或点击航道上已有战鸟前行！`;
           document.getElementById('game-event-log').innerText = log;
           renderAllMeeples();
           return;
@@ -1331,7 +1620,7 @@
           setTimeout(endTurn, 1000);
         }
       } else {
-        // AI (2P, 3P, 4P) 自动决策
+        // AI 自动决策
         if (canTakeoff(dice) && homeBirds.length > 0 && Math.random() > 0.4) {
           const hIdx = birds.findIndex(b => b.state === 'home');
           birds[hIdx].state = 'active';
@@ -1353,7 +1642,6 @@
       }
     }
 
-    // 棋子前行与撞子/跳格规则
     function moveBirdForward(color, idx, steps) {
       const bird = gameState[color][idx];
       bird.steps += steps;
@@ -1361,7 +1649,7 @@
       if (bird.state === 'active') {
         bird.pos = (bird.pos + steps) % 52;
 
-        // 经典同色跳跃机制：若落点为同色格子，额外乘风滑翔 4 格
+        // 同色格子顺风跳跃机制
         const landingColor = ['blue', 'yellow', 'purple', 'pink'][bird.pos % 4];
         if (landingColor === color) {
           bird.pos = (bird.pos + 4) % 52;
@@ -1369,7 +1657,7 @@
           playSound('open');
         }
 
-        // 凯旋冲刺跑道判定 (走满一圈 50 步后转入专属直线冲刺)
+        // 冲刺跑道判定
         if (bird.steps >= 50) {
           bird.state = 'runway';
           bird.pos = Math.min(5, bird.steps - 50);
@@ -1395,7 +1683,7 @@
       }
     }
 
-    // 击落/撞子规则 (Bump mechanic)
+    // 击落/撞子规则
     function checkTileCollision(activeColor, tilePos) {
       players.forEach(otherColor => {
         if (otherColor === activeColor) return;
@@ -1451,7 +1739,6 @@
       }
     }
 
-    // 回合移交与昼夜大轮替
     function endTurn() {
       activePlayerIdx = (activePlayerIdx + 1) % 4;
       if (activePlayerIdx === 0) {
@@ -1483,7 +1770,6 @@
       renderAllMeeples();
       updateGameUI();
 
-      // 若为 AI 玩家回合，自动掷骰
       if (players[activePlayerIdx] !== 'blue') {
         setTimeout(playerRollDice, 1000);
       }
@@ -1615,7 +1901,7 @@
     }
     requestAnimationFrame(animateParticles);
 
-    // 点击背景生成微型飞溅
+    // 背景点击飞溅
     window.addEventListener('click', (e) => {
       if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && !e.target.closest('button')) {
         for (let i = 0; i < 3; i++) {
@@ -1626,7 +1912,7 @@
       }
     });
 
-    // 空格键掷骰快捷键
+    // 空格键快捷掷骰
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && !document.getElementById('view-game-aero').classList.contains('hidden')) {
         e.preventDefault();
@@ -1635,6 +1921,11 @@
         }
       }
     });
+
+    // 调试或快捷直达实机棋盘
+    if (location.hash === '#board' || location.search.includes('board')) {
+      setTimeout(launchFlightChessGame, 50);
+    }
   </script>
 </body>
 </html>
