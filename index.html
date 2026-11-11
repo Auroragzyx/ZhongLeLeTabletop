@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>众乐乐桌游 - PARTY TABLETOP</title>
-  <!-- 100% 纯原生自包含 CSS，零外部 CDN 依赖，保证在离线本地与 Steam 客户端中 100% 完美呈现 -->
+  <!-- 本地离线 Three.js r128 3D渲染引擎（零外部网络依赖，file://协议直接支持） -->
+  <script src="assets/three.min.js"></script>
   <style>
     /* ========== 全局基础重置与盒模型 ========== */
     *, *::before, *::after {
@@ -24,7 +25,7 @@
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* 严控所有 SVG 尺寸，坚决杜绝未加载样式时图标无限膨胀问题 */
+    /* 严控所有 SVG 尺寸 */
     svg {
       width: 20px;
       height: 20px;
@@ -42,32 +43,31 @@
     }
     @keyframes diceRoll {
       0% { transform: rotate(0deg) scale(0.85); }
-      25% { transform: rotate(180deg) scale(1.15); }
-      50% { transform: rotate(360deg) scale(0.9); }
-      75% { transform: rotate(540deg) scale(1.1); }
+      25% { transform: rotate(180deg) scale(1.18); }
+      50% { transform: rotate(360deg) scale(0.92); }
+      75% { transform: rotate(540deg) scale(1.12); }
       100% { transform: rotate(720deg) scale(1); }
     }
-    @keyframes hop {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-12px) scale(1.12); }
-    }
     @keyframes pulseSoft {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
+      0%, 100% { opacity: 0.65; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+    @keyframes fireflyFloat {
+      0%, 100% { transform: translate(0px, 0px) scale(0.9); opacity: 0.35; }
+      50% { transform: translate(12px, -18px) scale(1.2); opacity: 0.95; }
     }
 
     .animate-float { animation: floatSlow 3.8s ease-in-out infinite; }
     .animate-dice-roll { animation: diceRoll 0.65s cubic-bezier(0.2, 0.8, 0.3, 1); }
-    .animate-hop { animation: hop 0.35s ease-in-out; }
     .animate-pulse { animation: pulseSoft 2s infinite ease-in-out; }
 
-    /* ========== 经典暖阳黄白皮肤 (默认) ========== */
+    /* ========== 主菜单：暖阳黄白皮肤 ========== */
     .ambient-board-grid {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      background-image: 
+      background-image:
         radial-gradient(#d9770618 1.5px, transparent 1.5px),
         linear-gradient(to right, #e2d9c820 1px, transparent 1px),
         linear-gradient(to bottom, #e2d9c820 1px, transparent 1px);
@@ -75,12 +75,12 @@
     }
 
     .glass-panel {
-      background: rgba(255, 255, 255, 0.94);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1.5px solid rgba(234, 179, 8, 0.35);
       border-radius: 18px;
-      box-shadow: 0 16px 36px -8px rgba(180, 83, 9, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      box-shadow: 0 16px 36px -8px rgba(180, 83, 9, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
     }
 
     .menu-card-btn {
@@ -104,15 +104,11 @@
       transform: translateY(-2px);
       box-shadow: 0 10px 24px -4px rgba(217, 119, 6, 0.25);
     }
-    .menu-card-btn:active {
-      transform: translateY(0px);
-    }
 
     .menu-icon-box {
       width: 44px;
       height: 44px;
       min-width: 44px;
-      max-width: 44px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -122,10 +118,7 @@
       color: #D97706;
       flex-shrink: 0;
     }
-    .menu-icon-box svg {
-      width: 22px;
-      height: 22px;
-    }
+    .menu-icon-box svg { width: 22px; height: 22px; }
     .menu-arrow-icon {
       width: 18px;
       height: 18px;
@@ -133,11 +126,8 @@
       flex-shrink: 0;
       transition: transform 0.2s ease;
     }
-    .menu-card-btn:hover .menu-arrow-icon {
-      transform: translateX(3px);
-    }
+    .menu-card-btn:hover .menu-arrow-icon { transform: translateX(3px); }
 
-    /* 通用玻璃按钮 */
     .glass-btn {
       background: #FFFFFF;
       border: 1px solid rgba(245, 158, 11, 0.35);
@@ -161,7 +151,6 @@
       transform: translateY(-1px);
     }
 
-    /* 黄金主操作按钮 */
     .primary-gold-btn {
       background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
       border: 1px solid #D97706;
@@ -184,9 +173,10 @@
       box-shadow: 0 8px 20px rgba(234, 88, 12, 0.4);
       transform: translateY(-1px);
     }
-    .primary-gold-btn svg {
-      width: 16px;
-      height: 16px;
+    .primary-gold-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
     }
 
     /* ========== 夜间护眼深空模式 ========== */
@@ -207,21 +197,15 @@
       background: linear-gradient(135deg, rgba(51, 65, 85, 0.85) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
       border-color: rgba(148, 163, 184, 0.35) !important;
       color: #FFFFFF !important;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
     }
     body.theme-night-dark .menu-card-btn:hover {
       background: linear-gradient(135deg, rgba(71, 85, 105, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%) !important;
       border-color: #F59E0B !important;
-      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25) !important;
     }
     body.theme-night-dark .glass-btn {
-      background: rgba(51, 65, 85, 0.8) !important;
+      background: rgba(51, 65, 85, 0.85) !important;
       border-color: rgba(148, 163, 184, 0.4) !important;
       color: #F1F5F9 !important;
-    }
-    body.theme-night-dark .glass-btn:hover {
-      background: rgba(71, 85, 105, 0.95) !important;
-      border-color: #F59E0B !important;
     }
     body.theme-night-dark .night-title {
       background: linear-gradient(to right, #FDE68A, #F59E0B, #FBBF24) !important;
@@ -235,12 +219,13 @@
     }
     body.theme-night-dark .night-text-main { color: #FFFFFF !important; }
 
-    /* 方方正正切角 UI 模式 */
+    /* 方方正正 UI 模式 */
     body.ui-square *,
     body.ui-square .glass-panel,
     body.ui-square .menu-card-btn,
     body.ui-square .glass-btn,
     body.ui-square .primary-gold-btn,
+    body.ui-square .scenic-hud-card,
     body.ui-square button,
     body.ui-square input,
     body.ui-square select,
@@ -248,7 +233,6 @@
       border-radius: 0px !important;
     }
 
-    /* 烟花粒子画布 */
     #fireworks-canvas {
       position: fixed;
       inset: 0;
@@ -258,92 +242,118 @@
       z-index: 1;
     }
 
-    /* ========== 飞行棋主盘与棋格专属样式 ========== */
-    .flight-board-box {
-      position: relative;
-      width: 560px;
-      height: 560px;
-      border-radius: 24px;
-      background: #FFFFFF;
-      border: 2px solid #F59E0B;
-      box-shadow: 0 20px 48px -10px rgba(180, 83, 9, 0.2);
+    /* ========== 日夜飞行棋：图5 梦幻星月湖畔界面的舞台与半透明悬浮 HUD ========== */
+    #view-game-aero {
+      position: fixed;
+      inset: 0;
+      z-index: 15;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #162447;
+    }
+
+    /* 背景图5图层（支持白昼/黑夜光滑滤镜过渡） */
+    #aero-scenic-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('assets/bg_aero_lake.jpg');
+      background-size: cover;
+      background-position: center bottom;
+      z-index: 0;
+      transition: filter 1.2s ease, transform 1.2s ease;
+    }
+    #aero-scenic-bg.day-atmosphere {
+      filter: brightness(1.18) saturate(1.12) hue-rotate(-8deg);
+    }
+    #aero-scenic-bg.night-atmosphere {
+      filter: brightness(0.96) contrast(1.06) saturate(1.05);
+    }
+
+    /* 湖畔柔和暗角遮罩，让中心3D棋盘和两侧HUD对比更立体 */
+    #aero-scenic-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.08) 25%, rgba(15, 23, 42, 0.52) 100%);
+    }
+
+    /* 飘浮萤火虫/光斑装饰层 */
+    #aero-ambient-fireflies {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
       overflow: hidden;
     }
-
-    .board-tile {
-      width: 38px;
-      height: 38px;
+    .firefly-dot {
+      position: absolute;
       border-radius: 50%;
-      position: absolute;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 900;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.15), inset 0 2px 2px rgba(255,255,255,0.7);
-      transition: transform 0.2s ease;
-      cursor: default;
-    }
-    .board-tile:hover {
-      transform: scale(1.15);
-      z-index: 35;
+      background: radial-gradient(circle, #FEF08A 0%, rgba(250, 204, 21, 0.4) 55%, transparent 100%);
+      box-shadow: 0 0 10px #FDE047;
+      animation: fireflyFloat 4.5s ease-in-out infinite;
     }
 
-    /* 灵禽 4 色棋格 */
-    .tile-blue {
-      background: radial-gradient(circle at 35% 35%, #93C5FD 0%, #3B82F6 70%, #1D4ED8 100%);
-      border: 2px solid #BFDBFE;
-      color: #FFFFFF;
+    /* 全屏 3D WebGL 舞台画布 */
+    #aero-3d-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      cursor: grab;
     }
-    .tile-yellow {
-      background: radial-gradient(circle at 35% 35%, #FEF08A 0%, #F59E0B 70%, #B45309 100%);
-      border: 2px solid #FEF9C3;
-      color: #451A03;
-    }
-    .tile-purple {
-      background: radial-gradient(circle at 35% 35%, #D8B4FE 0%, #9333EA 70%, #6B21A8 100%);
-      border: 2px solid #F3E8FF;
-      color: #FFFFFF;
-    }
-    .tile-pink {
-      background: radial-gradient(circle at 35% 35%, #FBCFE8 0%, #EC4899 70%, #9D174D 100%);
-      border: 2px solid #FCE7F3;
-      color: #FFFFFF;
+    #aero-3d-stage:active {
+      cursor: grabbing;
     }
 
-    /* 直线冲刺跑道格 */
-    .runway-tile {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      position: absolute;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 900;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    /* 图5 界面专用的梦幻半透明玻璃卡片 (透出后方星月湖畔美景) */
+    .scenic-hud-card {
+      background: rgba(15, 23, 42, 0.62);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(191, 219, 254, 0.35);
+      border-radius: 16px;
+      color: #F8FAFC;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      transition: all 0.25s ease;
+    }
+    .scenic-hud-card.active-turn-card {
+      border-color: #FBBF24;
+      box-shadow: 0 0 22px rgba(251, 191, 36, 0.45), 0 10px 30px rgba(0, 0, 0, 0.45);
+      transform: scale(1.03);
     }
 
-    /* 棋子精美立绘渲染 */
-    .bird-piece-sprite {
-      position: absolute;
-      width: 42px;
-      height: 50px;
-      top: -16px;
-      left: -2px;
-      z-index: 40;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    .scenic-hud-btn {
+      background: rgba(30, 41, 59, 0.72);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(191, 219, 254, 0.4);
+      border-radius: 12px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #F8FAFC;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
     }
-    .bird-piece-sprite:hover {
-      transform: scale(1.25) translateY(-5px);
-      z-index: 50;
+    .scenic-hud-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: #FDE047;
+      color: #FEF08A;
+      transform: translateY(-1px);
     }
-    .active-turn-meeple {
-      animation: hop 0.5s infinite alternate;
-      filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.95));
+
+    .portrait-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      object-fit: contain;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      flex-shrink: 0;
     }
 
     /* 通用隐藏工具类 */
@@ -364,15 +374,13 @@
       padding: 16px;
       z-index: 100;
     }
-    .modal-backdrop.hidden {
-      display: none !important;
-    }
+    .modal-backdrop.hidden { display: none !important; }
     .modal-card {
       background: #FFFFFF;
       border: 2px solid #F59E0B;
       border-radius: 20px;
       padding: 24px 28px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
       display: flex;
       flex-direction: column;
       max-height: 90vh;
@@ -400,7 +408,7 @@
           <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; margin-right: 8px; display: inline-block;"></span>
           Steam 客户端架构就绪
         </span>
-        <span class="night-subtext" style="font-size: 12px; color: #78716C; font-family: monospace;">v0.5.3 • PC Native Standalone</span>
+        <span class="night-subtext" style="font-size: 12px; color: #78716C; font-family: monospace;">v0.6.0 • 3D Tabletop Edition</span>
       </div>
 
       <div style="display: flex; align-items: center; gap: 14px;">
@@ -419,8 +427,6 @@
 
     <!-- 主标题与四大功能入口 -->
     <main style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 16px; margin: 10px 0;">
-      
-      <!-- 游戏 LOGO 标牌 -->
       <div class="animate-float" style="text-align: center; margin-bottom: 28px;">
         <div style="display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
           <div style="width: 76px; height: 76px; border-radius: 20px; background: linear-gradient(135deg, #FBBF24, #F97316); padding: 2px; box-shadow: 0 12px 28px rgba(245, 158, 11, 0.35);">
@@ -445,10 +451,7 @@
         </p>
       </div>
 
-      <!-- 四个功能入口卡片 -->
       <div style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px;">
-        
-        <!-- 1. 开始游戏 (向导弹窗) -->
         <button onclick="startWizard()" class="menu-card-btn">
           <div style="display: flex; align-items: center; gap: 16px;">
             <div class="menu-icon-box" style="background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.4); color: #D97706;">
@@ -466,7 +469,6 @@
           </svg>
         </button>
 
-        <!-- 2. 多人联机大厅 -->
         <button onclick="openModal('modal-online-lobby')" class="menu-card-btn">
           <div style="display: flex; align-items: center; gap: 16px;">
             <div class="menu-icon-box" style="background: rgba(234, 88, 12, 0.15); border-color: rgba(234, 88, 12, 0.35); color: #EA580C;">
@@ -486,7 +488,6 @@
           </svg>
         </button>
 
-        <!-- 3. 局域网联机 -->
         <button onclick="openModal('modal-lan-lobby')" class="menu-card-btn">
           <div style="display: flex; align-items: center; gap: 16px;">
             <div class="menu-icon-box" style="background: rgba(217, 119, 6, 0.15); border-color: rgba(217, 119, 6, 0.35); color: #B45309;">
@@ -506,7 +507,6 @@
           </svg>
         </button>
 
-        <!-- 4. 游戏设置 -->
         <button onclick="openModal('modal-settings')" class="menu-card-btn" style="padding: 12px 18px;">
           <div style="display: flex; align-items: center; gap: 16px;">
             <div class="menu-icon-box" style="width: 38px; height: 38px; min-width: 38px; background: rgba(120, 113, 108, 0.15); border-color: rgba(120, 113, 108, 0.3); color: #78716C;">
@@ -539,227 +539,156 @@
     </footer>
   </div>
 
-  <!-- ======================== 视图 2：日夜飞行棋完整对战棋盘 ======================== -->
-  <div id="view-game-aero" class="hidden" style="position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 24px;">
-    
-    <!-- 棋盘对战顶栏 -->
-    <header class="glass-panel" style="padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-      <div style="display: flex; align-items: center; gap: 14px;">
-        <button onclick="returnToMainMenu()" class="glass-btn" style="padding: 6px 14px; font-size: 12px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          <span>退出至主菜单</span>
-        </button>
-        <span style="font-size: 13px; font-weight: 900; color: #B45309; background: #FEF3C7; padding: 4px 12px; border-radius: 999px; border: 1px solid #FCD34D;">
-          《日夜飞行棋》天象对局
-        </span>
-      </div>
+  <!-- ======================== 视图 2：日夜飞行棋 3D 实景对局界面 (图5 梦幻星月湖畔 + 3D十字棋盘 + 3D灵禽棋子) ======================== -->
+  <div id="view-game-aero" class="hidden">
+    <!-- 图5 实景森林星月湖畔大背景 -->
+    <div id="aero-scenic-bg" class="day-atmosphere"></div>
+    <div id="aero-scenic-vignette"></div>
+    <div id="aero-ambient-fireflies"></div>
 
-      <!-- 昼夜天象实时指示牌 -->
-      <div class="night-card-bg" style="display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.9); padding: 6px 18px; border-radius: 999px; border: 1.5px solid #FCD34D; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
-        <span id="game-daynight-icon" class="animate-pulse" style="font-size: 24px;">☀️</span>
-        <div>
-          <div id="game-daynight-status" class="night-text-main" style="font-size: 13px; font-weight: 900; color: #92400E;">白昼晴空 (顺风气流)</div>
-          <div id="game-round-counter" class="night-subtext" style="font-size: 11px; color: #78716C;">昼夜轮换: 第 1 / 4 大回合</div>
+    <!-- 全屏 3D Three.js WebGL 棋盘舞台 -->
+    <div id="aero-3d-stage"></div>
+
+    <!-- 顶栏悬浮玻璃导航 -->
+    <header style="position: relative; z-index: 20; padding: 14px 22px 0 22px; pointer-events: none;">
+      <div class="scenic-hud-card" style="padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; pointer-events: auto;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button onclick="returnToMainMenu()" class="scenic-hud-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>返回大厅</span>
+          </button>
+          <span style="font-size: 13px; font-weight: 900; color: #FDE68A; background: rgba(245, 158, 11, 0.25); padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(251, 191, 36, 0.45);">
+            《日夜飞行棋》3D 星湖秘境赛场
+          </span>
         </div>
-      </div>
 
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span class="night-subtext" style="font-size: 12px; font-weight: 700; color: #78716C;">当前行动:</span>
-        <span id="lbl-active-player" style="padding: 6px 16px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #3B82F6; color: #FFFFFF; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);">
-          玩家 1P (蓝羽夜鸮)
-        </span>
+        <!-- 昼夜天象轮转指示器 -->
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.65); padding: 5px 16px; border-radius: 999px; border: 1px solid rgba(253, 224, 71, 0.45);">
+          <span id="game-daynight-icon" class="animate-pulse" style="font-size: 20px;">☀️</span>
+          <div>
+            <div id="game-daynight-status" style="font-size: 12px; font-weight: 900; color: #FEF08A;">白昼晴空 (顺风气流)</div>
+            <div id="game-round-counter" style="font-size: 10px; color: #CBD5E1;">昼夜轮换: 第 1 / 4 大回合</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="toggleCameraMode()" id="btn-cam-mode" class="scenic-hud-btn" title="切换 3D 视角与垂直俯视视角">
+            📐 视角: 3D立体 (可拖拽旋转)
+          </button>
+          <span id="lbl-active-player" style="padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #3B82F6; color: #FFFFFF; box-shadow: 0 2px 12px rgba(59, 130, 246, 0.5);">
+            1P 蓝羽夜鸮 (你)
+          </span>
+        </div>
       </div>
     </header>
 
-    <!-- 赛场主体：左看板 + 棋盘核心 + 右看板与骰子台 -->
-    <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 24px; margin: 4px 0;">
+    <!-- 两侧浮空透明玩家席位 HUD（绝不遮挡中间 3D 棋盘与四周图5湖景） -->
+    <div style="position: relative; z-index: 20; flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 12px 22px; pointer-events: none;">
       
-      <!-- 左侧灵禽看板 (1P 蓝鸮 & 4P 粉鹦) -->
-      <div style="width: 220px; display: flex; flex-direction: column; gap: 14px;">
+      <!-- 左侧：2P 晨曦灵雀(左上蓝黄位置对应) & 1P 蓝羽夜鸮(左下) -->
+      <div style="width: 215px; display: flex; flex-direction: column; gap: 16px; pointer-events: auto;">
         
-        <div id="card-player-blue" class="glass-panel" style="padding: 14px; border: 2px solid #60A5FA; background: rgba(239, 246, 255, 0.7);">
+        <!-- 2P 晨曦灵雀 (左上黄底座) -->
+        <div id="card-player-yellow" class="scenic-hud-card" style="padding: 12px; border-left: 4px solid #F59E0B;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <img src="assets/piece_blue_owl.png" style="width: 36px; height: 44px; object-fit: contain;" alt="蓝鸮">
+            <img id="hud-portrait-yellow" class="portrait-thumb" alt="2P 晨曦灵雀">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #1E3A8A;">1P 蓝羽夜鸮 (你)</div>
-              <div style="font-size: 11px; font-weight: 700; color: #2563EB;">凯旋加冕: <span id="cnt-blue-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #FDE68A;">2P 晨曦灵雀 (AI)</div>
+              <div style="font-size: 11px; color: #FCD34D; font-weight: 700;">凯旋加冕: <span id="cnt-yellow-done">0</span>/4</div>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
-            <span>鸟巢待命: <strong id="cnt-blue-home">4</strong></span>
-            <span>航道竞逐: <strong id="cnt-blue-active">0</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #CBD5E1; background: rgba(15, 23, 42, 0.55); padding: 4px 10px; border-radius: 8px;">
+            <span>停机坪: <strong id="cnt-yellow-home" style="color:#FFF;">4</strong></span>
+            <span>航道: <strong id="cnt-yellow-active" style="color:#FFF;">0</strong></span>
           </div>
         </div>
 
-        <div id="card-player-pink" class="glass-panel" style="padding: 14px; border: 1.5px solid #F472B6; background: rgba(253, 242, 248, 0.6);">
+        <!-- 1P 蓝羽夜鸮 (左下蓝底座) -->
+        <div id="card-player-blue" class="scenic-hud-card active-turn-card" style="padding: 12px; border-left: 4px solid #3B82F6;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <img src="assets/piece_pink_cockatoo.png" style="width: 36px; height: 44px; object-fit: contain;" alt="粉鹦">
+            <img id="hud-portrait-blue" class="portrait-thumb" alt="1P 蓝羽夜鸮">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #831843;">4P 霞光粉鹦 (AI)</div>
-              <div style="font-size: 11px; font-weight: 700; color: #DB2777;">凯旋加冕: <span id="cnt-pink-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #93C5FD;">1P 蓝羽夜鸮 (你)</div>
+              <div style="font-size: 11px; color: #60A5FA; font-weight: 700;">凯旋加冕: <span id="cnt-blue-done">0</span>/4</div>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
-            <span>鸟巢待命: <strong id="cnt-pink-home">4</strong></span>
-            <span>航道竞逐: <strong id="cnt-pink-active">0</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #CBD5E1; background: rgba(15, 23, 42, 0.55); padding: 4px 10px; border-radius: 8px;">
+            <span>停机坪: <strong id="cnt-blue-home" style="color:#FFF;">4</strong></span>
+            <span>航道: <strong id="cnt-blue-active" style="color:#FFF;">0</strong></span>
           </div>
         </div>
       </div>
 
-      <!-- 棋盘核心主赛场 -->
-      <div class="glass-panel" style="padding: 18px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.98);">
-        <div id="flight-board-arena" class="flight-board-box">
-          
-          <!-- 1P 蓝羽之巢 (左上) -->
-          <div style="position: absolute; top: 8px; left: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(219, 234, 254, 0.95); border: 2px solid #3B82F6; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #1E40AF;">
-              <span>蓝羽之巢</span>
-              <span style="background: #93C5FD; color: #1E3A8A; padding: 2px 6px; border-radius: 4px; font-size: 10px;">1P</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
-              <div id="nest-slot-blue-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
-              <div id="nest-slot-blue-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
-              <div id="nest-slot-blue-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
-              <div id="nest-slot-blue-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(147, 197, 253, 0.5); border: 1.5px dashed #3B82F6; position: relative;"></div>
-            </div>
-          </div>
-
-          <!-- 2P 晨雀之巢 (右上) -->
-          <div style="position: absolute; top: 8px; right: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(254, 243, 199, 0.95); border: 2px solid #F59E0B; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #92400E;">
-              <span>晨雀之巢</span>
-              <span style="background: #FDE68A; color: #78350F; padding: 2px 6px; border-radius: 4px; font-size: 10px;">2P</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
-              <div id="nest-slot-yellow-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
-              <div id="nest-slot-yellow-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
-              <div id="nest-slot-yellow-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
-              <div id="nest-slot-yellow-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(253, 230, 138, 0.5); border: 1.5px dashed #F59E0B; position: relative;"></div>
-            </div>
-          </div>
-
-          <!-- 3P 紫鸦之巢 (右下) -->
-          <div style="position: absolute; bottom: 8px; right: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(243, 232, 255, 0.95); border: 2px solid #9333EA; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #6B21A8;">
-              <span>紫鸦之巢</span>
-              <span style="background: #E9D5FF; color: #581C87; padding: 2px 6px; border-radius: 4px; font-size: 10px;">3P</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
-              <div id="nest-slot-purple-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
-              <div id="nest-slot-purple-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
-              <div id="nest-slot-purple-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
-              <div id="nest-slot-purple-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(233, 213, 255, 0.5); border: 1.5px dashed #9333EA; position: relative;"></div>
-            </div>
-          </div>
-
-          <!-- 4P 粉鹦之巢 (左下) -->
-          <div style="position: absolute; bottom: 8px; left: 8px; width: 132px; height: 132px; border-radius: 18px; background: rgba(252, 231, 243, 0.95); border: 2px solid #EC4899; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #9D174D;">
-              <span>粉鹦之巢</span>
-              <span style="background: #FBCFE8; color: #831843; padding: 2px 6px; border-radius: 4px; font-size: 10px;">4P</span>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
-              <div id="nest-slot-pink-0" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
-              <div id="nest-slot-pink-1" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
-              <div id="nest-slot-pink-2" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
-              <div id="nest-slot-pink-3" style="width: 46px; height: 46px; border-radius: 50%; background: rgba(251, 207, 232, 0.5); border: 1.5px dashed #EC4899; position: relative;"></div>
-            </div>
-          </div>
-
-          <!-- 直线冲刺航道容器 -->
-          <div id="runways-container" style="position: absolute; inset: 0; pointer-events: none;"></div>
-
-          <!-- 中央天穹终点神坛 (嵌入4款皇冠终点徽标) -->
-          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 148px; height: 148px; border-radius: 50%; background: linear-gradient(135deg, #FEF08A, #F59E0B); border: 4px solid #D97706; padding: 4px; box-shadow: 0 10px 24px rgba(0,0,0,0.25); z-index: 25;">
-            <div style="width: 100%; height: 100%; border-radius: 50%; background: #FFFFFF; display: grid; grid-template-columns: repeat(2, 1fr); align-items: center; justify-items: center; padding: 8px;">
-              <div style="position: relative;" title="蓝羽夜鸮加冕区">
-                <img src="assets/token_blue_owl_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="蓝鸮王冠">
-                <span id="badge-done-blue" style="position: absolute; bottom: -2px; right: -2px; background: #2563EB; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
-              </div>
-              <div style="position: relative;" title="晨曦黄雀加冕区">
-                <img src="assets/token_yellow_finch_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="晨雀王冠">
-                <span id="badge-done-yellow" style="position: absolute; bottom: -2px; right: -2px; background: #D97706; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
-              </div>
-              <div style="position: relative;" title="霞光粉鹦加冕区">
-                <img src="assets/token_pink_cockatoo_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="粉鹦王冠">
-                <span id="badge-done-pink" style="position: absolute; bottom: -2px; right: -2px; background: #DB2777; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
-              </div>
-              <div style="position: relative;" title="冥夜紫鸦加冕区">
-                <img src="assets/token_purple_raven_goal.png" style="width: 44px; height: 44px; object-fit: contain;" alt="紫鸦王冠">
-                <span id="badge-done-purple" style="position: absolute; bottom: -2px; right: -2px; background: #9333EA; color: #FFF; font-size: 9px; font-weight: 900; border-radius: 999px; padding: 1px 5px;">0/4</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 环形 52 格主航道 -->
-          <div id="board-tracks-container" style="position: absolute; inset: 0; pointer-events: none;"></div>
-
-          <!-- 动态棋子立绘渲染层 -->
-          <div id="meeple-overlay-layer" style="position: absolute; inset: 0; pointer-events: none; z-index: 30;"></div>
-        </div>
-      </div>
-
-      <!-- 右侧灵禽看板 (2P 黄雀 & 3P 紫鸦) & 骰子天命台 -->
-      <div style="width: 220px; display: flex; flex-direction: column; gap: 14px;">
+      <!-- 右侧：3P 冥夜紫鸦 & 4P 霞光粉鹦 & 骰子天命控制台 -->
+      <div style="width: 220px; display: flex; flex-direction: column; gap: 14px; pointer-events: auto;">
         
-        <div id="card-player-yellow" class="glass-panel" style="padding: 14px; border: 1.5px solid #FBBF24; background: rgba(254, 252, 232, 0.6);">
+        <!-- 3P 冥夜紫鸦 (右上紫底座) -->
+        <div id="card-player-purple" class="scenic-hud-card" style="padding: 12px; border-right: 4px solid #A855F7;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <img src="assets/piece_yellow_finch.png" style="width: 36px; height: 44px; object-fit: contain;" alt="晨雀">
+            <img id="hud-portrait-purple" class="portrait-thumb" alt="3P 冥夜紫鸦">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #78350F;">2P 晨曦黄雀 (AI)</div>
-              <div style="font-size: 11px; font-weight: 700; color: #D97706;">凯旋加冕: <span id="cnt-yellow-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #E9D5FF;">3P 冥夜紫鸦 (AI)</div>
+              <div style="font-size: 11px; color: #C084FC; font-weight: 700;">凯旋加冕: <span id="cnt-purple-done">0</span>/4</div>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
-            <span>鸟巢待命: <strong id="cnt-yellow-home">4</strong></span>
-            <span>航道竞逐: <strong id="cnt-yellow-active">0</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #CBD5E1; background: rgba(15, 23, 42, 0.55); padding: 4px 10px; border-radius: 8px;">
+            <span>停机坪: <strong id="cnt-purple-home" style="color:#FFF;">4</strong></span>
+            <span>航道: <strong id="cnt-purple-active" style="color:#FFF;">0</strong></span>
           </div>
         </div>
 
-        <div id="card-player-purple" class="glass-panel" style="padding: 14px; border: 1.5px solid #C084FC; background: rgba(250, 245, 255, 0.6);">
+        <!-- 4P 霞光粉鹦 (右下粉底座) -->
+        <div id="card-player-pink" class="scenic-hud-card" style="padding: 12px; border-right: 4px solid #EC4899;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <img src="assets/piece_purple_raven.png" style="width: 36px; height: 44px; object-fit: contain;" alt="紫鸦">
+            <img id="hud-portrait-pink" class="portrait-thumb" alt="4P 霞光粉鹦">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #581C87;">3P 冥夜紫鸦 (AI)</div>
-              <div style="font-size: 11px; font-weight: 700; color: #9333EA;">凯旋加冕: <span id="cnt-purple-done">0</span>/4</div>
+              <div style="font-size: 13px; font-weight: 900; color: #FBCFE8;">4P 霞光粉鹦 (AI)</div>
+              <div style="font-size: 11px; color: #F472B6; font-weight: 700;">凯旋加冕: <span id="cnt-pink-done">0</span>/4</div>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; background: rgba(255, 255, 255, 0.85); padding: 5px 10px; border-radius: 8px;">
-            <span>鸟巢待命: <strong id="cnt-purple-home">4</strong></span>
-            <span>航道竞逐: <strong id="cnt-purple-active">0</strong></span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #CBD5E1; background: rgba(15, 23, 42, 0.55); padding: 4px 10px; border-radius: 8px;">
+            <span>停机坪: <strong id="cnt-pink-home" style="color:#FFF;">4</strong></span>
+            <span>航道: <strong id="cnt-pink-active" style="color:#FFF;">0</strong></span>
           </div>
         </div>
 
         <!-- 骰子操作台 -->
-        <div class="glass-panel" style="padding: 16px; border: 2px solid #F59E0B; background: rgba(254, 243, 199, 0.9); display: flex; flex-direction: column; align-items: center; gap: 10px;">
-          <div class="night-text-main" style="font-size: 13px; font-weight: 900; color: #451A03;">骰子天命台</div>
-          <div id="dice-cube" onclick="playerRollDice()" style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #FBBF24, #EA580C); box-shadow: 0 8px 18px rgba(234, 88, 12, 0.35); display: flex; align-items: center; justify-content: center; font-size: 38px; color: #FFFFFF; font-weight: 900; cursor: pointer; border: 2px solid #FEF08A; transition: transform 0.15s ease;">
+        <div class="scenic-hud-card" style="padding: 14px; border: 2px solid rgba(251, 191, 36, 0.65); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="font-size: 12px; font-weight: 900; color: #FEF08A;">🎲 天命骰子台</div>
+          <div id="dice-cube" onclick="playerRollDice()" style="width: 62px; height: 62px; border-radius: 16px; background: linear-gradient(135deg, #FBBF24, #EA580C); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45); display: flex; align-items: center; justify-content: center; font-size: 38px; color: #FFFFFF; font-weight: 900; cursor: pointer; border: 2px solid #FEF08A; transition: transform 0.15s ease;">
             🎲
           </div>
-          <div id="dice-result-text" class="night-subtext" style="font-size: 12px; font-weight: 800; color: #92400E;">点击或按 SPACE 投掷！</div>
-          <button id="btn-roll-dice" onclick="playerRollDice()" class="primary-gold-btn" style="width: 100%; padding: 8px 12px; font-size: 12px;">
+          <div id="dice-result-text" style="font-size: 11px; font-weight: 800; color: #E2E8F0; text-align: center;">点击或按 SPACE 投掷！</div>
+          <button id="btn-roll-dice" onclick="playerRollDice()" class="primary-gold-btn" style="width: 100%; padding: 8px 10px; font-size: 12px;">
             掷骰行棋 (SPACE)
           </button>
+          <div id="action-hint-box" class="hidden" style="width: 100%; margin-top: 2px;">
+            <button onclick="autoPickMove()" class="scenic-hud-btn" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.75); border-color: #93C5FD; font-size: 11px;">
+              ✨ 推荐走法 / 点棋子出战
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 底部事件流水 -->
-    <div class="glass-panel" style="padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #57534E;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="width: 8px; height: 8px; border-radius: 50%; background: #F59E0B;" class="animate-pulse"></span>
-        <span id="game-event-log" class="night-text-main" style="font-weight: 800; color: #292524;">【开局就绪】请蓝羽夜鸮 (1P) 掷骰！满足点数即可出鸟巢！</span>
+    <!-- 底部半透明战报条 -->
+    <footer style="position: relative; z-index: 20; padding: 0 22px 14px 22px; pointer-events: none;">
+      <div class="scenic-hud-card" style="padding: 9px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; pointer-events: auto;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #FBBF24;" class="animate-pulse"></span>
+          <span id="game-event-log" style="font-weight: 800; color: #F8FAFC;">【开局就绪】左键拖拽可旋转观察 3D 灵禽棋子！请 1P 蓝羽夜鸮掷骰！</span>
+        </div>
+        <div style="font-size: 11px; font-family: monospace; color: #94A3B8;">3D实时渲染 • 日夜奖惩: 8% / 2%</div>
       </div>
-      <div class="night-subtext" style="font-size: 11px; font-family: monospace; color: #A8A29E;">日夜机制: 顺风/夜袭 8% | 逆风/迷航 2%</div>
-    </div>
+    </footer>
   </div>
 
-  <!-- ======================== 模态弹窗系统 (原生居中独立浮层) ======================== -->
+  <!-- ======================== 模态弹窗系统 ======================== -->
 
-  <!-- 1. 开房与规则自定义向导 -->
+  <!-- 1. 开房向导 -->
   <div id="modal-wizard" class="modal-backdrop hidden">
     <div class="modal-card" style="max-width: 620px;">
       <div style="padding-bottom: 14px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
@@ -778,10 +707,9 @@
       </div>
 
       <div style="flex: 1; overflow-y: auto; padding: 18px 4px;">
-        <!-- 步骤 1: 房间类型 -->
+        <!-- 步骤 1 -->
         <div id="wizard-step-1" style="display: flex; flex-direction: column; gap: 12px;">
           <p class="night-subtext" style="font-size: 12px; font-weight: 700; color: #78716C;">请决定这次对局的接入类型：</p>
-          
           <label style="cursor: pointer;">
             <input type="radio" name="room-type" value="ai" checked style="display: none;">
             <div class="menu-card-btn" style="padding: 14px; background: #FFFBEB; border-color: #F59E0B;">
@@ -789,12 +717,11 @@
                 <div class="menu-icon-box" style="font-size: 22px;">🤖</div>
                 <div>
                   <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">单人人机房间 <span style="font-size: 11px; color: #D97706; margin-left: 8px;">离线单机 / 随时暂停</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">与不同性格的 3 位 AI 灵禽对弈，磨练技巧，零网络要求。</div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">与 3 位 AI 灵禽在 3D 棋盘同台竞技。</div>
                 </div>
               </div>
             </div>
           </label>
-
           <label style="cursor: pointer;">
             <input type="radio" name="room-type" value="lan" style="display: none;">
             <div class="menu-card-btn" style="padding: 14px;">
@@ -802,79 +729,73 @@
                 <div class="menu-icon-box" style="font-size: 22px;">📶</div>
                 <div>
                   <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">创建局域网房间 <span style="font-size: 11px; color: #EA580C; margin-left: 8px;">LAN / 局域网直连</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">在同一 WiFi 下建立主机，房客一键搜到即连。</div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">在同一 WiFi 下建立主机，朋友一键加入。</div>
                 </div>
               </div>
             </div>
           </label>
-
           <label style="cursor: pointer;">
             <input type="radio" name="room-type" value="online" style="display: none;">
             <div class="menu-card-btn" style="padding: 14px;">
               <div style="display: flex; align-items: center; gap: 14px;">
                 <div class="menu-icon-box" style="font-size: 22px;">🌐</div>
                 <div>
-                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">创建多人联机房间 <span style="font-size: 11px; color: #B45309; margin-left: 8px;">Steam P2P / 互联网大厅</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">在公共网络大厅开房，与远距离好友一同联机。</div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">创建多人联机房间 <span style="font-size: 11px; color: #B45309; margin-left: 8px;">Steam P2P</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">在互联网公共大厅开房邀请好友。</div>
                 </div>
               </div>
             </div>
           </label>
         </div>
 
-        <!-- 步骤 2: 游戏模式挑选 -->
+        <!-- 步骤 2 -->
         <div id="wizard-step-2" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
           <p class="night-subtext" style="font-size: 12px; font-weight: 700; color: #78716C;">挑选本局想要玩的棋类模式：</p>
-          
           <label style="cursor: pointer;">
             <input type="radio" name="wizard-game-mode" value="aero" checked onchange="onWizardModeChange()" style="display: none;">
             <div class="menu-card-btn" style="padding: 14px; background: #FFFBEB; border-color: #F59E0B;">
               <div style="display: flex; align-items: center; gap: 14px;">
                 <div class="menu-icon-box" style="font-size: 22px;">✈️</div>
                 <div>
-                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">日夜飞行棋 (首发力作) <span style="background: #F59E0B; color: #451A03; font-size: 10px; padding: 2px 8px; border-radius: 999px; margin-left: 6px;">独家昼夜奖惩机制</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">昼夜律动更替！白天顺风突击加步/逆风滞留，黑夜夜袭出动/迷航坠落。</div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">日夜飞行棋 3D <span style="background: #F59E0B; color: #451A03; font-size: 10px; padding: 2px 8px; border-radius: 999px; margin-left: 6px;">实机可玩</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">3D 灵禽棋子 + 星月湖畔实景 + 十字航道直飞快捷键！</div>
                 </div>
               </div>
             </div>
           </label>
-
           <label style="cursor: pointer;">
             <input type="radio" name="wizard-game-mode" value="tycoon" onchange="onWizardModeChange()" style="display: none;">
             <div class="menu-card-btn" style="padding: 14px;">
               <div style="display: flex; align-items: center; gap: 14px;">
                 <div class="menu-icon-box" style="font-size: 22px;">⚙️</div>
                 <div>
-                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">机械大亨 (Gear Tycoon) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(工坊模块开发中)</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">发条齿轮圈地！升级建筑、收取过路费。</div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">机械大亨 (Gear Tycoon) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(敬请期待)</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">蒸汽发条圈地大作，下一阶段研发接入。</div>
                 </div>
               </div>
             </div>
           </label>
-
           <label style="cursor: pointer;">
             <input type="radio" name="wizard-game-mode" value="gomoku" onchange="onWizardModeChange()" style="display: none;">
             <div class="menu-card-btn" style="padding: 14px;">
               <div style="display: flex; align-items: center; gap: 14px;">
                 <div class="menu-icon-box" style="font-size: 22px;">✨</div>
                 <div>
-                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">星轨五子棋 (Astral Gomoku) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(工坊模块开发中)</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">黑洞与恒星交错，三子连珠星轨共振。</div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">星轨五子棋 (Astral Gomoku) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(敬请期待)</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">星轨连珠共振，后续 DLC 与合集扩展。</div>
                 </div>
               </div>
             </div>
           </label>
         </div>
 
-        <!-- 步骤 3: 玩家自定义选项 -->
+        <!-- 步骤 3 -->
         <div id="wizard-step-3" class="hidden" style="display: flex; flex-direction: column; gap: 14px;">
           <div id="custom-panel-aero" style="display: flex; flex-direction: column; gap: 12px;">
-            
-            <!-- 起飞点数自定义 -->
             <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #292524;">🛫 起飞点数自定义</span>
-                <span class="night-subtext" style="font-size: 11px; color: #78716C;">满足点数即可出鸟巢</span>
+                <span class="night-subtext" style="font-size: 11px; color: #78716C;">满足点数即可出基地停机坪</span>
               </div>
               <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
                 <button type="button" onclick="selectTakeoff(this, '6')" class="btn-takeoff glass-btn" style="font-size: 11px; padding: 6px;">仅 6 点 (经典)</button>
@@ -884,11 +805,10 @@
               </div>
             </div>
 
-            <!-- 昼夜轮换大回合数 -->
             <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: space-between;">
               <div>
                 <div class="night-text-main" style="font-size: 13px; font-weight: 900; color: #292524;">🌓 昼夜轮替律</div>
-                <div class="night-subtext" style="font-size: 11px; color: #78716C; margin-top: 2px;">全场玩家合计完成大回合后天色切换</div>
+                <div class="night-subtext" style="font-size: 11px; color: #78716C; margin-top: 2px;">全场玩家合计完成大回合后天色与光线自动轮换</div>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 12px; font-weight: 700; color: #B45309;">每</span>
@@ -900,7 +820,6 @@
               </div>
             </div>
 
-            <!-- 白昼机制开关 -->
             <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column; gap: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #92400E;">☀️ 白昼机制：【奖】与【惩】独立开关</span>
@@ -932,7 +851,6 @@
               </div>
             </div>
 
-            <!-- 黑夜机制开关 -->
             <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(147, 51, 234, 0.3); display: flex; flex-direction: column; gap: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #6B21A8;">🌙 黑夜机制：【奖】与【惩】独立开关</span>
@@ -967,7 +885,6 @@
         </div>
       </div>
 
-      <!-- 向导底栏操作按钮 -->
       <div style="padding-top: 14px; border-top: 1.5px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: space-between;">
         <button id="btn-wizard-prev" onclick="wizardPrev()" class="glass-btn hidden">上一步</button>
         <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
@@ -983,7 +900,7 @@
     </div>
   </div>
 
-  <!-- 2. 多人联机大厅弹窗 -->
+  <!-- 2. 多人联机大厅 -->
   <div id="modal-online-lobby" class="modal-backdrop hidden">
     <div class="modal-card" style="max-width: 680px; height: 75vh;">
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
@@ -1003,30 +920,23 @@
           </thead>
           <tbody>
             <tr style="border-bottom: 1px solid #F5F5F4;">
-              <td style="padding: 10px 8px; font-weight: 800;">周末灵禽飞行棋！速来2人</td>
-              <td style="padding: 10px 8px; color: #D97706; font-weight: 700;">日夜飞行棋</td>
+              <td style="padding: 10px 8px; font-weight: 800;">周末灵禽飞行棋 3D！速来2人</td>
+              <td style="padding: 10px 8px; color: #D97706; font-weight: 700;">日夜飞行棋 3D</td>
               <td style="padding: 10px 8px;">2 / 4</td>
               <td style="padding: 10px 8px; color: #10B981; font-family: monospace;">22 ms</td>
               <td style="padding: 10px 8px; text-align: right;"><button onclick="joinRoom('周末灵禽飞行棋')" class="primary-gold-btn" style="padding: 4px 12px; font-size: 11px;">加入</button></td>
-            </tr>
-            <tr style="border-bottom: 1px solid #F5F5F4;">
-              <td style="padding: 10px 8px; font-weight: 800;">【高手房】极夜迷雾激战</td>
-              <td style="padding: 10px 8px; color: #D97706; font-weight: 700;">日夜飞行棋</td>
-              <td style="padding: 10px 8px;">3 / 4</td>
-              <td style="padding: 10px 8px; color: #10B981; font-family: monospace;">35 ms</td>
-              <td style="padding: 10px 8px; text-align: right;"><button onclick="joinRoom('极夜迷雾激战')" class="primary-gold-btn" style="padding: 4px 12px; font-size: 11px;">加入</button></td>
             </tr>
           </tbody>
         </table>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1.5px solid rgba(245, 158, 11, 0.3);">
-        <span class="night-subtext" style="font-size: 12px; color: #78716C;">已连接到 Steam P2P 匹配集群</span>
+        <span class="night-subtext" style="font-size: 12px; color: #78716C;">Steamworks P2P 中继节点已连接</span>
         <button onclick="closeModal('modal-online-lobby')" class="glass-btn">返回</button>
       </div>
     </div>
   </div>
 
-  <!-- 3. 局域网联机弹窗 -->
+  <!-- 3. 局域网大厅 -->
   <div id="modal-lan-lobby" class="modal-backdrop hidden">
     <div class="modal-card" style="max-width: 580px; height: 65vh;">
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
@@ -1038,7 +948,7 @@
           <div style="display: flex; align-items: center; gap: 14px;">
             <span style="font-size: 24px;">✈️</span>
             <div>
-              <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">客厅 PC - 灵禽日夜飞行棋</div>
+              <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">客厅 PC - 日夜飞行棋 3D</div>
               <div class="night-subtext" style="font-size: 11px; color: #78716C;">IP: 192.168.1.102:7777 • 延迟: 2ms</div>
             </div>
           </div>
@@ -1052,7 +962,7 @@
     </div>
   </div>
 
-  <!-- 4. 系统设置弹窗 -->
+  <!-- 4. 系统设置 -->
   <div id="modal-settings" class="modal-backdrop hidden">
     <div class="modal-card" style="max-width: 520px;">
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.3);">
@@ -1063,7 +973,6 @@
       <div style="display: flex; flex-direction: column; gap: 14px; padding: 16px 0;">
         <div class="night-card-bg" style="background: #F8F5EE; padding: 14px; border-radius: 14px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column; gap: 12px;">
           <h3 class="night-title" style="font-size: 12px; font-weight: 900; color: #92400E; text-transform: uppercase;">界面形态与视觉主题</h3>
-          
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <div class="night-text-main" style="font-size: 13px; font-weight: 800; color: #292524;">UI 边角风格</div>
@@ -1102,7 +1011,7 @@
               <span class="night-text-main">主音量</span>
               <span id="val-master">80%</span>
             </div>
-            <input type="range" min="0" max="100" value="80" style="width: 100%; accent-color: #F59E0B;">
+            <input type="range" min="0" max="100" value="80" oninput="setMasterVolume(this.value)" style="width: 100%; accent-color: #F59E0B;">
           </div>
         </div>
       </div>
@@ -1113,69 +1022,89 @@
     </div>
   </div>
 
-  <!-- ======================== 核心游戏引擎与对战逻辑 ======================== -->
+  <!-- ======================== 核心游戏引擎脚本 ======================== -->
   <script>
-    // --- 极速安全的音频合成引擎 (免任何外部音频文件，零报错风险) ---
+    // =========================================================================
+    // 1. 音频合成与全局模态向导控制
+    // =========================================================================
     let audioCtx = null;
+    let masterGainScale = 0.8;
+
     function getAudioContext() {
       try {
         if (!audioCtx) {
-          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          if (AudioContextClass) audioCtx = new AudioContextClass();
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
         }
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume().catch(() => {});
         }
         return audioCtx;
-      } catch (e) {
-        return null;
-      }
+      } catch (e) { return null; }
     }
 
     function playSound(type = 'click') {
       try {
         const ctx = getAudioContext();
-        if (!ctx) return;
+        if (!ctx || masterGainScale <= 0.01) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
         const now = ctx.currentTime;
+        const v = masterGainScale;
 
         if (type === 'click') {
           osc.frequency.setValueAtTime(650, now);
-          osc.frequency.exponentialRampToValueAtTime(850, now + 0.04);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
-          osc.start(now); osc.stop(now + 0.04);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.04);
+          gain.gain.setValueAtTime(0.12 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.045);
+          osc.start(now); osc.stop(now + 0.05);
+        } else if (type === 'hop') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, now);
+          osc.frequency.exponentialRampToValueAtTime(680, now + 0.07);
+          gain.gain.setValueAtTime(0.14 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.075);
+          osc.start(now); osc.stop(now + 0.08);
         } else if (type === 'open') {
           osc.frequency.setValueAtTime(350, now);
-          osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-          gain.gain.setValueAtTime(0.16, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-          osc.start(now); osc.stop(now + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(620, now + 0.11);
+          gain.gain.setValueAtTime(0.16 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.12);
+          osc.start(now); osc.stop(now + 0.12);
         } else if (type === 'dice') {
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(220, now);
-          osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
-          gain.gain.setValueAtTime(0.2, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-          osc.start(now); osc.stop(now + 0.25);
+          osc.frequency.exponentialRampToValueAtTime(860, now + 0.25);
+          gain.gain.setValueAtTime(0.2 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.26);
+          osc.start(now); osc.stop(now + 0.26);
+        } else if (type === 'bump') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(95, now + 0.22);
+          gain.gain.setValueAtTime(0.22 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.24);
+          osc.start(now); osc.stop(now + 0.24);
         } else if (type === 'victory') {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(523.25, now);
           osc.frequency.setValueAtTime(659.25, now + 0.1);
           osc.frequency.setValueAtTime(783.99, now + 0.2);
-          gain.gain.setValueAtTime(0.25, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-          osc.start(now); osc.stop(now + 0.4);
+          osc.frequency.setValueAtTime(1046.5, now + 0.3);
+          gain.gain.setValueAtTime(0.25 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.55);
+          osc.start(now); osc.stop(now + 0.55);
         }
-      } catch (e) {
-        // 音频异常静默降级
-      }
+      } catch (e) {}
     }
 
-    // --- 弹窗与设置控制 ---
+    function setMasterVolume(val) {
+      document.getElementById('val-master').innerText = val + '%';
+      masterGainScale = val / 100;
+    }
+
     function openModal(id) {
       const el = document.getElementById(id);
       if (el) el.classList.remove('hidden');
@@ -1218,40 +1147,36 @@
     }
 
     function renderWizardStep() {
-      const s1 = document.getElementById('wizard-step-1');
-      const s2 = document.getElementById('wizard-step-2');
-      const s3 = document.getElementById('wizard-step-3');
-      if (s1) s1.classList.toggle('hidden', currentStep !== 1);
-      if (s2) s2.classList.toggle('hidden', currentStep !== 2);
-      if (s3) s3.classList.toggle('hidden', currentStep !== 3);
+      ['wizard-step-1', 'wizard-step-2', 'wizard-step-3'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', currentStep !== i + 1);
+      });
 
       const badge = document.getElementById('step-badge');
       const title = document.getElementById('wizard-title');
       const btnPrev = document.getElementById('btn-wizard-prev');
       const btnNext = document.getElementById('btn-wizard-next');
 
-      const p1 = document.getElementById('prog-1');
-      const p2 = document.getElementById('prog-2');
-      const p3 = document.getElementById('prog-3');
-      if (p1) p1.style.background = currentStep >= 1 ? '#F59E0B' : '#FDE68A';
-      if (p2) p2.style.background = currentStep >= 2 ? '#F59E0B' : '#FDE68A';
-      if (p3) p3.style.background = currentStep >= 3 ? '#F59E0B' : '#FDE68A';
+      ['prog-1', 'prog-2', 'prog-3'].forEach((id, i) => {
+        const p = document.getElementById(id);
+        if (p) p.style.background = currentStep >= i + 1 ? '#F59E0B' : '#FDE68A';
+      });
 
       if (currentStep === 1) {
         if (badge) badge.innerText = '第 1 步 / 共 3 步';
         if (title) title.innerText = '选择房间类型 (联机/单人)';
         if (btnPrev) btnPrev.classList.add('hidden');
-        if (btnNext) btnNext.innerHTML = '<span>下一步：选择游戏模式</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        if (btnNext) btnNext.innerHTML = '<span>下一步：选择游戏模式</span>';
       } else if (currentStep === 2) {
         if (badge) badge.innerText = '第 2 步 / 共 3 步';
         if (title) title.innerText = '挑选游戏模式';
         if (btnPrev) btnPrev.classList.remove('hidden');
-        if (btnNext) btnNext.innerHTML = '<span>下一步：配置自定义规则</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-      } else if (currentStep === 3) {
+        if (btnNext) btnNext.innerHTML = '<span>下一步：配置自定义规则</span>';
+      } else {
         if (badge) badge.innerText = '第 3 步 / 共 3 步';
         if (title) title.innerText = '配置玩家自定义专属规则';
         if (btnPrev) btnPrev.classList.remove('hidden');
-        if (btnNext) btnNext.innerHTML = '<span>创建房间并开战！</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>';
+        if (btnNext) btnNext.innerHTML = '<span>创建房间并开战！</span>';
         onWizardModeChange();
       }
     }
@@ -1271,10 +1196,7 @@
 
     function wizardPrev() {
       playSound('click');
-      if (currentStep > 1) {
-        currentStep--;
-        renderWizardStep();
-      }
+      if (currentStep > 1) { currentStep--; renderWizardStep(); }
     }
 
     function onWizardModeChange() {
@@ -1287,24 +1209,16 @@
     function selectTakeoff(btn, val) {
       playSound('click');
       takeoffOption = val;
-      document.querySelectorAll('.btn-takeoff').forEach(b => {
-        b.className = 'btn-takeoff glass-btn';
-      });
+      document.querySelectorAll('.btn-takeoff').forEach(b => b.className = 'btn-takeoff glass-btn');
       btn.className = 'btn-takeoff primary-gold-btn';
     }
 
     function setUiShape(shape) {
       playSound('click');
       const body = document.getElementById('app-body');
-      if (shape === 'square') {
-        body.classList.add('ui-square');
-        document.getElementById('btn-ui-square').className = 'primary-gold-btn';
-        document.getElementById('btn-ui-round').className = 'glass-btn';
-      } else {
-        body.classList.remove('ui-square');
-        document.getElementById('btn-ui-round').className = 'primary-gold-btn';
-        document.getElementById('btn-ui-square').className = 'glass-btn';
-      }
+      body.classList.toggle('ui-square', shape === 'square');
+      document.getElementById('btn-ui-square').className = shape === 'square' ? 'primary-gold-btn' : 'glass-btn';
+      document.getElementById('btn-ui-round').className = shape === 'round' ? 'primary-gold-btn' : 'glass-btn';
     }
 
     function setThemeMode(theme) {
@@ -1328,211 +1242,1094 @@
       alert('正在通过 Steam P2P 接入对战房间: ' + name);
     }
 
-    // ========================================================
-    // --- 日夜飞行棋核心竞技系统 (Day & Night Aero Chess) ---
-    // ========================================================
-    const players = ['blue', 'yellow', 'purple', 'pink'];
-    const playerNames = {
-      blue: '蓝羽夜鸮 (1P 你)',
-      yellow: '晨曦黄雀 (2P AI)',
-      purple: '冥夜紫鸦 (3P AI)',
-      pink: '霞光粉鹦 (4P AI)'
-    };
-    const playerColors = {
-      blue: '#3B82F6',
-      yellow: '#F59E0B',
-      purple: '#9333EA',
-      pink: '#EC4899'
-    };
-    const playerPieceAssets = {
-      blue: 'assets/piece_blue_owl.png',
-      yellow: 'assets/piece_yellow_finch.png',
-      purple: 'assets/piece_purple_raven.png',
-      pink: 'assets/piece_pink_cockatoo.png'
+    // =========================================================================
+    // 2. 图1 经典十字飞行棋盘精确坐标映射（17U x 17U 对称网格）
+    // =========================================================================
+    const BOARD_WORLD_SIZE = 15.0; // Three.js 世界宽度: -7.5 ~ +7.5
+
+    function gridToWorld(gx, gy) {
+      return {
+        x: ((gx / 17) - 0.5) * BOARD_WORLD_SIZE,
+        z: ((gy / 17) - 0.5) * BOARD_WORLD_SIZE
+      };
+    }
+
+    // 四大阵营颜色与图1几何位置对应 (1P蓝羽夜鸮->2P晨曦灵雀->3P冥夜紫鸦->4P霞光粉鹦 顺时针)
+    const COLOR_MAP = {
+      blue:   { main: '#2596EC', dark: '#1D4ED8', light: '#93C5FD', hex: 0x2596EC },
+      yellow: { main: '#FACC15', dark: '#D97706', light: '#FEF08A', hex: 0xFACC15 },
+      purple: { main: '#7C3AED', dark: '#5B21B6', light: '#C4B5FD', hex: 0x7C3AED },
+      pink:   { main: '#F45B9A', dark: '#BE185D', light: '#FBCFE8', hex: 0xF45B9A }
     };
 
+    const TILE_CYCLE = ['blue', 'yellow', 'purple', 'pink'];
+
+    // 外环 52 格精确坐标 (0 = Top-Left chamfer of Top Arm Blue, 顺时针至 51)
+    const TRACK_GRID_COORDS = [
+      [5.35, 1.35], // 0: Blue Top-Left chamfer
+      [6.5,  1.0],  // 1: Yellow
+      [7.5,  1.0],  // 2: Purple
+      [8.5,  1.0],  // 3: Pink (North Sprint Entrance)
+      [9.5,  1.0],  // 4: Blue
+      [10.5, 1.0],  // 5: Yellow
+      [11.65,1.35], // 6: Purple Top-Right chamfer (Purple Start Tile!)
+      [12.0, 2.5],  // 7: Pink
+      [12.0, 3.5],  // 8: Blue
+      [11.55,4.55], // 9: Yellow (Top-Right Elbow upper-left)
+      [12.45,5.45], // 10: Purple (Top-Right Elbow lower-right -> Purple Shortcut Down!)
+      [13.5, 5.0],  // 11: Pink
+      [14.5, 5.0],  // 12: Blue
+      [15.65,5.35], // 13: Yellow Right-Arm Top chamfer
+      [16.0, 6.5],  // 14: Purple
+      [16.0, 7.5],  // 15: Pink
+      [16.0, 8.5],  // 16: Blue (East Sprint Entrance)
+      [16.0, 9.5],  // 17: Yellow
+      [16.0, 10.5], // 18: Purple
+      [15.65,11.65],// 19: Pink Bottom-Right chamfer (Pink Start Tile!)
+      [14.5, 12.0], // 20: Blue
+      [13.5, 12.0], // 21: Yellow
+      [12.45,11.55],// 22: Purple (Bottom-Right Elbow upper-right)
+      [11.55,12.45],// 23: Pink (Bottom-Right Elbow lower-left -> Pink Shortcut Left!)
+      [12.0, 13.5], // 24: Blue
+      [12.0, 14.5], // 25: Yellow
+      [11.65,15.65],// 26: Purple Bottom-Right chamfer
+      [10.5, 16.0], // 27: Pink
+      [9.5,  16.0], // 28: Blue
+      [8.5,  16.0], // 29: Yellow (South Sprint Entrance)
+      [7.5,  16.0], // 30: Purple
+      [6.5,  16.0], // 31: Pink
+      [5.35, 15.65],// 32: Blue Bottom-Left chamfer (Blue Start Tile!)
+      [5.0,  14.5], // 33: Yellow
+      [5.0,  13.5], // 34: Purple
+      [5.45, 12.45],// 35: Pink (Bottom-Left Elbow lower-right)
+      [4.55, 11.55],// 36: Blue (Bottom-Left Elbow upper-left -> Blue Shortcut Up!)
+      [3.5,  12.0], // 37: Yellow
+      [2.5,  12.0], // 38: Purple
+      [1.35, 11.65],// 39: Pink Left-Arm Bottom chamfer
+      [1.0,  10.5], // 40: Blue
+      [1.0,  9.5],  // 41: Yellow
+      [1.0,  8.5],  // 42: Purple (West Sprint Entrance)
+      [1.0,  7.5],  // 43: Pink
+      [1.0,  6.5],  // 44: Blue
+      [1.35, 5.35], // 45: Yellow Left-Arm Top chamfer (Yellow Start Tile!)
+      [2.5,  5.0],  // 46: Purple
+      [3.5,  5.0],  // 47: Pink
+      [4.55, 5.45], // 48: Blue (Top-Left Elbow lower-left)
+      [5.45, 4.55], // 49: Yellow (Top-Left Elbow upper-right -> Yellow Shortcut Right!)
+      [5.0,  3.5],  // 50: Purple
+      [5.0,  2.5]   // 51: Pink
+    ];
+
+    // 四方基地机坪坐标、起飞箭头停靠位、冲刺航道与凯旋入口
+    const FACTIONS_CONFIG = {
+      blue: {
+        name: '1P 蓝羽夜鸮 (你)',
+        hangars: [[1.25, 14.25], [2.75, 14.25], [1.25, 15.75], [2.75, 15.75]],
+        hangarArrowDir: 'right', // 图1左下蓝色圈内箭头向右 →
+        readySpot: [4.15, 16.05], // 图1底左下侧蓝色向上起飞箭头 ↑
+        startTile: 32,
+        shortcutTrigger: 36,
+        shortcutDest: 48,
+        sprintGate: 16,
+        runway: [[14.52, 8.5], [13.55, 8.5], [12.58, 8.5], [11.61, 8.5], [10.64, 8.5], [9.52, 8.5]],
+        faceRotationY: 0.36
+      },
+      yellow: {
+        name: '2P 晨曦灵雀 (AI)',
+        hangars: [[1.25, 1.25], [2.75, 1.25], [1.25, 2.75], [2.75, 2.75]],
+        hangarArrowDir: 'down', // 图1左上黄色圈内箭头向下 ↓
+        readySpot: [0.95, 4.15], // 图1左外黄右指起飞箭头 →
+        startTile: 45,
+        shortcutTrigger: 49,
+        shortcutDest: 9,
+        sprintGate: 29,
+        runway: [[8.5, 14.52], [8.5, 13.55], [8.5, 12.58], [8.5, 11.61], [8.5, 10.64], [8.5, 9.52]],
+        faceRotationY: 0.42
+      },
+      purple: {
+        name: '3P 冥夜紫鸦 (AI)',
+        hangars: [[14.25, 1.25], [15.75, 1.25], [14.25, 2.75], [15.75, 2.75]],
+        hangarArrowDir: 'left', // 图1右上圈内箭头向左 ←
+        readySpot: [12.85, 0.95], // 图1右上向下指起飞箭头 ↓
+        startTile: 6,
+        shortcutTrigger: 10,
+        shortcutDest: 22,
+        sprintGate: 42,
+        runway: [[2.48, 8.5], [3.45, 8.5], [4.42, 8.5], [5.39, 8.5], [6.36, 8.5], [7.48, 8.5]],
+        faceRotationY: -0.42
+      },
+      pink: {
+        name: '4P 霞光粉鹦 (AI)',
+        hangars: [[14.25, 14.25], [15.75, 14.25], [14.25, 15.75], [15.75, 15.75]],
+        hangarArrowDir: 'up', // 图1右下圈内箭头向上 ↑
+        readySpot: [16.05, 12.85], // 图1右外向左指起飞箭头 ←
+        startTile: 19,
+        shortcutTrigger: 23,
+        shortcutDest: 35,
+        sprintGate: 3,
+        runway: [[8.5, 2.48], [8.5, 3.45], [8.5, 4.42], [8.5, 5.39], [8.5, 6.36], [8.5, 7.48]],
+        faceRotationY: -0.36
+      }
+    };
+
+    // 绘制高精 2048x2048 图1样式飞行棋盘贴图
+    function generateBoardCanvasTexture() {
+      const size = 2048;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const u = size / 17;
+
+      // 温润质感乳白棋盘底板
+      ctx.fillStyle = '#FAF8F5';
+      ctx.fillRect(0, 0, size, size);
+
+      // 外围柔金微细边框装饰
+      ctx.strokeStyle = 'rgba(180, 140, 80, 0.35)';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(20, 20, size - 40, size - 40);
+
+      function strokeAndFillRect(gx, gy, gw, gh, fill) {
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 5;
+        ctx.fillRect(gx * u, gy * u, gw * u, gh * u);
+        ctx.strokeRect(gx * u, gy * u, gw * u, gh * u);
+      }
+
+      function drawPoly(pts, fill) {
+        ctx.beginPath();
+        pts.forEach((p, idx) => {
+          if (idx === 0) ctx.moveTo(p[0] * u, p[1] * u);
+          else ctx.lineTo(p[0] * u, p[1] * u);
+        });
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }
+
+      function drawWhiteStepDot(gx, gy, r = 0.36) {
+        ctx.beginPath();
+        ctx.arc(gx * u, gy * u, r * u, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+
+      function drawArrowGlyph(gx, gy, dir, fillColor, scale = 0.34) {
+        ctx.save();
+        ctx.translate(gx * u, gy * u);
+        let rot = 0;
+        if (dir === 'down') rot = Math.PI / 2;
+        else if (dir === 'left') rot = Math.PI;
+        else if (dir === 'up') rot = -Math.PI / 2;
+        ctx.rotate(rot);
+
+        const s = scale * u;
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.9, -s * 0.32);
+        ctx.lineTo(s * 0.15, -s * 0.32);
+        ctx.lineTo(s * 0.15, -s * 0.72);
+        ctx.lineTo(s * 0.92, 0);
+        ctx.lineTo(s * 0.15, s * 0.72);
+        ctx.lineTo(s * 0.15, s * 0.32);
+        ctx.lineTo(-s * 0.9, s * 0.32);
+        ctx.closePath();
+
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 1. 绘制 4 个大圆停机坪及内部带方向箭头圈圈
+      const cornerBases = [
+        { cx: 2, cy: 2, color: COLOR_MAP.yellow, faction: FACTIONS_CONFIG.yellow },
+        { cx: 15, cy: 2, color: COLOR_MAP.purple, faction: FACTIONS_CONFIG.purple },
+        { cx: 15, cy: 15, color: COLOR_MAP.pink, faction: FACTIONS_CONFIG.pink },
+        { cx: 2, cy: 15, color: COLOR_MAP.blue, faction: FACTIONS_CONFIG.blue }
+      ];
+      cornerBases.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(b.cx * u, b.cy * u, 1.78 * u, 0, Math.PI * 2);
+        ctx.fillStyle = b.color.main;
+        ctx.fill();
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        b.faction.hangars.forEach(pt => {
+          drawWhiteStepDot(pt[0], pt[1], 0.42);
+          drawArrowGlyph(pt[0], pt[1], b.faction.hangarArrowDir, b.color.main, 0.28);
+        });
+      });
+
+      // 2. 绘制外侧 4 个起飞口小箭头
+      drawArrowGlyph(0.95, 4.15, 'right', COLOR_MAP.yellow.main, 0.35);
+      drawArrowGlyph(12.85, 0.95, 'down', COLOR_MAP.purple.main, 0.35);
+      drawArrowGlyph(16.05, 12.85, 'left', COLOR_MAP.pink.main, 0.35);
+      drawArrowGlyph(4.15, 16.05, 'up', COLOR_MAP.blue.main, 0.35);
+
+      // 3. 绘制十字直线格与直角三角格 (按图1精确布局 0..51)
+      // 4个外斜切角 (Chamfers)
+      drawPoly([[4, 2], [6, 0], [6, 2]], COLOR_MAP[TILE_CYCLE[0]].main); // 0
+      drawPoly([[11, 0], [13, 2], [11, 2]], COLOR_MAP[TILE_CYCLE[6 % 4]].main); // 6
+      drawPoly([[15, 4], [17, 6], [15, 6]], COLOR_MAP[TILE_CYCLE[13 % 4]].main); // 13
+      drawPoly([[15, 11], [17, 11], [15, 13]], COLOR_MAP[TILE_CYCLE[19 % 4]].main); // 19
+      drawPoly([[11, 15], [13, 15], [11, 17]], COLOR_MAP[TILE_CYCLE[26 % 4]].main); // 26
+      drawPoly([[4, 15], [6, 15], [6, 17]], COLOR_MAP[TILE_CYCLE[32 % 4]].main); // 32
+      drawPoly([[0, 11], [2, 11], [2, 13]], COLOR_MAP[TILE_CYCLE[39 % 4]].main); // 39
+      drawPoly([[0, 6], [2, 4], [2, 6]], COLOR_MAP[TILE_CYCLE[45 % 4]].main); // 45
+
+      // 顶臂 5 格 (1..5)
+      for (let i = 0; i < 5; i++) strokeAndFillRect(6 + i, 0, 1, 2, COLOR_MAP[TILE_CYCLE[(1 + i) % 4]].main);
+      // 右腿 2 格 (7..8)
+      strokeAndFillRect(11, 2, 2, 1, COLOR_MAP[TILE_CYCLE[7 % 4]].main);
+      strokeAndFillRect(11, 3, 2, 1, COLOR_MAP[TILE_CYCLE[8 % 4]].main);
+      // 右上内拐角双三角 (9..10)
+      drawPoly([[11, 4], [13, 4], [11, 6]], COLOR_MAP[TILE_CYCLE[9 % 4]].main);
+      drawPoly([[13, 4], [13, 6], [11, 6]], COLOR_MAP[TILE_CYCLE[10 % 4]].main);
+      // 右上横臂 2 格 (11..12)
+      strokeAndFillRect(13, 4, 1, 2, COLOR_MAP[TILE_CYCLE[11 % 4]].main);
+      strokeAndFillRect(14, 4, 1, 2, COLOR_MAP[TILE_CYCLE[12 % 4]].main);
+      // 右壁 5 格 (14..18)
+      for (let i = 0; i < 5; i++) strokeAndFillRect(15, 6 + i, 2, 1, COLOR_MAP[TILE_CYCLE[(14 + i) % 4]].main);
+      // 右下横臂 2 格 (20..21)
+      strokeAndFillRect(14, 11, 1, 2, COLOR_MAP[TILE_CYCLE[20 % 4]].main);
+      strokeAndFillRect(13, 11, 1, 2, COLOR_MAP[TILE_CYCLE[21 % 4]].main);
+      // 右下内拐角双三角 (22..23)
+      drawPoly([[11, 11], [13, 11], [13, 13]], COLOR_MAP[TILE_CYCLE[22 % 4]].main);
+      drawPoly([[11, 11], [13, 13], [11, 13]], COLOR_MAP[TILE_CYCLE[23 % 4]].main);
+      // 右下腿 2 格 (24..25)
+      strokeAndFillRect(11, 13, 2, 1, COLOR_MAP[TILE_CYCLE[24 % 4]].main);
+      strokeAndFillRect(11, 14, 2, 1, COLOR_MAP[TILE_CYCLE[25 % 4]].main);
+      // 底臂 5 格 (27..31)
+      for (let i = 0; i < 5; i++) strokeAndFillRect(10 - i, 15, 1, 2, COLOR_MAP[TILE_CYCLE[(27 + i) % 4]].main);
+      // 左下腿 2 格 (33..34)
+      strokeAndFillRect(4, 14, 2, 1, COLOR_MAP[TILE_CYCLE[33 % 4]].main);
+      strokeAndFillRect(4, 13, 2, 1, COLOR_MAP[TILE_CYCLE[34 % 4]].main);
+      // 左下内拐角双三角 (35..36)
+      drawPoly([[6, 11], [6, 13], [4, 13]], COLOR_MAP[TILE_CYCLE[35 % 4]].main);
+      drawPoly([[4, 11], [6, 11], [4, 13]], COLOR_MAP[TILE_CYCLE[36 % 4]].main);
+      // 左下横臂 2 格 (37..38)
+      strokeAndFillRect(3, 11, 1, 2, COLOR_MAP[TILE_CYCLE[37 % 4]].main);
+      strokeAndFillRect(2, 11, 1, 2, COLOR_MAP[TILE_CYCLE[38 % 4]].main);
+      // 左壁 5 格 (40..44)
+      for (let i = 0; i < 5; i++) strokeAndFillRect(0, 10 - i, 2, 1, COLOR_MAP[TILE_CYCLE[(40 + i) % 4]].main);
+      // 左上横臂 2 格 (46..47)
+      strokeAndFillRect(2, 4, 1, 2, COLOR_MAP[TILE_CYCLE[46 % 4]].main);
+      strokeAndFillRect(3, 4, 1, 2, COLOR_MAP[TILE_CYCLE[47 % 4]].main);
+      // 左上内拐角双三角 (48..49)
+      drawPoly([[4, 4], [6, 6], [4, 6]], COLOR_MAP[TILE_CYCLE[48 % 4]].main);
+      drawPoly([[4, 4], [6, 4], [6, 6]], COLOR_MAP[TILE_CYCLE[49 % 4]].main);
+      // 左上腿 2 格 (50..51)
+      strokeAndFillRect(4, 3, 2, 1, COLOR_MAP[TILE_CYCLE[50 % 4]].main);
+      strokeAndFillRect(4, 2, 2, 1, COLOR_MAP[TILE_CYCLE[51 % 4]].main);
+
+      // 4. 在外圈全部 52 格中心绘制纯净白圆踏步圈
+      TRACK_GRID_COORDS.forEach(pt => drawWhiteStepDot(pt[0], pt[1], 0.34));
+
+      // 5. 绘制中央十字 4 条终极冲刺通道 + 图1经典展翼分明中央大箭头
+      // 北臂向下冲刺 (Pink)
+      for (let r = 0; r < 5; r++) strokeAndFillRect(8, 2 + r * 0.97, 1, 0.97, COLOR_MAP.pink.main);
+      drawPoly([[8, 6.85], [9, 6.85], [9.88, 6.85], [8.5, 8.28], [7.12, 6.85]], COLOR_MAP.pink.main);
+      FACTIONS_CONFIG.pink.runway.forEach(pt => drawWhiteStepDot(pt[0], pt[1], 0.33));
+
+      // 东臂向左冲刺 (Blue)
+      for (let r = 0; r < 5; r++) strokeAndFillRect(14.03 - r * 0.97, 8, 0.97, 1, COLOR_MAP.blue.main);
+      drawPoly([[10.15, 8], [10.15, 9], [10.15, 9.88], [8.72, 8.5], [10.15, 7.12]], COLOR_MAP.blue.main);
+      FACTIONS_CONFIG.blue.runway.forEach(pt => drawWhiteStepDot(pt[0], pt[1], 0.33));
+
+      // 南臂向上冲刺 (Yellow)
+      for (let r = 0; r < 5; r++) strokeAndFillRect(8, 14.03 - r * 0.97, 1, 0.97, COLOR_MAP.yellow.main);
+      drawPoly([[9, 10.15], [8, 10.15], [7.12, 10.15], [8.5, 8.72], [9.88, 10.15]], COLOR_MAP.yellow.main);
+      FACTIONS_CONFIG.yellow.runway.forEach(pt => drawWhiteStepDot(pt[0], pt[1], 0.33));
+
+      // 西臂向右冲刺 (Purple)
+      for (let r = 0; r < 5; r++) strokeAndFillRect(2 + r * 0.97, 8, 0.97, 1, COLOR_MAP.purple.main);
+      drawPoly([[6.85, 9], [6.85, 8], [6.85, 7.12], [8.28, 8.5], [6.85, 9.88]], COLOR_MAP.purple.main);
+      FACTIONS_CONFIG.purple.runway.forEach(pt => drawWhiteStepDot(pt[0], pt[1], 0.33));
+
+      // 6. 绘制 4 条内侧快捷飞跃航线虚线及引导小箭头
+      // Top Yellow -> ->
+      ctx.setLineDash([12, 10]);
+      ctx.strokeStyle = COLOR_MAP.yellow.dark;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(6.1 * u, 5.0 * u); ctx.lineTo(10.9 * u, 5.0 * u); ctx.stroke();
+      ctx.setLineDash([]);
+      drawArrowGlyph(6.7, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
+      drawArrowGlyph(7.5, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
+      drawArrowGlyph(9.5, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
+      drawArrowGlyph(10.3, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
+
+      // Right Purple ↓ ↓
+      ctx.setLineDash([12, 10]);
+      ctx.strokeStyle = COLOR_MAP.purple.dark;
+      ctx.beginPath(); ctx.moveTo(12.0 * u, 6.1 * u); ctx.lineTo(12.0 * u, 10.9 * u); ctx.stroke();
+      ctx.setLineDash([]);
+      drawArrowGlyph(12.0, 6.7, 'down', COLOR_MAP.purple.main, 0.25);
+      drawArrowGlyph(12.0, 7.5, 'down', COLOR_MAP.purple.main, 0.25);
+      drawArrowGlyph(12.0, 9.5, 'down', COLOR_MAP.purple.main, 0.25);
+      drawArrowGlyph(12.0, 10.3, 'down', COLOR_MAP.purple.main, 0.25);
+
+      // Bottom Pink ← ←
+      ctx.setLineDash([12, 10]);
+      ctx.strokeStyle = COLOR_MAP.pink.dark;
+      ctx.beginPath(); ctx.moveTo(10.9 * u, 12.0 * u); ctx.lineTo(6.1 * u, 12.0 * u); ctx.stroke();
+      ctx.setLineDash([]);
+      drawArrowGlyph(10.3, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
+      drawArrowGlyph(9.5, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
+      drawArrowGlyph(7.5, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
+      drawArrowGlyph(6.7, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
+
+      // Left Blue ↑ ↑
+      ctx.setLineDash([12, 10]);
+      ctx.strokeStyle = COLOR_MAP.blue.dark;
+      ctx.beginPath(); ctx.moveTo(5.0 * u, 10.9 * u); ctx.lineTo(5.0 * u, 6.1 * u); ctx.stroke();
+      ctx.setLineDash([]);
+      drawArrowGlyph(5.0, 10.3, 'up', COLOR_MAP.blue.main, 0.25);
+      drawArrowGlyph(5.0, 9.5, 'up', COLOR_MAP.blue.main, 0.25);
+      drawArrowGlyph(5.0, 7.5, 'up', COLOR_MAP.blue.main, 0.25);
+      drawArrowGlyph(5.0, 6.7, 'up', COLOR_MAP.blue.main, 0.25);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 8;
+      return tex;
+    }
+
+    // =========================================================================
+    // 3. 精细 3D 灵禽棋子建模工厂 (依据图2/3/4/5打造真正 3D 手办立体质感)
+    // =========================================================================
+    function createPedestalTexture(mainHex, rayHex) {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const g = c.getContext('2d');
+      g.fillStyle = mainHex;
+      g.fillRect(0, 0, 256, 256);
+      g.translate(128, 128);
+      for (let i = 0; i < 12; i++) {
+        if (i % 2 === 0) {
+          g.beginPath();
+          g.moveTo(0, 0);
+          g.arc(0, 0, 130, (i * Math.PI) / 6, ((i + 1) * Math.PI) / 6);
+          g.closePath();
+          g.fillStyle = rayHex;
+          g.fill();
+        }
+      }
+      return new THREE.CanvasTexture(c);
+    }
+
+    function createBird3DModel(colorKey) {
+      const group = new THREE.Group();
+      const palette = COLOR_MAP[colorKey];
+
+      // --- 通用立体圆盘棋子底座 (完全还原图2/3/4的光滑辐射纹圆盘) ---
+      const baseTopTex = createPedestalTexture(palette.main, palette.light);
+      const baseSideMat = new THREE.MeshStandardMaterial({ color: palette.dark, roughness: 0.3, metalness: 0.12 });
+      const baseTopMat = new THREE.MeshStandardMaterial({ map: baseTopTex, roughness: 0.28, metalness: 0.08 });
+      const baseBottomMat = new THREE.MeshStandardMaterial({ color: palette.dark, roughness: 0.5 });
+
+      const discGeo = new THREE.CylinderGeometry(0.41, 0.43, 0.15, 32);
+      const discMesh = new THREE.Mesh(discGeo, [baseSideMat, baseTopMat, baseBottomMat]);
+      discMesh.position.y = 0.075;
+      discMesh.castShadow = true;
+      discMesh.receiveShadow = true;
+      group.add(discMesh);
+
+      // 高光边缘保护环
+      const rimGeo = new THREE.TorusGeometry(0.41, 0.022, 10, 32);
+      const rimMat = new THREE.MeshStandardMaterial({ color: palette.light, roughness: 0.2 });
+      const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+      rimMesh.rotation.x = Math.PI / 2;
+      rimMesh.position.y = 0.148;
+      group.add(rimMesh);
+
+      // 小鸟双爪
+      const footColor = colorKey === 'blue' ? 0x9A4D2E : (colorKey === 'yellow' ? 0x4A3531 : (colorKey === 'purple' ? 0x3B1D5E : 0x702459));
+      const footMat = new THREE.MeshStandardMaterial({ color: footColor, roughness: 0.5 });
+      [-0.1, 0.1].forEach(fx => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.09, 10), footMat);
+        leg.position.set(fx, 0.19, 0.04);
+        group.add(leg);
+        for (let t = -1; t <= 1; t++) {
+          const toe = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 10), footMat);
+          toe.scale.set(0.85, 0.65, 1.75);
+          toe.rotation.y = -t * 0.35;
+          toe.position.set(fx + t * 0.028, 0.162, 0.11);
+          group.add(toe);
+        }
+      });
+
+      const bodyGroup = new THREE.Group();
+      bodyGroup.position.y = 0.48;
+      group.add(bodyGroup);
+
+      if (colorKey === 'blue') {
+        // ========== 1P 蓝羽夜鸮 (圆滚天蓝胖猫头鹰) ==========
+        const matBody = new THREE.MeshStandardMaterial({ color: 0x3B82F6, roughness: 0.45 });
+        const matBelly = new THREE.MeshStandardMaterial({ color: 0xEEF2FF, roughness: 0.6 });
+        const matWhite = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.35 });
+        const matPupil = new THREE.MeshStandardMaterial({ color: 0x0F172A, roughness: 0.15, metalness: 0.2 });
+        const matBeak = new THREE.MeshStandardMaterial({ color: 0xF97316, roughness: 0.35 });
+        const matTuft = new THREE.MeshStandardMaterial({ color: 0x2563EB, roughness: 0.4 });
+
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 24), matBody);
+        torso.scale.set(1.04, 0.98, 0.94);
+        torso.castShadow = true;
+        bodyGroup.add(torso);
+
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.24, 20, 20), matBelly);
+        belly.position.set(0, -0.09, 0.17);
+        belly.scale.set(0.95, 0.9, 0.6);
+        bodyGroup.add(belly);
+
+        // 巨大萌白猫头鹰脸盘
+        [-0.13, 0.13].forEach(ex => {
+          const mask = new THREE.Mesh(new THREE.SphereGeometry(0.165, 20, 20), matWhite);
+          mask.position.set(ex, 0.09, 0.24);
+          mask.scale.set(1.0, 1.0, 0.42);
+          bodyGroup.add(mask);
+
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.095, 16, 16), matPupil);
+          eye.position.set(ex, 0.09, 0.285);
+          eye.scale.set(1.0, 1.0, 0.55);
+          bodyGroup.add(eye);
+
+          const glint = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 10), matWhite);
+          glint.position.set(ex - 0.028, 0.125, 0.328);
+          bodyGroup.add(glint);
+        });
+
+        // 橘色小钻石嘴
+        const beak = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.11, 4), matBeak);
+        beak.rotation.x = Math.PI * 0.55;
+        beak.position.set(0, 0.04, 0.36);
+        bodyGroup.add(beak);
+
+        // 两撇向后斜扬的蓝羽耳冠
+        [-1, 1].forEach(side => {
+          const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.26, 10), matTuft);
+          tuft.position.set(side * 0.21, 0.33, 0.02);
+          tuft.rotation.z = -side * 0.45;
+          tuft.rotation.x = -0.35;
+          tuft.castShadow = true;
+          bodyGroup.add(tuft);
+
+          const wing = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), matBody);
+          wing.position.set(side * 0.32, -0.04, 0.0);
+          wing.scale.set(0.45, 1.05, 0.85);
+          wing.rotation.z = side * 0.18;
+          wing.castShadow = true;
+          bodyGroup.add(wing);
+        });
+      } else if (colorKey === 'yellow') {
+        // ========== 2P 晨曦灵雀 (白胸黑帽流线后冠 — 对应图4) ==========
+        const matWhite = new THREE.MeshStandardMaterial({ color: 0xFAF6EB, roughness: 0.65 });
+        const matCap = new THREE.MeshStandardMaterial({ color: 0x262D42, roughness: 0.42 });
+        const matWing = new THREE.MeshStandardMaterial({ color: 0x8A89B4, roughness: 0.50 });
+        const matEyeY = new THREE.MeshStandardMaterial({ color: 0xF59E0B, roughness: 0.25 });
+        const matPupil = new THREE.MeshStandardMaterial({ color: 0x0F172A, roughness: 0.15 });
+        const matBeak = new THREE.MeshStandardMaterial({ color: 0x453C4E, roughness: 0.38 });
+
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 24), matWhite);
+        torso.scale.set(0.98, 1.04, 1.08);
+        torso.castShadow = true;
+        bodyGroup.add(torso);
+
+        // 厚实深蓝黑帽头顶盖 + 飘逸后冠双长羽
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.295, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.56), matCap);
+        cap.position.set(0, 0.10, -0.02);
+        cap.rotation.x = -0.22;
+        bodyGroup.add(cap);
+
+        [0.08, -0.02, -0.10].forEach((cy, idx) => {
+          const crest = new THREE.Mesh(new THREE.ConeGeometry(0.052, 0.34 - idx * 0.04, 8), idx === 2 ? matWing : matCap);
+          crest.position.set(0, 0.23 + cy, -0.27 - idx * 0.03);
+          crest.rotation.x = -1.18 - idx * 0.18;
+          crest.scale.set(0.65, 1.0, 1.0);
+          bodyGroup.add(crest);
+        });
+
+        // 犀利黑灰尖嘴
+        const beak = new THREE.Mesh(new THREE.ConeGeometry(0.078, 0.25, 12), matBeak);
+        beak.rotation.x = Math.PI * 0.52;
+        beak.position.set(0, 0.06, 0.39);
+        bodyGroup.add(beak);
+
+        // 酷炫大金黄眸 + 凌厉压低黑眉线 (更前移，俯视也清晰!)
+        [-0.145, 0.145].forEach(ex => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.072, 14, 14), matEyeY);
+          eye.position.set(ex, 0.125, 0.265);
+          bodyGroup.add(eye);
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), matPupil);
+          pupil.position.set(ex, 0.125, 0.322);
+          bodyGroup.add(pupil);
+          const brow = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.032, 0.06), matCap);
+          brow.position.set(ex, 0.175, 0.29);
+          brow.rotation.z = ex < 0 ? -0.24 : 0.24;
+          bodyGroup.add(brow);
+        });
+
+        // 淡灰紫翅膀
+        [-1, 1].forEach(side => {
+          const wing = new THREE.Mesh(new THREE.SphereGeometry(0.195, 16, 16), matWing);
+          wing.position.set(side * 0.29, -0.02, -0.04);
+          wing.scale.set(0.45, 0.85, 1.18);
+          wing.castShadow = true;
+          bodyGroup.add(wing);
+        });
+      } else if (colorKey === 'purple') {
+        // ========== 3P 冥夜紫鸦 (蓬松紫胸+钩喙+半睁高冷眼 — 对应图2) ==========
+        const matDarkP = new THREE.MeshStandardMaterial({ color: 0x5B2C8E, roughness: 0.48 });
+        const matLightP = new THREE.MeshStandardMaterial({ color: 0x7E42C2, roughness: 0.42 });
+        const matBeak = new THREE.MeshStandardMaterial({ color: 0x3D1B63, roughness: 0.35 });
+        const matWhite = new THREE.MeshStandardMaterial({ color: 0xFAF5FF, roughness: 0.3 });
+        const matPupil = new THREE.MeshStandardMaterial({ color: 0x1E0B36, roughness: 0.2 });
+
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 24), matDarkP);
+        torso.scale.set(1.0, 0.96, 1.06);
+        torso.castShadow = true;
+        bodyGroup.add(torso);
+
+        // 胸口锯齿乱毛簇 + 后脑炸毛簇
+        for (let i = -2; i <= 2; i++) {
+          const ruff = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.18, 6), matDarkP);
+          ruff.position.set(i * 0.08, -0.10, 0.31);
+          ruff.rotation.x = Math.PI * 0.72;
+          ruff.rotation.z = i * 0.15;
+          bodyGroup.add(ruff);
+        }
+        [0.10, -0.02, -0.12].forEach((cy, idx) => {
+          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.24, 8), matDarkP);
+          spike.position.set(idx === 1 ? 0.08 : (idx === 2 ? -0.08 : 0), 0.24 + cy, -0.27);
+          spike.rotation.x = -1.2;
+          bodyGroup.add(spike);
+        });
+
+        // 厚实弯钩大喙
+        const upperBeak = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.31, 12), matBeak);
+        upperBeak.rotation.x = Math.PI * 0.56;
+        upperBeak.position.set(0, 0.06, 0.39);
+        bodyGroup.add(upperBeak);
+
+        // 酷酷半睁迷离紫白眼
+        [-0.145, 0.145].forEach(ex => {
+          const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 14), matWhite);
+          sclera.position.set(ex, 0.105, 0.255);
+          bodyGroup.add(sclera);
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 10), matPupil);
+          pupil.position.set(ex, 0.10, 0.32);
+          bodyGroup.add(pupil);
+          // 压住上半眼睑
+          const lid = new THREE.Mesh(new THREE.SphereGeometry(0.086, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.48), matDarkP);
+          lid.position.set(ex, 0.115, 0.26);
+          lid.rotation.x = 0.22;
+          bodyGroup.add(lid);
+        });
+
+        // 亮紫色折叠翅膀
+        [-1, 1].forEach(side => {
+          const wing = new THREE.Mesh(new THREE.SphereGeometry(0.20, 16, 16), matLightP);
+          wing.position.set(side * 0.30, -0.03, -0.04);
+          wing.scale.set(0.42, 0.82, 1.12);
+          wing.castShadow = true;
+          bodyGroup.add(wing);
+        });
+      } else {
+        // ========== 4P 霞光粉鹦 (渐黄橘粉凤冠+笑眼+腮红 — 对应图3) ==========
+        const matPinkBody = new THREE.MeshStandardMaterial({ color: 0xFFD9EA, roughness: 0.62 });
+        const matPinkWing = new THREE.MeshStandardMaterial({ color: 0xFF6BA8, roughness: 0.46 });
+        const matCrestGold = new THREE.MeshStandardMaterial({ color: 0xFDE047, roughness: 0.38 });
+        const matCrestPink = new THREE.MeshStandardMaterial({ color: 0xFF4D8D, roughness: 0.40 });
+        const matBeak = new THREE.MeshStandardMaterial({ color: 0x5B214D, roughness: 0.35 });
+        const matBlush = new THREE.MeshStandardMaterial({ color: 0xFB7185, roughness: 0.55 });
+        const matEyeSmile = new THREE.MeshStandardMaterial({ color: 0x1E1B4B, roughness: 0.2 });
+
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 24), matPinkBody);
+        torso.scale.set(1.0, 1.0, 0.96);
+        torso.castShadow = true;
+        bodyGroup.add(torso);
+
+        // 头顶标志性 4 枚高耸金粉渐层凤冠羽翎！
+        const crestAngles = [0.15, -0.22, -0.58, -0.92];
+        crestAngles.forEach((ang, idx) => {
+          const feather = new THREE.Mesh(new THREE.ConeGeometry(0.082, 0.42 - idx * 0.03, 10), idx % 2 === 0 ? matCrestPink : matCrestGold);
+          feather.position.set(0, 0.38 - idx * 0.045, 0.05 - idx * 0.085);
+          feather.rotation.x = ang - 0.32;
+          feather.scale.set(0.5, 1.0, 1.25);
+          feather.castShadow = true;
+          bodyGroup.add(feather);
+        });
+
+        // 弯弯小月牙笑眼 + 粉嫩腮红
+        [-0.145, 0.145].forEach(ex => {
+          const smileArc = new THREE.Mesh(new THREE.TorusGeometry(0.058, 0.02, 8, 16, Math.PI), matEyeSmile);
+          smileArc.position.set(ex, 0.095, 0.315);
+          bodyGroup.add(smileArc);
+
+          const blush = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), matBlush);
+          blush.position.set(ex * 1.12, 0.015, 0.295);
+          blush.scale.set(1.2, 0.7, 0.38);
+          bodyGroup.add(blush);
+        });
+
+        // 圆润紫棕鹦鹉钩喙
+        const beak = new THREE.Mesh(new THREE.SphereGeometry(0.082, 14, 14), matBeak);
+        beak.position.set(0, 0.05, 0.355);
+        beak.scale.set(0.85, 1.15, 1.2);
+        bodyGroup.add(beak);
+
+        // 桃粉色展开羽翼
+        [-1, 1].forEach(side => {
+          const wing = new THREE.Mesh(new THREE.SphereGeometry(0.20, 16, 16), matPinkWing);
+          wing.position.set(side * 0.30, -0.04, -0.03);
+          wing.scale.set(0.42, 0.88, 1.12);
+          wing.castShadow = true;
+          bodyGroup.add(wing);
+        });
+      }
+
+      // 默认令小鸟自身稍微前倾可爱视角 (+Z forward)
+      return group;
+    }
+
+    // =========================================================================
+    // 4. Three.js 3D 舞台引擎与动态摄像机 / 光影 / 拾取交互
+    // =========================================================================
+    let scene, camera, renderer, boardGroup;
+    let sunLight, ambientLight;
+    let camYaw = 0;      // 水平环绕偏角
+    let camPitch = 0.85; // 俯仰弧度 (0.85 = 绝佳48度桌游立体视角；1.52 = 纯正俯视视角)
+    let isTopDownCamera = false;
+    let isDraggingCam = false;
+    let dragStart = { x: 0, y: 0 };
+    let raycaster = null;
+    let pointerVec = null;
+
+    // 所有 16 只 3D 棋子实体映射表: birdMeshes['blue'][0..3] -> THREE.Group
+    const birdMeshes = { blue: [], yellow: [], purple: [], pink: [] };
+    // 高亮拾取光环池
+    let highlightRings = [];
+
+    // 从 3D 模型现场渲染 HUD 头像肖像（彻底废弃原先的所有 2D PNG 图片）
+    function generateHUDPortraitsFrom3DModels() {
+      try {
+        if (!window.THREE || !renderer) return;
+        const rtScene = new THREE.Scene();
+        const rtCam = new THREE.PerspectiveCamera(35, 1, 0.1, 20);
+        rtCam.position.set(0.55, 0.72, 1.65);
+        rtCam.lookAt(0, 0.42, 0);
+        rtScene.add(new THREE.AmbientLight(0xffffff, 0.95));
+        const dLight = new THREE.DirectionalLight(0xfffbeb, 0.85);
+        dLight.position.set(2, 3, 2);
+        rtScene.add(dLight);
+
+        const offRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+        offRenderer.setSize(128, 128);
+
+        ['blue', 'yellow', 'purple', 'pink'].forEach(c => {
+          const m = createBird3DModel(c);
+          m.rotation.y = c === 'blue' ? 0.12 : -0.52;
+          rtScene.add(m);
+          offRenderer.render(rtScene, rtCam);
+          const url = offRenderer.domElement.toDataURL('image/png');
+          const imgEl = document.getElementById(`hud-portrait-${c}`);
+          if (imgEl) imgEl.src = url;
+          rtScene.remove(m);
+        });
+        offRenderer.dispose();
+      } catch (e) {}
+    }
+
+    function init3DStage() {
+      const container = document.getElementById('aero-3d-stage');
+      if (!container || !window.THREE) return;
+      container.innerHTML = '';
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+      updateCameraTransform();
+
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      pointerVec = new THREE.Vector2();
+
+      // 天象光影（动态跟随白天☀️/黑夜🌙切换！）
+      ambientLight = new THREE.AmbientLight(0xFFF7ED, 0.85);
+      scene.add(ambientLight);
+
+      sunLight = new THREE.DirectionalLight(0xFFFBEB, 1.05);
+      sunLight.position.set(6, 14, 8);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 2048;
+      sunLight.shadow.mapSize.height = 2048;
+      sunLight.shadow.camera.near = 2;
+      sunLight.shadow.camera.far = 35;
+      const d = 9.5;
+      sunLight.shadow.camera.left = -d;
+      sunLight.shadow.camera.right = d;
+      sunLight.shadow.camera.top = d;
+      sunLight.shadow.camera.bottom = -d;
+      scene.add(sunLight);
+
+      // 柔和湖面背光补光
+      const fillLight = new THREE.DirectionalLight(0x93C5FD, 0.38);
+      fillLight.position.set(-7, 6, -8);
+      scene.add(fillLight);
+
+      boardGroup = new THREE.Group();
+      scene.add(boardGroup);
+
+      // 创建厚实精致的立体十字桌游大底盘
+      const boardTex = generateBoardCanvasTexture();
+      const topMat = new THREE.MeshStandardMaterial({ map: boardTex, roughness: 0.48, metalness: 0.02 });
+      const edgeMat = new THREE.MeshStandardMaterial({ color: 0xCBD5E1, roughness: 0.42, metalness: 0.08 });
+      const plaqueGeo = new THREE.BoxGeometry(BOARD_WORLD_SIZE, 0.38, BOARD_WORLD_SIZE);
+      const plaqueMesh = new THREE.Mesh(plaqueGeo, [edgeMat, edgeMat, topMat, edgeMat, edgeMat, edgeMat]);
+      plaqueMesh.position.y = -0.19;
+      plaqueMesh.receiveShadow = true;
+      boardGroup.add(plaqueMesh);
+
+      // 温润胡桃木底座托边装饰
+      const trimGeo = new THREE.BoxGeometry(BOARD_WORLD_SIZE + 0.34, 0.22, BOARD_WORLD_SIZE + 0.34);
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x7C583B, roughness: 0.45, metalness: 0.18 });
+      const trimMesh = new THREE.Mesh(trimGeo, trimMat);
+      trimMesh.position.y = -0.32;
+      boardGroup.add(trimMesh);
+
+      // 构建全部 16 个可交互的 3D 灵禽棋子实体
+      ['blue', 'yellow', 'purple', 'pink'].forEach(color => {
+        birdMeshes[color] = [];
+        for (let i = 0; i < 4; i++) {
+          const mesh = createBird3DModel(color);
+          mesh.userData = { color, index: i, animHopPhase: 0, hoverBump: 0 };
+          mesh.rotation.y = FACTIONS_CONFIG[color].faceRotationY;
+          boardGroup.add(mesh);
+          birdMeshes[color].push(mesh);
+        }
+      });
+
+      // 创建脚底脉冲高亮光环 (用于指示 1P 玩家哪些 3D 棋子可点击出战)
+      highlightRings = [];
+      for (let i = 0; i < 4; i++) {
+        const rGeo = new THREE.RingGeometry(0.46, 0.58, 32);
+        const rMat = new THREE.MeshBasicMaterial({ color: 0xFACC15, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+        const ring = new THREE.Mesh(rGeo, rMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.03;
+        ring.visible = false;
+        boardGroup.add(ring);
+        highlightRings.push(ring);
+      }
+
+      // 绑定 3D 画布交互事件：旋转观察 & 点击拾取 3D 棋子
+      container.onpointerdown = (e) => {
+        isDraggingCam = false;
+        dragStart = { x: e.clientX, y: e.clientY };
+      };
+      container.onpointermove = (e) => {
+        if (e.buttons === 1) {
+          const dx = e.clientX - dragStart.x;
+          const dy = e.clientY - dragStart.y;
+          if (Math.hypot(dx, dy) > 4) isDraggingCam = true;
+          if (isDraggingCam && !isTopDownCamera) {
+            camYaw -= dx * 0.0055;
+            camPitch = Math.max(0.42, Math.min(1.38, camPitch + dy * 0.0045));
+            dragStart = { x: e.clientX, y: e.clientY };
+            updateCameraTransform();
+          }
+        }
+      };
+      container.onpointerup = (e) => {
+        if (!isDraggingCam) {
+          handle3DClick(e);
+        }
+        isDraggingCam = false;
+      };
+
+      window.addEventListener('resize', onStageResize);
+      generateHUDPortraitsFrom3DModels();
+      buildLakeFireflies();
+      start3DRenderLoop();
+    }
+
+    function updateCameraTransform() {
+      if (!camera) return;
+      const dist = isTopDownCamera ? 21.8 : 22.8;
+      const effPitch = isTopDownCamera ? 1.54 : camPitch;
+      const effYaw = isTopDownCamera ? 0 : camYaw;
+
+      camera.position.x = dist * Math.cos(effPitch) * Math.sin(effYaw);
+      camera.position.y = dist * Math.sin(effPitch);
+      camera.position.z = dist * Math.cos(effPitch) * Math.cos(effYaw);
+      camera.lookAt(0, -0.2, 0);
+    }
+
+    function toggleCameraMode() {
+      playSound('click');
+      isTopDownCamera = !isTopDownCamera;
+      const btn = document.getElementById('btn-cam-mode');
+      if (btn) {
+        btn.innerText = isTopDownCamera ? '📐 视角: 正俯视棋盘' : '📐 视角: 3D立体 (可拖拽旋转)';
+      }
+      updateCameraTransform();
+    }
+
+    function onStageResize() {
+      const container = document.getElementById('aero-3d-stage');
+      if (!container || !renderer || !camera) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function handle3DClick(e) {
+      if (!raycaster || !camera || !boardGroup) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointerVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerVec.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointerVec, camera);
+      const intersects = raycaster.intersectObjects(boardGroup.children, true);
+      for (const hit of intersects) {
+        let obj = hit.object;
+        while (obj && obj.userData.color === undefined && obj.parent) obj = obj.parent;
+        if (obj && obj.userData && obj.userData.color) {
+          on3DBirdClicked(obj.userData.color, obj.userData.index);
+          break;
+        }
+      }
+    }
+
+    // 生成图5湖畔夜空萤火虫/星光浮粒子
+    function buildLakeFireflies() {
+      const host = document.getElementById('aero-ambient-fireflies');
+      if (!host) return;
+      host.innerHTML = '';
+      for (let i = 0; i < 18; i++) {
+        const f = document.createElement('div');
+        f.className = 'firefly-dot';
+        const sz = Math.random() * 6 + 4;
+        f.style.width = `${sz}px`;
+        f.style.height = `${sz}px`;
+        f.style.left = `${Math.random() * 100}%`;
+        f.style.top = `${25 + Math.random() * 72}%`;
+        f.style.animationDelay = `${Math.random() * 4.5}s`;
+        f.style.animationDuration = `${3.5 + Math.random() * 3.5}s`;
+        host.appendChild(f);
+      }
+    }
+
+    let renderLoopActive = false;
+    function start3DRenderLoop() {
+      if (renderLoopActive) return;
+      renderLoopActive = true;
+      function tick(now) {
+        requestAnimationFrame(tick);
+        const aeroView = document.getElementById('view-game-aero');
+        if (!aeroView || aeroView.classList.contains('hidden')) return;
+
+        // 动画待机呼吸 & 高亮棋子可爱弹跳
+        const t = now * 0.004;
+        const curPlayerColor = players[activePlayerIdx];
+        let ringSlot = 0;
+
+        ['blue', 'yellow', 'purple', 'pink'].forEach(c => {
+          birdMeshes[c].forEach((mesh, idx) => {
+            const piece = gameState[c][idx];
+            if (!mesh) return;
+
+            // 是否处于等待 1P 点击选择的状态
+            const canPick = waitingForPlayerChoice && c === 'blue' && isPieceEligibleForMove(piece, pendingDice);
+            if (canPick && ringSlot < 4) {
+              const ring = highlightRings[ringSlot++];
+              ring.visible = true;
+              ring.position.x = mesh.position.x;
+              ring.position.z = mesh.position.z;
+              const s = 1 + Math.sin(t * 2.2) * 0.12;
+              ring.scale.set(s, s, 1);
+            }
+
+            if (mesh.userData.isMovingAnim) return; // 行棋抛物线期间不由待机呼吸接管 Y
+
+            if (canPick) {
+              mesh.position.y = Math.abs(Math.sin(t * 1.8 + idx)) * 0.24;
+            } else if (c === curPlayerColor && piece.state !== 'done') {
+              mesh.position.y = Math.sin(t * 1.2 + idx) * 0.03;
+            } else {
+              mesh.position.y = 0;
+            }
+          });
+        });
+
+        while (ringSlot < 4) {
+          if (highlightRings[ringSlot]) highlightRings[ringSlot].visible = false;
+          ringSlot++;
+        }
+
+        if (renderer && scene && camera) renderer.render(scene, camera);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // =========================================================================
+    // 5. 日夜飞行棋 3D 走棋动画与完整规则对战引擎
+    // =========================================================================
+    const players = ['blue', 'yellow', 'purple', 'pink'];
     let activePlayerIdx = 0;
     let isDayTime = true;
     let currentRound = 1;
     let lastDiceValue = 1;
+    let pendingDice = 1;
     let isDiceRolling = false;
+    let isAnimatingMove = false;
+    let waitingForPlayerChoice = false;
 
     let gameState = {
-      blue: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }],
-      yellow: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }],
-      purple: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }],
-      pink: [{ state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }, { state: 'home', pos: 0, steps: 0 }]
+      blue: [], yellow: [], purple: [], pink: []
     };
 
-    const playerTrackConfig = {
-      blue:   { startTile: 0,  runwayAngle: -Math.PI/2 },
-      yellow: { startTile: 13, runwayAngle: 0 },
-      purple: { startTile: 26, runwayAngle: Math.PI/2 },
-      pink:   { startTile: 39, runwayAngle: Math.PI }
-    };
+    function getPieceTargetWorldPos(color, idx) {
+      const piece = gameState[color][idx];
+      const fac = FACTIONS_CONFIG[color];
+      let gp;
 
-    const trackCoords = [];
-    const runwayCoords = { blue: [], yellow: [], purple: [], pink: [] };
+      if (piece.state === 'home') {
+        gp = fac.hangars[idx];
+      } else if (piece.state === 'ready') {
+        gp = fac.readySpot;
+      } else if (piece.state === 'active') {
+        gp = TRACK_GRID_COORDS[piece.pos];
+      } else if (piece.state === 'runway') {
+        gp = fac.runway[Math.min(5, piece.pos)];
+      } else {
+        // 'done' 加冕站在中央巨型箭头正前方并稍错开
+        const offsets = [[-0.28, -0.28], [0.28, -0.28], [-0.28, 0.28], [0.28, 0.28]];
+        gp = [fac.runway[5][0] + offsets[idx][0], fac.runway[5][1] + offsets[idx][1]];
+      }
+
+      const w = gridToWorld(gp[0], gp[1]);
+      // 多只不同棋子落同一格时微错开位置防止重叠穿透
+      let offsetX = 0, offsetZ = 0;
+      if (piece.state === 'active' || piece.state === 'runway') {
+        let sameCount = 0, myOrder = 0;
+        players.forEach(c => {
+          gameState[c].forEach((other, oi) => {
+            if (other.state === piece.state && other.pos === piece.pos) {
+              if (c === color && oi === idx) myOrder = sameCount;
+              sameCount++;
+            }
+          });
+        });
+        if (sameCount > 1) {
+          const ang = (myOrder / sameCount) * Math.PI * 2;
+          offsetX = Math.cos(ang) * 0.22;
+          offsetZ = Math.sin(ang) * 0.22;
+        }
+      }
+      return { x: w.x + offsetX, z: w.z + offsetZ };
+    }
+
+    function snapAll3DMeeplesImmediately() {
+      players.forEach(c => {
+        for (let i = 0; i < 4; i++) {
+          const mesh = birdMeshes[c][i];
+          if (!mesh) continue;
+          const pos = getPieceTargetWorldPos(c, i);
+          mesh.position.set(pos.x, 0, pos.z);
+          mesh.scale.set(gameState[c][i].state === 'done' ? 0.72 : 1, gameState[c][i].state === 'done' ? 0.72 : 1, gameState[c][i].state === 'done' ? 0.72 : 1);
+        }
+      });
+    }
+
+    // 单步流畅 3D 抛物线跳跃动画
+    function animateHopStep(color, idx, destX, destZ, durationMs = 240, arcHeight = 0.85) {
+      return new Promise(resolve => {
+        const mesh = birdMeshes[color][idx];
+        if (!mesh) return resolve();
+        mesh.userData.isMovingAnim = true;
+        const startX = mesh.position.x;
+        const startZ = mesh.position.z;
+        const startRotY = mesh.rotation.y;
+
+        // 面向前行方向转向
+        const dx = destX - startX;
+        const dz = destZ - startZ;
+        let targetRotY = startRotY;
+        if (Math.hypot(dx, dz) > 0.05) {
+          targetRotY = Math.atan2(dx, dz);
+        }
+
+        const startTime = performance.now();
+        function frame(now) {
+          const p = Math.min(1, (now - startTime) / durationMs);
+          mesh.position.x = startX + dx * p;
+          mesh.position.z = startZ + dz * p;
+          mesh.position.y = Math.sin(p * Math.PI) * arcHeight;
+          mesh.rotation.y = targetRotY;
+          if (p < 1) {
+            requestAnimationFrame(frame);
+          } else {
+            mesh.position.set(destX, 0, destZ);
+            mesh.userData.isMovingAnim = false;
+            playSound('hop');
+            resolve();
+          }
+        }
+        requestAnimationFrame(frame);
+      });
+    }
 
     function launchFlightChessGame() {
       playSound('open');
-      const vMenu = document.getElementById('view-menu');
-      const vGame = document.getElementById('view-game-aero');
-      if (vMenu) vMenu.classList.add('hidden');
-      if (vGame) vGame.classList.remove('hidden');
-      buildBoardLayout();
+      document.getElementById('view-menu').classList.add('hidden');
+      document.getElementById('view-game-aero').classList.remove('hidden');
+
       resetGameData();
-      renderAllMeeples();
+      init3DStage();
+      snapAll3DMeeplesImmediately();
       updateGameUI();
+      updateTurnAtmosphereVisuals();
     }
 
     function returnToMainMenu() {
       playSound('click');
-      const vMenu = document.getElementById('view-menu');
-      const vGame = document.getElementById('view-game-aero');
-      if (vGame) vGame.classList.add('hidden');
-      if (vMenu) vMenu.classList.remove('hidden');
+      isAnimatingMove = false;
+      waitingForPlayerChoice = false;
+      document.getElementById('view-game-aero').classList.add('hidden');
+      document.getElementById('view-menu').classList.remove('hidden');
     }
 
     function resetGameData() {
       activePlayerIdx = 0;
       isDayTime = true;
       currentRound = 1;
+      isDiceRolling = false;
+      isAnimatingMove = false;
+      waitingForPlayerChoice = false;
+
       players.forEach(p => {
-        gameState[p] = [
-          { state: 'home', pos: 0, steps: 0 },
-          { state: 'home', pos: 0, steps: 0 },
-          { state: 'home', pos: 0, steps: 0 },
-          { state: 'home', pos: 0, steps: 0 }
-        ];
+        gameState[p] = [0, 1, 2, 3].map(() => ({ state: 'home', pos: 0, steps: 0 }));
       });
-      document.getElementById('game-daynight-icon').innerText = '☀️';
-      document.getElementById('game-daynight-status').innerText = '白昼晴空 (顺风气流)';
       document.getElementById('game-round-counter').innerText = `昼夜轮换: 第 1 / ${roundCycleLimit} 大回合`;
+      document.getElementById('action-hint-box').classList.add('hidden');
+      document.getElementById('game-event-log').innerText = '【开局就绪】左键拖拽旋转可全角度欣赏 3D 灵禽棋子！请 1P 蓝羽夜鸮掷骰！';
       updateTurnIndicator();
-    }
-
-    function buildBoardLayout() {
-      const container = document.getElementById('board-tracks-container');
-      const runwayContainer = document.getElementById('runways-container');
-      container.innerHTML = '';
-      runwayContainer.innerHTML = '';
-      trackCoords.length = 0;
-
-      const cx = 280;
-      const cy = 280;
-      const rOuter = 222;
-      const tileColors = ['blue', 'yellow', 'purple', 'pink'];
-
-      // 1. 生成 52 格外围大环线
-      for (let i = 0; i < 52; i++) {
-        const angle = (i / 52) * Math.PI * 2 - Math.PI / 2;
-        const x = cx + Math.cos(angle) * rOuter - 19;
-        const y = cy + Math.sin(angle) * rOuter - 19;
-        trackCoords[i] = { x: x + 19, y: y + 19 };
-
-        const color = tileColors[i % 4];
-        const div = document.createElement('div');
-        div.id = `track-tile-${i}`;
-        div.className = `board-tile tile-${color}`;
-        div.style.left = `${x}px`;
-        div.style.top = `${y}px`;
-
-        let innerHtml = `<span>${i + 1}</span>`;
-        if (i === 0) innerHtml = `<span>🦉</span>`;
-        else if (i === 13) innerHtml = `<span>🐤</span>`;
-        else if (i === 26) innerHtml = `<span>🦅</span>`;
-        else if (i === 39) innerHtml = `<span>🦜</span>`;
-
-        div.innerHTML = innerHtml;
-        container.appendChild(div);
-      }
-
-      // 2. 生成 4 组冲刺跑道 (每组 6 格直接射向中央神坛)
-      players.forEach(p => {
-        runwayCoords[p] = [];
-        const baseAngle = playerTrackConfig[p].runwayAngle;
-        const startR = 172;
-        const endR = 95;
-
-        for (let step = 0; step < 6; step++) {
-          const r = startR - (step / 5) * (startR - endR);
-          const rx = cx + Math.cos(baseAngle) * r - 15;
-          const ry = cy + Math.sin(baseAngle) * r - 15;
-          runwayCoords[p].push({ x: rx + 15, y: ry + 15 });
-
-          const rTile = document.createElement('div');
-          rTile.id = `runway-${p}-${step}`;
-          rTile.className = `runway-tile tile-${p}`;
-          rTile.style.left = `${rx}px`;
-          rTile.style.top = `${ry}px`;
-          rTile.innerText = step + 1;
-          runwayContainer.appendChild(rTile);
-        }
-      });
-    }
-
-    function renderAllMeeples() {
-      // 1. 鸟巢待命插槽
-      players.forEach(color => {
-        for (let i = 0; i < 4; i++) {
-          const slot = document.getElementById(`nest-slot-${color}-${i}`);
-          if (!slot) continue;
-          slot.innerHTML = '';
-          const bird = gameState[color][i];
-          if (bird.state === 'home') {
-            const img = document.createElement('img');
-            img.src = playerPieceAssets[color];
-            img.className = 'bird-piece-sprite';
-            img.style.top = '-6px';
-            img.style.left = '2px';
-            if (color === 'blue' && activePlayerIdx === 0 && canTakeoff(lastDiceValue)) {
-              img.classList.add('active-turn-meeple');
-            }
-            img.onclick = () => tryLaunchBird(color, i);
-            slot.appendChild(img);
-          }
-        }
-      });
-
-      // 2. 航线与冲刺中的战棋
-      const overlay = document.getElementById('meeple-overlay-layer');
-      overlay.innerHTML = '';
-
-      players.forEach(color => {
-        gameState[color].forEach((bird, idx) => {
-          if (bird.state === 'active') {
-            const coord = trackCoords[bird.pos];
-            if (coord) {
-              const img = document.createElement('img');
-              img.src = playerPieceAssets[color];
-              img.className = 'bird-piece-sprite';
-              img.style.pointerEvents = 'auto';
-              img.style.left = `${coord.x - 21}px`;
-              img.style.top = `${coord.y - 32}px`;
-              if (color === players[activePlayerIdx]) {
-                img.classList.add('active-turn-meeple');
-              }
-              img.onclick = () => onBirdMeepleClick(color, idx);
-              overlay.appendChild(img);
-            }
-          } else if (bird.state === 'runway') {
-            const coord = runwayCoords[color][bird.pos];
-            if (coord) {
-              const img = document.createElement('img');
-              img.src = playerPieceAssets[color];
-              img.className = 'bird-piece-sprite';
-              img.style.pointerEvents = 'auto';
-              img.style.left = `${coord.x - 21}px`;
-              img.style.top = `${coord.y - 32}px`;
-              if (color === players[activePlayerIdx]) {
-                img.classList.add('active-turn-meeple');
-              }
-              overlay.appendChild(img);
-            }
-          }
-        });
-      });
     }
 
     function canTakeoff(dice) {
@@ -1542,11 +2339,22 @@
       return dice === 6;
     }
 
+    function isPieceEligibleForMove(piece, dice) {
+      if (piece.state === 'done') return false;
+      if (piece.state === 'home') return canTakeoff(dice);
+      return true;
+    }
+
     function playerRollDice() {
-      if (isDiceRolling) return;
+      if (isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
+      if (players[activePlayerIdx] !== 'blue' && !aiCallingRoll) return;
+      executeDiceRoll();
+    }
+
+    let aiCallingRoll = false;
+    function executeDiceRoll() {
       isDiceRolling = true;
       playSound('dice');
-
       const cube = document.getElementById('dice-cube');
       cube.classList.add('animate-dice-roll');
       document.getElementById('dice-result-text').innerText = '骰子翻滚中...';
@@ -1557,189 +2365,287 @@
         const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
         cube.innerText = diceFaces[lastDiceValue - 1];
         document.getElementById('dice-result-text').innerText = `掷出了 【${lastDiceValue} 点】!`;
+        isDiceRolling = false;
+        aiCallingRoll = false;
 
         processTurnStep(lastDiceValue);
-        isDiceRolling = false;
       }, 650);
     }
 
     function processTurnStep(dice) {
       const curColor = players[activePlayerIdx];
-      const pName = playerNames[curColor];
-      let log = `【${pName}】掷出了 ${dice} 点！`;
+      const fac = FACTIONS_CONFIG[curColor];
+      let log = `【${fac.name}】掷出了 ${dice} 点！`;
 
       const dayTrig = parseInt(currentDayTrigger);
       const nightTrig = parseInt(currentNightTrigger);
       let extraSteps = 0;
 
-      // 昼夜机制判定
+      // 日夜奖惩判定
       if (isDayTime && dice === dayTrig) {
         const rand = Math.random() * 100;
-        const chkReward = document.getElementById('chk-day-reward');
-        const chkPenalty = document.getElementById('chk-day-penalty');
-        if (rand < 8 && chkReward && chkReward.checked) {
+        const chkR = document.getElementById('chk-day-reward');
+        const chkP = document.getElementById('chk-day-penalty');
+        if (rand < 8 && chkR && chkR.checked) {
           extraSteps = 2;
-          log += ` 🌟白昼神恩！触发【顺风突击】(8%几率)，额外赠送 2 步（共前行 ${dice + 2} 步）！`;
-        } else if (rand >= 8 && rand < 10 && chkPenalty && chkPenalty.checked) {
-          log += ` 💨触发白昼【逆风滞留】(2%几率)，遇对流风紊乱，原地休整！`;
+          log += ` 🌟触发白昼【顺风突击】(8%)！额外附赠 +2 步！`;
+        } else if (rand >= 8 && rand < 10 && chkP && chkP.checked) {
+          log += ` 💨触发白昼【逆风滞留】(2%)，遇强气流本回合原地待命！`;
           document.getElementById('game-event-log').innerText = log;
-          endTurn();
+          setTimeout(endTurn, 900);
           return;
         }
       } else if (!isDayTime && dice === nightTrig) {
         const rand = Math.random() * 100;
-        const chkReward = document.getElementById('chk-night-reward');
-        const chkPenalty = document.getElementById('chk-night-penalty');
-        if (rand < 8 && chkReward && chkReward.checked) {
-          log += ` 🌙黑夜狂啸！触发【夜袭出动】(8%几率)，感应暗夜月辉，免费额外起飞 1 架！`;
-          forceLaunchFreeBird(curColor);
-        } else if (rand >= 8 && rand < 10 && chkPenalty && chkPenalty.checked) {
-          log += ` ⚠️黑夜浓雾！触发【迷航失联】(2%几率)，航标被夜雾遮蔽，在途 1 架战鸟被迫返巢！`;
-          forceReturnLostBird(curColor);
-          document.getElementById('game-event-log').innerText = log;
-          endTurn();
-          return;
+        const chkR = document.getElementById('chk-night-reward');
+        const chkP = document.getElementById('chk-night-penalty');
+        if (rand < 8 && chkR && chkR.checked) {
+          const freeHome = gameState[curColor].findIndex(b => b.state === 'home');
+          if (freeHome !== -1) {
+            gameState[curColor][freeHome].state = 'ready';
+            log += ` 🌙触发黑夜【夜袭出动】(8%)！额外无消耗进驻 1 只待飞灵禽！`;
+            snapAll3DMeeplesImmediately();
+          }
+        } else if (rand >= 8 && rand < 10 && chkP && chkP.checked) {
+          const actIdx = gameState[curColor].findIndex(b => b.state === 'active' || b.state === 'runway');
+          if (actIdx !== -1) {
+            gameState[curColor][actIdx].state = 'home';
+            gameState[curColor][actIdx].steps = 0;
+            log += ` ⚠️触发黑夜【迷航失联】(2%)，在途 1 只灵禽被迫飞返停机坪！`;
+            snapAll3DMeeplesImmediately();
+            document.getElementById('game-event-log').innerText = log;
+            setTimeout(endTurn, 900);
+            return;
+          }
         }
       }
 
-      const birds = gameState[curColor];
-      const activeBirds = birds.filter(b => b.state === 'active' || b.state === 'runway');
-      const homeBirds = birds.filter(b => b.state === 'home');
+      const eligibleIndices = [];
+      gameState[curColor].forEach((b, idx) => {
+        if (isPieceEligibleForMove(b, dice)) eligibleIndices.push(idx);
+      });
+
+      if (eligibleIndices.length === 0) {
+        log += ` 无可移动棋子，回合移交下家。`;
+        document.getElementById('game-event-log').innerText = log;
+        setTimeout(endTurn, 900);
+        return;
+      }
 
       if (curColor === 'blue') {
-        if (canTakeoff(dice) && homeBirds.length > 0) {
-          log += ` 🛫 满足起飞条件！可点击鸟巢起飞新战鸟，或点击航道上已有战鸟前行！`;
-          document.getElementById('game-event-log').innerText = log;
-          renderAllMeeples();
-          return;
-        } else if (activeBirds.length > 0) {
-          moveBirdForward('blue', birds.indexOf(activeBirds[0]), dice + extraSteps);
+        // 如果只有一个可选动作且无需二选一，或让玩家亲自在 3D 棋盘上点击
+        if (eligibleIndices.length === 1 && gameState.blue.filter(b => b.state !== 'home' && b.state !== 'done').length === 0) {
+          // 唯一可出库棋子，自动快捷出击并配合动画
+          document.getElementById('game-event-log').innerText = log + ` 🛫 满足起飞条件，蓝羽夜鸮飞出停机坪！`;
+          performPieceAction('blue', eligibleIndices[0], dice + extraSteps);
         } else {
-          log += ` 未掷出起飞点数且无在途战机，回合移交。`;
-          document.getElementById('game-event-log').innerText = log;
-          setTimeout(endTurn, 1000);
+          waitingForPlayerChoice = true;
+          pendingDice = dice + extraSteps;
+          document.getElementById('action-hint-box').classList.remove('hidden');
+          document.getElementById('game-event-log').innerText = log + ` 👇 请在 3D 棋盘上点击闪烁高亮的蓝色夜鸮（或点右侧推荐走法）！`;
         }
       } else {
-        // AI 自动决策
-        if (canTakeoff(dice) && homeBirds.length > 0 && Math.random() > 0.4) {
-          const hIdx = birds.findIndex(b => b.state === 'home');
-          birds[hIdx].state = 'active';
-          birds[hIdx].pos = playerTrackConfig[curColor].startTile;
-          birds[hIdx].steps = 0;
-          log += ` 🛫 战鸟划破长空出巢，踏入主航道！`;
-          checkTileCollision(curColor, birds[hIdx].pos);
-        } else if (activeBirds.length > 0) {
-          const actIdx = birds.indexOf(activeBirds[0]);
-          moveBirdForward(curColor, actIdx, dice + extraSteps);
-        } else {
-          log += ` 蓄力待命中，未达起飞条件。`;
+        // AI 智能挑选走法：优先走已在轨跑道接近终点或能起飞/撞子的棋子
+        let bestIdx = eligibleIndices[0];
+        if (canTakeoff(dice)) {
+          const homeOpt = eligibleIndices.find(i => gameState[curColor][i].state === 'home');
+          if (homeOpt !== undefined && (Math.random() > 0.35 || eligibleIndices.length === 1)) bestIdx = homeOpt;
         }
-
         document.getElementById('game-event-log').innerText = log;
-        renderAllMeeples();
-        updateGameUI();
-        setTimeout(endTurn, 1200);
+        performPieceAction(curColor, bestIdx, dice + extraSteps);
       }
     }
 
-    function moveBirdForward(color, idx, steps) {
-      const bird = gameState[color][idx];
-      bird.steps += steps;
-
-      if (bird.state === 'active') {
-        bird.pos = (bird.pos + steps) % 52;
-
-        // 同色格子顺风跳跃机制
-        const landingColor = ['blue', 'yellow', 'purple', 'pink'][bird.pos % 4];
-        if (landingColor === color) {
-          bird.pos = (bird.pos + 4) % 52;
-          bird.steps += 4;
-          playSound('open');
-        }
-
-        // 冲刺跑道判定
-        if (bird.steps >= 50) {
-          bird.state = 'runway';
-          bird.pos = Math.min(5, bird.steps - 50);
-        }
-
-        checkTileCollision(color, bird.pos);
-      } else if (bird.state === 'runway') {
-        bird.pos += steps;
-        if (bird.pos >= 5) {
-          bird.state = 'done';
-          bird.pos = 5;
-          playSound('victory');
-          createTriumphBurst();
-        }
-      }
-
-      renderAllMeeples();
-      updateGameUI();
-      checkVictoryCondition(color);
-
-      if (color === 'blue') {
-        setTimeout(endTurn, 1200);
-      }
-    }
-
-    // 击落/撞子规则
-    function checkTileCollision(activeColor, tilePos) {
-      players.forEach(otherColor => {
-        if (otherColor === activeColor) return;
-        gameState[otherColor].forEach(b => {
-          if (b.state === 'active' && b.pos === tilePos) {
-            b.state = 'home';
-            b.steps = 0;
-            playSound('click');
-            const logEl = document.getElementById('game-event-log');
-            if (logEl) {
-              logEl.innerText += ` 💥【${playerNames[activeColor]}】凌空扑击！【${playerNames[otherColor]}】被击落返巢！`;
-            }
-          }
-        });
+    function autoPickMove() {
+      if (!waitingForPlayerChoice) return;
+      const eligible = [];
+      gameState.blue.forEach((b, idx) => {
+        if (isPieceEligibleForMove(b, lastDiceValue)) eligible.push(idx);
       });
+      if (eligible.length > 0) {
+        // 优先走最靠前的在途棋子，否则出巢
+        let pick = eligible.find(i => gameState.blue[i].state === 'runway' || gameState.blue[i].state === 'active');
+        if (pick === undefined) pick = eligible[0];
+        on3DBirdClicked('blue', pick);
+      }
     }
 
-    function onBirdMeepleClick(color, idx) {
-      if (color !== 'blue' || activePlayerIdx !== 0) return;
-      moveBirdForward('blue', idx, lastDiceValue);
+    function on3DBirdClicked(color, idx) {
+      if (!waitingForPlayerChoice || color !== 'blue' || isAnimatingMove) return;
+      if (!isPieceEligibleForMove(gameState.blue[idx], lastDiceValue)) return;
+
+      waitingForPlayerChoice = false;
+      document.getElementById('action-hint-box').classList.add('hidden');
+      performPieceAction('blue', idx, pendingDice);
     }
 
-    function tryLaunchBird(color, idx) {
-      if (color !== 'blue' || activePlayerIdx !== 0) return;
-      if (canTakeoff(lastDiceValue) && gameState.blue[idx].state === 'home') {
-        gameState.blue[idx].state = 'active';
-        gameState.blue[idx].pos = playerTrackConfig.blue.startTile;
-        gameState.blue[idx].steps = 0;
-        playSound('open');
-        document.getElementById('game-event-log').innerText = `【蓝羽夜鸮】战鸟出动机巢，滑翔进入起飞航道！`;
-        checkTileCollision('blue', playerTrackConfig.blue.startTile);
-        renderAllMeeples();
+    async function performPieceAction(color, idx, steps) {
+      isAnimatingMove = true;
+      const piece = gameState[color][idx];
+      const fac = FACTIONS_CONFIG[color];
+      const logEl = document.getElementById('game-event-log');
+
+      if (piece.state === 'home') {
+        // 1. 从停机坪起飞至外侧彩色起飞箭头位置
+        piece.state = 'ready';
+        piece.steps = 0;
+        const w = getPieceTargetWorldPos(color, idx);
+        await animateHopStep(color, idx, w.x, w.z, 360, 1.2);
         updateGameUI();
-        setTimeout(endTurn, 1000);
+      } else if (piece.state === 'ready') {
+        // 2. 由起飞箭头正式步入环形跑道 (步1 = startTile)
+        piece.state = 'active';
+        piece.pos = fac.startTile;
+        piece.steps = 1;
+        let w = getPieceTargetWorldPos(color, idx);
+        await animateHopStep(color, idx, w.x, w.z, 260, 0.9);
+
+        for (let s = 1; s < steps; s++) {
+          piece.pos = (piece.pos + 1) % 52;
+          piece.steps++;
+          w = getPieceTargetWorldPos(color, idx);
+          await animateHopStep(color, idx, w.x, w.z, 210, 0.75);
+        }
+
+        await checkPostTrackMoves(color, idx);
+      } else if (piece.state === 'active') {
+        // 3. 环形主航道逐步前跳 -> 进入 37 步后切入彩色冲刺箭道
+        for (let s = 0; s < steps; s++) {
+          if (piece.state === 'active') {
+            if (piece.steps >= 37) {
+              piece.state = 'runway';
+              piece.pos = 0;
+              piece.steps++;
+            } else {
+              piece.pos = (piece.pos + 1) % 52;
+              piece.steps++;
+            }
+          } else if (piece.state === 'runway') {
+            if (piece.pos < 5) piece.pos++;
+            else piece.pos = Math.max(0, 5 - (piece.pos + 1 - 5)); // 超过终点反弹
+          }
+          const w = getPieceTargetWorldPos(color, idx);
+          await animateHopStep(color, idx, w.x, w.z, 200, 0.75);
+        }
+
+        if (piece.state === 'active') {
+          await checkPostTrackMoves(color, idx);
+        } else if (piece.state === 'runway' && piece.pos === 5) {
+          await crownPieceDone(color, idx);
+        }
+      } else if (piece.state === 'runway') {
+        // 4. 在专属冲刺直道上走向中心箭头，超出则反弹折返！
+        let dir = 1;
+        for (let s = 0; s < steps; s++) {
+          if (piece.pos === 5) dir = -1;
+          else if (piece.pos === 0 && dir === -1) dir = 1;
+          piece.pos += dir;
+          const w = getPieceTargetWorldPos(color, idx);
+          await animateHopStep(color, idx, w.x, w.z, 210, 0.72);
+        }
+        if (piece.pos === 5) {
+          await crownPieceDone(color, idx);
+        }
+      }
+
+      isAnimatingMove = false;
+      updateGameUI();
+
+      // 判定胜利
+      if (gameState[color].every(b => b.state === 'done')) {
+        playSound('victory');
+        setTimeout(() => alert(`🏆 捷报！【${fac.name}】四只 3D 神鸟全部会师中央皇冠终点，勇夺冠军！`), 250);
+        return;
+      }
+
+      // 掷出 6 点奖励额外连掷一次！
+      if (lastDiceValue === 6) {
+        if (logEl) logEl.innerText = `🎲 【${fac.name}】掷出 6 点极佳运气，奖励再掷一次！`;
+        if (color !== 'blue') {
+          aiCallingRoll = true;
+          setTimeout(playerRollDice, 750);
+        }
+      } else {
+        setTimeout(endTurn, 500);
       }
     }
 
-    function forceLaunchFreeBird(color) {
-      const home = gameState[color].find(b => b.state === 'home');
-      if (home) {
-        home.state = 'active';
-        home.pos = playerTrackConfig[color].startTile;
-        home.steps = 0;
-        checkTileCollision(color, home.pos);
+    async function checkPostTrackMoves(color, idx) {
+      const piece = gameState[color][idx];
+      const fac = FACTIONS_CONFIG[color];
+      const logEl = document.getElementById('game-event-log');
+
+      // 撞子/击落检查
+      await checkAndBumpOpponents(color, piece.pos);
+
+      // 优先检查跨道直飞虚线捷径！
+      if (piece.pos === fac.shortcutTrigger) {
+        if (logEl) logEl.innerText = `✨ 【${fac.name}】触发图1虚线飞跃航道！直接凌空跨越高飞至对岸拐角！`;
+        piece.pos = fac.shortcutDest;
+        piece.steps += 12;
+        const w = getPieceTargetWorldPos(color, idx);
+        playSound('open');
+        await animateHopStep(color, idx, w.x, w.z, 550, 2.2);
+        await checkAndBumpOpponents(color, piece.pos);
+        return;
+      }
+
+      // 同色格顺风跳跃 (+4 格，不可越过自己冲刺门步数37)
+      const landedColor = TILE_CYCLE[piece.pos % 4];
+      if (landedColor === color && piece.steps + 4 <= 37) {
+        if (logEl) logEl.innerText = `💨 【${fac.name}】停驻同色格，乘风滑翔前冲 +4 格！`;
+        piece.pos = (piece.pos + 4) % 52;
+        piece.steps += 4;
+        const w = getPieceTargetWorldPos(color, idx);
+        playSound('open');
+        await animateHopStep(color, idx, w.x, w.z, 420, 1.6);
+        await checkAndBumpOpponents(color, piece.pos);
+
+        // 若同色跳正好跳进虚线捷径点，触发经典二段飞跃！
+        if (piece.pos === fac.shortcutTrigger) {
+          if (logEl) logEl.innerText = `⚡ 二段奇袭连跳！【${fac.name}】触发跨盘飞跃直线直插对岸！`;
+          piece.pos = fac.shortcutDest;
+          piece.steps += 12;
+          const w2 = getPieceTargetWorldPos(color, idx);
+          await animateHopStep(color, idx, w2.x, w2.z, 550, 2.3);
+          await checkAndBumpOpponents(color, piece.pos);
+        }
       }
     }
 
-    function forceReturnLostBird(color) {
-      const act = gameState[color].find(b => b.state === 'active' || b.state === 'runway');
-      if (act) {
-        act.state = 'home';
-        act.steps = 0;
+    async function checkAndBumpOpponents(activeColor, tilePos) {
+      for (const otherColor of players) {
+        if (otherColor === activeColor) continue;
+        for (let oi = 0; oi < 4; oi++) {
+          const ob = gameState[otherColor][oi];
+          if (ob.state === 'active' && ob.pos === tilePos) {
+            ob.state = 'home';
+            ob.steps = 0;
+            playSound('bump');
+            const dest = getPieceTargetWorldPos(otherColor, oi);
+            const logEl = document.getElementById('game-event-log');
+            if (logEl) logEl.innerText += ` 💥凌空击落【${FACTIONS_CONFIG[otherColor].name}】！`;
+            await animateHopStep(otherColor, oi, dest.x, dest.z, 450, 2.5);
+          }
+        }
       }
+    }
+
+    async function crownPieceDone(color, idx) {
+      gameState[color][idx].state = 'done';
+      playSound('victory');
+      const w = getPieceTargetWorldPos(color, idx);
+      await animateHopStep(color, idx, w.x, w.z, 320, 1.3);
+      if (birdMeshes[color][idx]) {
+        birdMeshes[color][idx].scale.set(0.72, 0.72, 0.72);
+      }
+      const logEl = document.getElementById('game-event-log');
+      if (logEl) logEl.innerText = `👑 辉煌时刻！【${FACTIONS_CONFIG[color].name}】1 只神鸟抵达中央箭头加冕！`;
     }
 
     function endTurn() {
+      if (document.getElementById('view-game-aero').classList.contains('hidden')) return;
+
       activePlayerIdx = (activePlayerIdx + 1) % 4;
       if (activePlayerIdx === 0) {
         currentRound++;
@@ -1747,71 +2653,74 @@
           currentRound = 1;
           isDayTime = !isDayTime;
           playSound('open');
-
-          const icon = document.getElementById('game-daynight-icon');
-          const status = document.getElementById('game-daynight-status');
-          const log = document.getElementById('game-event-log');
-
-          if (isDayTime) {
-            if (icon) icon.innerText = '☀️';
-            if (status) status.innerText = '白昼晴空 (顺风气流)';
-            if (log) log.innerText = `【日夜天象变换】晨曦降临！极昼光芒笼罩，顺风突击机制已激活！`;
-          } else {
-            if (icon) icon.innerText = '🌙';
-            if (status) status.innerText = '极夜暗曜 (夜袭迷雾)';
-            if (log) log.innerText = `【日夜天象变换】夜幕降临！星穹极夜开启，夜袭出动与夜航迷雾机制激活！`;
-          }
+          updateTurnAtmosphereVisuals();
         }
-        const roundEl = document.getElementById('game-round-counter');
-        if (roundEl) roundEl.innerText = `昼夜轮换: 第 ${currentRound} / ${roundCycleLimit} 大回合`;
+        document.getElementById('game-round-counter').innerText = `昼夜轮换: 第 ${currentRound} / ${roundCycleLimit} 大回合`;
       }
 
       updateTurnIndicator();
-      renderAllMeeples();
-      updateGameUI();
-
       if (players[activePlayerIdx] !== 'blue') {
-        setTimeout(playerRollDice, 1000);
+        aiCallingRoll = true;
+        setTimeout(playerRollDice, 750);
+      }
+    }
+
+    function updateTurnAtmosphereVisuals() {
+      const bgEl = document.getElementById('aero-scenic-bg');
+      const iconEl = document.getElementById('game-daynight-icon');
+      const statusEl = document.getElementById('game-daynight-status');
+      const firefliesEl = document.getElementById('aero-ambient-fireflies');
+      const logEl = document.getElementById('game-event-log');
+
+      if (isDayTime) {
+        if (bgEl) bgEl.className = 'day-atmosphere';
+        if (iconEl) iconEl.innerText = '☀️';
+        if (statusEl) statusEl.innerText = '白昼晴空 (顺风气流)';
+        if (firefliesEl) firefliesEl.style.opacity = '0.25';
+        if (ambientLight) ambientLight.color.setHex(0xFFFBEB);
+        if (sunLight) { sunLight.color.setHex(0xFFF3C4); sunLight.intensity = 1.15; }
+        if (logEl) logEl.innerText = '【昼夜更替】晨光映照星湖！白昼顺风机制激活！';
+      } else {
+        if (bgEl) bgEl.className = 'night-atmosphere';
+        if (iconEl) iconEl.innerText = '🌙';
+        if (statusEl) statusEl.innerText = '极夜星月湖畔 (夜袭迷雾)';
+        if (firefliesEl) firefliesEl.style.opacity = '1.0';
+        if (ambientLight) ambientLight.color.setHex(0xC7D2FE);
+        if (sunLight) { sunLight.color.setHex(0x93C5FD); sunLight.intensity = 0.85; }
+        if (logEl) logEl.innerText = '【昼夜更替】弯月映水萤火起舞！黑夜夜袭机制激活！';
       }
     }
 
     function updateTurnIndicator() {
-      const nextColor = players[activePlayerIdx];
-      const pName = playerNames[nextColor];
+      const curColor = players[activePlayerIdx];
       const lbl = document.getElementById('lbl-active-player');
       if (lbl) {
-        lbl.innerText = pName;
-        lbl.style.backgroundColor = playerColors[nextColor];
+        lbl.innerText = FACTIONS_CONFIG[curColor].name;
+        lbl.style.backgroundColor = COLOR_MAP[curColor].dark;
       }
+      players.forEach(c => {
+        const card = document.getElementById(`card-player-${c}`);
+        if (card) card.classList.toggle('active-turn-card', c === curColor);
+      });
     }
 
     function updateGameUI() {
       players.forEach(p => {
-        const homeCount = gameState[p].filter(b => b.state === 'home').length;
-        const activeCount = gameState[p].filter(b => b.state === 'active' || b.state === 'runway').length;
-        const doneCount = gameState[p].filter(b => b.state === 'done').length;
-
-        const homeEl = document.getElementById(`cnt-${p}-home`);
-        const actEl = document.getElementById(`cnt-${p}-active`);
-        const doneEl = document.getElementById(`cnt-${p}-done`);
-        const badgeEl = document.getElementById(`badge-done-${p}`);
-
-        if (homeEl) homeEl.innerText = homeCount;
-        if (actEl) actEl.innerText = activeCount;
-        if (doneEl) doneEl.innerText = doneCount;
-        if (badgeEl) badgeEl.innerText = `${doneCount}/4`;
+        const homeCnt = gameState[p].filter(b => b.state === 'home').length;
+        const activeCnt = gameState[p].filter(b => b.state === 'ready' || b.state === 'active' || b.state === 'runway').length;
+        const doneCnt = gameState[p].filter(b => b.state === 'done').length;
+        const hEl = document.getElementById(`cnt-${p}-home`);
+        const aEl = document.getElementById(`cnt-${p}-active`);
+        const dEl = document.getElementById(`cnt-${p}-done`);
+        if (hEl) hEl.innerText = homeCnt;
+        if (aEl) aEl.innerText = activeCnt;
+        if (dEl) dEl.innerText = doneCnt;
       });
     }
 
-    function checkVictoryCondition(color) {
-      const doneCount = gameState[color].filter(b => b.state === 'done').length;
-      if (doneCount >= 4) {
-        playSound('victory');
-        alert(`🏆 恭喜！【${playerNames[color]}】四羽神鸟全部凯旋加冕，夺得本场天象飞行棋总冠军！`);
-      }
-    }
-
-    // --- 炫彩烟花与桌游喷泉特效 ---
+    // =========================================================================
+    // 6. 大厅烟花粒子与全局快捷键
+    // =========================================================================
     const canvas = document.getElementById('fireworks-canvas');
     const ctx = canvas ? canvas.getContext('2d') : null;
     function resizeCanvas() {
@@ -1875,15 +2784,11 @@
     }
 
     function createFountainBurst() {
+      const menuVisible = !document.getElementById('view-menu').classList.contains('hidden');
+      if (!menuVisible) return;
       const startX = window.innerWidth * 0.15 + Math.random() * (window.innerWidth * 0.7);
       const startY = window.innerHeight + 10;
       for (let i = 0; i < 4; i++) particles.push(new BoardParticle(startX + (Math.random() - 0.5) * 40, startY));
-    }
-
-    function createTriumphBurst() {
-      for (let i = 0; i < 20; i++) {
-        particles.push(new BoardParticle(window.innerWidth / 2 + (Math.random() - 0.5) * 200, window.innerHeight * 0.6));
-      }
     }
 
     let lastTime = 0;
@@ -1901,18 +2806,18 @@
     }
     requestAnimationFrame(animateParticles);
 
-    // 背景点击飞溅
     window.addEventListener('click', (e) => {
       if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && !e.target.closest('button')) {
-        for (let i = 0; i < 3; i++) {
-          const p = new BoardParticle(e.clientX, e.clientY);
-          p.vy = -Math.random() * 6 - 4;
-          particles.push(p);
+        if (!document.getElementById('view-menu').classList.contains('hidden')) {
+          for (let i = 0; i < 3; i++) {
+            const p = new BoardParticle(e.clientX, e.clientY);
+            p.vy = -Math.random() * 6 - 4;
+            particles.push(p);
+          }
         }
       }
     });
 
-    // 空格键快捷掷骰
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && !document.getElementById('view-game-aero').classList.contains('hidden')) {
         e.preventDefault();
@@ -1921,11 +2826,6 @@
         }
       }
     });
-
-    // 调试或快捷直达实机棋盘
-    if (location.hash === '#board' || location.search.includes('board')) {
-      setTimeout(launchFlightChessGame, 50);
-    }
   </script>
 </body>
 </html>
