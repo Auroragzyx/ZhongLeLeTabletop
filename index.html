@@ -578,6 +578,9 @@
           <button onclick="toggleCameraMode()" id="btn-cam-mode" class="scenic-hud-btn" title="切换 3D 视角与垂直俯视视角">
             📐 视角: 3D立体 (可拖拽旋转)
           </button>
+          <button onclick="openModal('modal-settings')" id="btn-ingame-settings" class="scenic-hud-btn" title="局内调节画面亮度、音量与界面模式">
+            ⚙️ 设置
+          </button>
           <span id="lbl-active-player" style="padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #3B82F6; color: #FFFFFF; box-shadow: 0 2px 12px rgba(59, 130, 246, 0.5);">
             1P 蓝羽夜鸮 (你)
           </span>
@@ -670,6 +673,19 @@
               ✨ 推荐走法 / 点棋子出战
             </button>
           </div>
+          <!-- [TEST-ONLY START] 自定义测试骰子面板（测试完毕后可整块删除） -->
+          <div id="test-custom-dice-panel" style="width: 100%; margin-top: 4px; padding-top: 8px; border-top: 1px dashed rgba(251, 191, 36, 0.4);">
+            <div style="font-size: 10px; font-weight: 800; color: #FCD34D; text-align: center; margin-bottom: 5px;">🧪 测试指定点数 (可随时删除)</div>
+            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;">
+              <button type="button" onclick="testForceRollDice(1)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">1</button>
+              <button type="button" onclick="testForceRollDice(2)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">2</button>
+              <button type="button" onclick="testForceRollDice(3)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">3</button>
+              <button type="button" onclick="testForceRollDice(4)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">4</button>
+              <button type="button" onclick="testForceRollDice(5)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">5</button>
+              <button type="button" onclick="testForceRollDice(6)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">6</button>
+            </div>
+          </div>
+          <!-- [TEST-ONLY END] -->
         </div>
       </div>
     </div>
@@ -1087,6 +1103,26 @@
           gain.gain.setValueAtTime(0.22 * v, now);
           gain.gain.exponentialRampToValueAtTime(0.005, now + 0.24);
           osc.start(now); osc.stop(now + 0.24);
+        } else if (type === 'firework') {
+          // 重击踩踏轰鸣 + 璀璨烟花升空爆裂音效
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(190, now);
+          osc.frequency.exponentialRampToValueAtTime(55, now + 0.28);
+          gain.gain.setValueAtTime(0.32 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.30);
+          osc.start(now); osc.stop(now + 0.30);
+          [0.08, 0.16, 0.24].forEach((dt, idx) => {
+            const sOsc = ctx.createOscillator();
+            const sGain = ctx.createGain();
+            sOsc.connect(sGain); sGain.connect(ctx.destination);
+            sOsc.type = 'sine';
+            const f0 = 760 + idx * 240;
+            sOsc.frequency.setValueAtTime(f0, now + dt);
+            sOsc.frequency.exponentialRampToValueAtTime(f0 * 1.65, now + dt + 0.12);
+            sGain.gain.setValueAtTime(0.14 * v, now + dt);
+            sGain.gain.exponentialRampToValueAtTime(0.004, now + dt + 0.14);
+            sOsc.start(now + dt); sOsc.stop(now + dt + 0.15);
+          });
         } else if (type === 'victory') {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(523.25, now);
@@ -1372,7 +1408,7 @@
       }
     };
 
-    // 绘制高精 2048x2048 图1样式飞行棋盘贴图
+    // 绘制高精 2048x2048 图1样式飞行棋盘透明叠加层（下方透出实时动态星空底板，杜绝白底过曝）
     function generateBoardCanvasTexture() {
       const size = 2048;
       const canvas = document.createElement('canvas');
@@ -1381,18 +1417,20 @@
       const ctx = canvas.getContext('2d');
       const u = size / 17;
 
-      // 温润质感乳白棋盘底板
-      ctx.fillStyle = '#FAF8F5';
-      ctx.fillRect(0, 0, size, size);
+      // 透明底板：让动态深空星辰底层完美穿透呈现
+      ctx.clearRect(0, 0, size, size);
 
-      // 外围柔金微细边框装饰
-      ctx.strokeStyle = 'rgba(180, 140, 80, 0.35)';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(20, 20, size - 40, size - 40);
+      // 星辉鎏金双线外框装饰
+      ctx.strokeStyle = 'rgba(253, 224, 71, 0.52)';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(18, 18, size - 36, size - 36);
+      ctx.strokeStyle = 'rgba(147, 197, 253, 0.32)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(30, 30, size - 60, size - 60);
 
       function strokeAndFillRect(gx, gy, gw, gh, fill) {
         ctx.fillStyle = fill;
-        ctx.strokeStyle = '#1E293B';
+        ctx.strokeStyle = '#0F172A';
         ctx.lineWidth = 5;
         ctx.fillRect(gx * u, gy * u, gw * u, gh * u);
         ctx.strokeRect(gx * u, gy * u, gw * u, gh * u);
@@ -1407,7 +1445,7 @@
         ctx.closePath();
         ctx.fillStyle = fill;
         ctx.fill();
-        ctx.strokeStyle = '#1E293B';
+        ctx.strokeStyle = '#0F172A';
         ctx.lineWidth = 5;
         ctx.stroke();
       }
@@ -1415,9 +1453,10 @@
       function drawWhiteStepDot(gx, gy, r = 0.36) {
         ctx.beginPath();
         ctx.arc(gx * u, gy * u, r * u, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFFFF';
+        // 柔和缎面珍珠白，清晰耐看且不刺眼过曝
+        ctx.fillStyle = '#E2E8F0';
         ctx.fill();
-        ctx.strokeStyle = '#1E293B';
+        ctx.strokeStyle = '#0F172A';
         ctx.lineWidth = 4;
         ctx.stroke();
       }
@@ -1558,47 +1597,47 @@
       drawPoly([[6.85, 9], [6.85, 8], [6.85, 7.12], [8.28, 8.5], [6.85, 9.88]], COLOR_MAP.purple.main);
       FACTIONS_CONFIG.purple.runway.forEach(pt => drawWhiteStepDot(pt[0], pt[1], 0.33));
 
-      // 6. 绘制 4 条内侧快捷飞跃航线虚线及引导小箭头
+      // 6. 绘制 4 条内侧快捷飞跃航线虚线及引导小箭头（高亮星辰虚线，映照暗夜星空！）
       // Top Yellow -> ->
       ctx.setLineDash([12, 10]);
-      ctx.strokeStyle = COLOR_MAP.yellow.dark;
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = COLOR_MAP.yellow.light;
+      ctx.lineWidth = 5;
       ctx.beginPath(); ctx.moveTo(6.1 * u, 5.0 * u); ctx.lineTo(10.9 * u, 5.0 * u); ctx.stroke();
       ctx.setLineDash([]);
-      drawArrowGlyph(6.7, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
-      drawArrowGlyph(7.5, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
-      drawArrowGlyph(9.5, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
-      drawArrowGlyph(10.3, 5.0, 'right', COLOR_MAP.yellow.main, 0.25);
+      drawArrowGlyph(6.7, 5.0, 'right', COLOR_MAP.yellow.main, 0.27);
+      drawArrowGlyph(7.5, 5.0, 'right', COLOR_MAP.yellow.main, 0.27);
+      drawArrowGlyph(9.5, 5.0, 'right', COLOR_MAP.yellow.main, 0.27);
+      drawArrowGlyph(10.3, 5.0, 'right', COLOR_MAP.yellow.main, 0.27);
 
       // Right Purple ↓ ↓
       ctx.setLineDash([12, 10]);
-      ctx.strokeStyle = COLOR_MAP.purple.dark;
+      ctx.strokeStyle = COLOR_MAP.purple.light;
       ctx.beginPath(); ctx.moveTo(12.0 * u, 6.1 * u); ctx.lineTo(12.0 * u, 10.9 * u); ctx.stroke();
       ctx.setLineDash([]);
-      drawArrowGlyph(12.0, 6.7, 'down', COLOR_MAP.purple.main, 0.25);
-      drawArrowGlyph(12.0, 7.5, 'down', COLOR_MAP.purple.main, 0.25);
-      drawArrowGlyph(12.0, 9.5, 'down', COLOR_MAP.purple.main, 0.25);
-      drawArrowGlyph(12.0, 10.3, 'down', COLOR_MAP.purple.main, 0.25);
+      drawArrowGlyph(12.0, 6.7, 'down', COLOR_MAP.purple.main, 0.27);
+      drawArrowGlyph(12.0, 7.5, 'down', COLOR_MAP.purple.main, 0.27);
+      drawArrowGlyph(12.0, 9.5, 'down', COLOR_MAP.purple.main, 0.27);
+      drawArrowGlyph(12.0, 10.3, 'down', COLOR_MAP.purple.main, 0.27);
 
       // Bottom Pink ← ←
       ctx.setLineDash([12, 10]);
-      ctx.strokeStyle = COLOR_MAP.pink.dark;
+      ctx.strokeStyle = COLOR_MAP.pink.light;
       ctx.beginPath(); ctx.moveTo(10.9 * u, 12.0 * u); ctx.lineTo(6.1 * u, 12.0 * u); ctx.stroke();
       ctx.setLineDash([]);
-      drawArrowGlyph(10.3, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
-      drawArrowGlyph(9.5, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
-      drawArrowGlyph(7.5, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
-      drawArrowGlyph(6.7, 12.0, 'left', COLOR_MAP.pink.main, 0.25);
+      drawArrowGlyph(10.3, 12.0, 'left', COLOR_MAP.pink.main, 0.27);
+      drawArrowGlyph(9.5, 12.0, 'left', COLOR_MAP.pink.main, 0.27);
+      drawArrowGlyph(7.5, 12.0, 'left', COLOR_MAP.pink.main, 0.27);
+      drawArrowGlyph(6.7, 12.0, 'left', COLOR_MAP.pink.main, 0.27);
 
       // Left Blue ↑ ↑
       ctx.setLineDash([12, 10]);
-      ctx.strokeStyle = COLOR_MAP.blue.dark;
+      ctx.strokeStyle = COLOR_MAP.blue.light;
       ctx.beginPath(); ctx.moveTo(5.0 * u, 10.9 * u); ctx.lineTo(5.0 * u, 6.1 * u); ctx.stroke();
       ctx.setLineDash([]);
-      drawArrowGlyph(5.0, 10.3, 'up', COLOR_MAP.blue.main, 0.25);
-      drawArrowGlyph(5.0, 9.5, 'up', COLOR_MAP.blue.main, 0.25);
-      drawArrowGlyph(5.0, 7.5, 'up', COLOR_MAP.blue.main, 0.25);
-      drawArrowGlyph(5.0, 6.7, 'up', COLOR_MAP.blue.main, 0.25);
+      drawArrowGlyph(5.0, 10.3, 'up', COLOR_MAP.blue.main, 0.27);
+      drawArrowGlyph(5.0, 9.5, 'up', COLOR_MAP.blue.main, 0.27);
+      drawArrowGlyph(5.0, 7.5, 'up', COLOR_MAP.blue.main, 0.27);
+      drawArrowGlyph(5.0, 6.7, 'up', COLOR_MAP.blue.main, 0.27);
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.anisotropy = 8;
@@ -1969,11 +2008,11 @@
       raycaster = new THREE.Raycaster();
       pointerVec = new THREE.Vector2();
 
-      // 天象光影（动态跟随白天☀️/黑夜🌙切换！）
-      ambientLight = new THREE.AmbientLight(0xFFF7ED, 0.85);
+      // 天象光影（柔和不刺眼，消除白底过曝）
+      ambientLight = new THREE.AmbientLight(0xF8FAFC, 0.78);
       scene.add(ambientLight);
 
-      sunLight = new THREE.DirectionalLight(0xFFFBEB, 1.05);
+      sunLight = new THREE.DirectionalLight(0xFFFBEB, 0.88);
       sunLight.position.set(6, 14, 8);
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.width = 2048;
@@ -1988,26 +2027,52 @@
       scene.add(sunLight);
 
       // 柔和湖面背光补光
-      const fillLight = new THREE.DirectionalLight(0x93C5FD, 0.38);
+      const fillLight = new THREE.DirectionalLight(0x93C5FD, 0.36);
       fillLight.position.set(-7, 6, -8);
       scene.add(fillLight);
 
       boardGroup = new THREE.Group();
       scene.add(boardGroup);
 
-      // 创建厚实精致的立体十字桌游大底盘
-      const boardTex = generateBoardCanvasTexture();
-      const topMat = new THREE.MeshStandardMaterial({ map: boardTex, roughness: 0.48, metalness: 0.02 });
-      const edgeMat = new THREE.MeshStandardMaterial({ color: 0xCBD5E1, roughness: 0.42, metalness: 0.08 });
+      // 1) 创建实时动态星空底板贴图并绑定立体桌游底座
+      const starTex = initStarfieldTexture();
+      const starTopMat = new THREE.MeshStandardMaterial({
+        map: starTex,
+        emissiveMap: starTex,
+        emissive: 0xFFFFFF,
+        emissiveIntensity: 0.45,
+        roughness: 0.88,
+        metalness: 0.04
+      });
+      const edgeMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.48, metalness: 0.22 });
       const plaqueGeo = new THREE.BoxGeometry(BOARD_WORLD_SIZE, 0.38, BOARD_WORLD_SIZE);
-      const plaqueMesh = new THREE.Mesh(plaqueGeo, [edgeMat, edgeMat, topMat, edgeMat, edgeMat, edgeMat]);
+      const plaqueMesh = new THREE.Mesh(plaqueGeo, [edgeMat, edgeMat, starTopMat, edgeMat, edgeMat, edgeMat]);
       plaqueMesh.position.y = -0.19;
       plaqueMesh.receiveShadow = true;
       boardGroup.add(plaqueMesh);
 
-      // 温润胡桃木底座托边装饰
+      // 2) 创建透明底十字彩色棋道贴图层（在动态星空上方清晰浮现）
+      const boardTex = generateBoardCanvasTexture();
+      const tilesOverlayMat = new THREE.MeshStandardMaterial({
+        map: boardTex,
+        transparent: true,
+        alphaTest: 0.05,
+        roughness: 0.72,
+        metalness: 0.0,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
+      });
+      const tilesGeo = new THREE.PlaneGeometry(BOARD_WORLD_SIZE, BOARD_WORLD_SIZE);
+      const tilesMesh = new THREE.Mesh(tilesGeo, tilesOverlayMat);
+      tilesMesh.rotation.x = -Math.PI / 2;
+      tilesMesh.position.y = 0.005;
+      tilesMesh.receiveShadow = true;
+      boardGroup.add(tilesMesh);
+
+      // 3) 温润星曜木金底座托边装饰
       const trimGeo = new THREE.BoxGeometry(BOARD_WORLD_SIZE + 0.34, 0.22, BOARD_WORLD_SIZE + 0.34);
-      const trimMat = new THREE.MeshStandardMaterial({ color: 0x7C583B, roughness: 0.45, metalness: 0.18 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x5C4033, roughness: 0.48, metalness: 0.22 });
       const trimMesh = new THREE.Mesh(trimGeo, trimMat);
       trimMesh.position.y = -0.32;
       boardGroup.add(trimMesh);
@@ -2135,14 +2200,253 @@
       }
     }
 
+    // =========================================================================
+    // 4.5 动态星空底板 CanvasTexture 引擎 + 3D 踩踏爆炸烟花粒子系统
+    // =========================================================================
+    let starCanvas = null, starCtx = null, starTex = null, starData = null, lastStarRenderMs = 0;
+
+    function initStarfieldTexture() {
+      const size = 1024;
+      starCanvas = document.createElement('canvas');
+      starCanvas.width = size;
+      starCanvas.height = size;
+      starCtx = starCanvas.getContext('2d');
+
+      const starColors = ['#FFFBEB', '#BAE6FD', '#FDE047', '#FBCFE8', '#C4B5FD'];
+      const stars = [];
+      for (let i = 0; i < 165; i++) {
+        const isSparkle = i < 22;
+        stars.push({
+          x: Math.random() * size,
+          y: Math.random() * size,
+          r: isSparkle ? (Math.random() * 2.4 + 2.4) : (Math.random() * 1.9 + 0.8),
+          phase: Math.random() * Math.PI * 2,
+          speed: Math.random() * 2.8 + 1.4,
+          color: starColors[i % starColors.length],
+          sparkle: isSparkle
+        });
+      }
+      const nebulae = [
+        { bx: 0.28, by: 0.26, rx: 0.44, col: 'rgba(56, 189, 248, 0.14)', sp: 0.25, ph: 0 },
+        { bx: 0.74, by: 0.72, rx: 0.48, col: 'rgba(168, 85, 247, 0.16)', sp: 0.19, ph: 2.1 },
+        { bx: 0.72, by: 0.24, rx: 0.36, col: 'rgba(244, 114, 182, 0.11)', sp: 0.31, ph: 4.2 }
+      ];
+      const meteors = [
+        { active: false, nextMs: 1200, x: 0, y: 0, vx: 0, vy: 0, life: 0 }
+      ];
+      starData = { size, stars, nebulae, meteors };
+
+      drawStarfieldFrame(0);
+      starTex = new THREE.CanvasTexture(starCanvas);
+      starTex.anisotropy = 4;
+      return starTex;
+    }
+
+    function drawStarfieldFrame(nowMs) {
+      if (!starCtx || !starData) return;
+      const { size, stars, nebulae, meteors } = starData;
+      const t = nowMs * 0.001;
+
+      // 深邃夜空径向渐变，避免纯白底曝光
+      const bg = starCtx.createRadialGradient(size * 0.5, size * 0.5, 40, size * 0.5, size * 0.5, size * 0.78);
+      bg.addColorStop(0, '#131D47');
+      bg.addColorStop(0.55, '#0B1333');
+      bg.addColorStop(1, '#05081A');
+      starCtx.fillStyle = bg;
+      starCtx.fillRect(0, 0, size, size);
+
+      // 缓慢游动的星云光晕
+      nebulae.forEach(n => {
+        const cx = (n.bx + Math.sin(t * n.sp + n.ph) * 0.06) * size;
+        const cy = (n.by + Math.cos(t * n.sp * 0.8 + n.ph) * 0.06) * size;
+        const ng = starCtx.createRadialGradient(cx, cy, 10, cx, cy, n.rx * size);
+        ng.addColorStop(0, n.col);
+        ng.addColorStop(1, 'rgba(0,0,0,0)');
+        starCtx.fillStyle = ng;
+        starCtx.fillRect(0, 0, size, size);
+      });
+
+      // 闪烁繁星与十字光芒主星
+      stars.forEach(s => {
+        const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+        starCtx.save();
+        starCtx.globalAlpha = tw;
+        starCtx.fillStyle = s.color;
+        starCtx.beginPath();
+        starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        starCtx.fill();
+
+        if (s.sparkle) {
+          const arm = s.r * (2.2 + tw * 1.4);
+          starCtx.strokeStyle = s.color;
+          starCtx.lineWidth = 1.6;
+          starCtx.beginPath();
+          starCtx.moveTo(s.x - arm, s.y); starCtx.lineTo(s.x + arm, s.y);
+          starCtx.moveTo(s.x, s.y - arm); starCtx.lineTo(s.x, s.y + arm);
+          starCtx.stroke();
+        }
+        starCtx.restore();
+      });
+
+      // 间歇划过的梦幻流星
+      const m = meteors[0];
+      if (!m.active && nowMs >= m.nextMs) {
+        m.active = true;
+        m.x = Math.random() * size * 0.7 + size * 0.1;
+        m.y = Math.random() * size * 0.4 + 40;
+        m.vx = 14 + Math.random() * 8;
+        m.vy = 9 + Math.random() * 6;
+        m.life = 1.0;
+      }
+      if (m.active) {
+        starCtx.save();
+        starCtx.globalAlpha = Math.max(0, m.life);
+        const grad = starCtx.createLinearGradient(m.x, m.y, m.x - m.vx * 5, m.y - m.vy * 5);
+        grad.addColorStop(0, '#FFFFFF');
+        grad.addColorStop(0.3, '#BAE6FD');
+        grad.addColorStop(1, 'rgba(186,230,253,0)');
+        starCtx.strokeStyle = grad;
+        starCtx.lineWidth = 3.2;
+        starCtx.beginPath();
+        starCtx.moveTo(m.x, m.y);
+        starCtx.lineTo(m.x - m.vx * 5, m.y - m.vy * 5);
+        starCtx.stroke();
+        starCtx.restore();
+        m.x += m.vx; m.y += m.vy; m.life -= 0.055;
+        if (m.life <= 0) {
+          m.active = false;
+          m.nextMs = nowMs + 2400 + Math.random() * 3200;
+        }
+      }
+
+      if (starTex) starTex.needsUpdate = true;
+    }
+
+    const activeFireworkBursts = [];
+
+    function spawnStompFireworks(wx, wz, attackerColor, victimColor) {
+      if (!scene || !window.THREE) return;
+      const palette = [
+        COLOR_MAP[attackerColor]?.hex || 0x38BDF8,
+        COLOR_MAP[victimColor]?.hex || 0xF45B9A,
+        0xFDE047,
+        0xFB923C,
+        0xFFFFFF
+      ];
+
+      // 1) 地面扩撒光波冲击环
+      const ringGeo = new THREE.RingGeometry(0.18, 0.40, 32);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xFDE047, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.rotation.x = -Math.PI / 2;
+      ringMesh.position.set(wx, 0.08, wz);
+      scene.add(ringMesh);
+      activeFireworkBursts.push({ type: 'ring', mesh: ringMesh, mat: ringMat, life: 0, maxLife: 0.55 });
+
+      // 2) 瞬间爆裂闪光球
+      const flashGeo = new THREE.SphereGeometry(0.36, 16, 16);
+      const flashMat = new THREE.MeshBasicMaterial({ color: 0xFEF08A, transparent: true, opacity: 0.95 });
+      const flashMesh = new THREE.Mesh(flashGeo, flashMat);
+      flashMesh.position.set(wx, 0.45, wz);
+      scene.add(flashMesh);
+      activeFireworkBursts.push({ type: 'flash', mesh: flashMesh, mat: flashMat, life: 0, maxLife: 0.25 });
+
+      // 3) 第一波：冲击中心喷溅出的 44 颗绚丽 3D 火花碎片
+      const sparkGeo = new THREE.SphereGeometry(0.075, 8, 8);
+      for (let i = 0; i < 44; i++) {
+        const mat = new THREE.MeshBasicMaterial({ color: palette[i % palette.length], transparent: true, opacity: 1 });
+        const sp = new THREE.Mesh(sparkGeo, mat);
+        sp.position.set(wx, 0.42, wz);
+        const ang = (i / 44) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+        const spd = 2.4 + Math.random() * 4.4;
+        const vy = 4.2 + Math.random() * 5.8;
+        scene.add(sp);
+        activeFireworkBursts.push({
+          type: 'spark', mesh: sp, mat,
+          vx: Math.cos(ang) * spd, vy, vz: Math.sin(ang) * spd,
+          gravity: -13.5, life: 0, maxLife: 0.65 + Math.random() * 0.45
+        });
+      }
+
+      // 4) 第二波：升空绽放的高空彩菊烟花（延迟 160ms 于正上方爆开！）
+      setTimeout(() => {
+        if (!scene) return;
+        const aerialGeo = new THREE.OctahedronGeometry(0.09, 0);
+        for (let i = 0; i < 34; i++) {
+          const mat = new THREE.MeshBasicMaterial({ color: palette[(i + 2) % palette.length], transparent: true, opacity: 1 });
+          const sp = new THREE.Mesh(aerialGeo, mat);
+          sp.position.set(wx, 1.85, wz);
+          const phi = Math.acos(2 * Math.random() - 1);
+          const theta = Math.random() * Math.PI * 2;
+          const spd = 2.8 + Math.random() * 3.8;
+          scene.add(sp);
+          activeFireworkBursts.push({
+            type: 'spark', mesh: sp, mat,
+            vx: Math.sin(phi) * Math.cos(theta) * spd,
+            vy: Math.cos(phi) * spd + 1.8,
+            vz: Math.sin(phi) * Math.sin(theta) * spd,
+            gravity: -9.5, life: 0, maxLife: 0.75 + Math.random() * 0.45
+          });
+        }
+      }, 160);
+    }
+
+    function update3DFireworks(dt) {
+      for (let i = activeFireworkBursts.length - 1; i >= 0; i--) {
+        const p = activeFireworkBursts[i];
+        p.life += dt;
+        const prog = Math.min(1, p.life / p.maxLife);
+        if (p.type === 'ring') {
+          const s = 1 + prog * 4.8;
+          p.mesh.scale.set(s, s, 1);
+          p.mat.opacity = (1 - prog) * 0.9;
+        } else if (p.type === 'flash') {
+          const s = 1 + prog * 2.2;
+          p.mesh.scale.set(s, s, s);
+          p.mat.opacity = 1 - prog;
+        } else if (p.type === 'spark') {
+          p.mesh.position.x += p.vx * dt;
+          p.mesh.position.y += p.vy * dt;
+          p.mesh.position.z += p.vz * dt;
+          p.vy += p.gravity * dt;
+          if (p.mesh.position.y < 0.05) { p.mesh.position.y = 0.05; p.vy *= -0.35; }
+          p.mesh.rotation.x += dt * 7;
+          p.mesh.rotation.y += dt * 5;
+          const sc = Math.max(0.05, 1 - prog * 0.85);
+          p.mesh.scale.set(sc, sc, sc);
+          p.mat.opacity = Math.max(0, 1 - Math.pow(prog, 1.6));
+        }
+
+        if (p.life >= p.maxLife) {
+          if (scene) scene.remove(p.mesh);
+          if (p.mat && p.mat.dispose) p.mat.dispose();
+          activeFireworkBursts.splice(i, 1);
+        }
+      }
+    }
+
     let renderLoopActive = false;
+    let lastTickNow = performance.now();
     function start3DRenderLoop() {
       if (renderLoopActive) return;
       renderLoopActive = true;
+      lastTickNow = performance.now();
       function tick(now) {
         requestAnimationFrame(tick);
         const aeroView = document.getElementById('view-game-aero');
         if (!aeroView || aeroView.classList.contains('hidden')) return;
+
+        const dt = Math.min(0.05, Math.max(0.001, (now - lastTickNow) * 0.001));
+        lastTickNow = now;
+
+        // 实时刷新动态星空底板 (约 30fps，丝滑流畅且极低耗时)
+        if (now - lastStarRenderMs > 32) {
+          lastStarRenderMs = now;
+          drawStarfieldFrame(now);
+        }
+
+        // 更新踩踏爆裂烟花粒子与冲击波
+        update3DFireworks(dt);
 
         // 动画待机呼吸 & 高亮棋子可爱弹跳
         const t = now * 0.004;
@@ -2165,7 +2469,7 @@
               ring.scale.set(s, s, 1);
             }
 
-            if (mesh.userData.isMovingAnim) return; // 行棋抛物线期间不由待机呼吸接管 Y
+            if (mesh.userData.isMovingAnim) return; // 行棋或被踩期间不由待机呼吸接管 Y
 
             if (canPick) {
               mesh.position.y = Math.abs(Math.sin(t * 1.8 + idx)) * 0.24;
@@ -2352,25 +2656,37 @@
     }
 
     let aiCallingRoll = false;
-    function executeDiceRoll() {
+    function executeDiceRoll(forcedValue = null) {
       isDiceRolling = true;
       playSound('dice');
       const cube = document.getElementById('dice-cube');
       cube.classList.add('animate-dice-roll');
-      document.getElementById('dice-result-text').innerText = '骰子翻滚中...';
+      document.getElementById('dice-result-text').innerText = forcedValue ? `🎯 测试指定 【${forcedValue} 点】中...` : '骰子翻滚中...';
 
       setTimeout(() => {
         cube.classList.remove('animate-dice-roll');
-        lastDiceValue = Math.floor(Math.random() * 6) + 1;
+        lastDiceValue = (forcedValue >= 1 && forcedValue <= 6) ? forcedValue : (Math.floor(Math.random() * 6) + 1);
         const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
         cube.innerText = diceFaces[lastDiceValue - 1];
-        document.getElementById('dice-result-text').innerText = `掷出了 【${lastDiceValue} 点】!`;
+        document.getElementById('dice-result-text').innerText = forcedValue ? `🎯 指定投出 【${lastDiceValue} 点】!` : `掷出了 【${lastDiceValue} 点】!`;
         isDiceRolling = false;
         aiCallingRoll = false;
 
         processTurnStep(lastDiceValue);
-      }, 650);
+      }, forcedValue ? 240 : 650);
     }
+
+    // [TEST-ONLY START] 自定义测试骰子执行入口（测试完毕可连同 HTML 按钮整块删除）
+    function testForceRollDice(num) {
+      if (isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
+      if (players[activePlayerIdx] !== 'blue') {
+        const logEl = document.getElementById('game-event-log');
+        if (logEl) logEl.innerText = '🧪 [测试提示] 请等待轮到【1P 蓝羽夜鸮 (你)】的回合后再指定点数！';
+        return;
+      }
+      executeDiceRoll(num);
+    }
+    // [TEST-ONLY END]
 
     function processTurnStep(dice) {
       const curColor = players[activePlayerIdx];
@@ -2575,8 +2891,8 @@
       const fac = FACTIONS_CONFIG[color];
       const logEl = document.getElementById('game-event-log');
 
-      // 撞子/击落检查
-      await checkAndBumpOpponents(color, piece.pos);
+      // 撞子/踩掉击落检查
+      await checkAndBumpOpponents(color, idx, piece.pos);
 
       // 优先检查跨道直飞虚线捷径！
       if (piece.pos === fac.shortcutTrigger) {
@@ -2586,7 +2902,7 @@
         const w = getPieceTargetWorldPos(color, idx);
         playSound('open');
         await animateHopStep(color, idx, w.x, w.z, 550, 2.2);
-        await checkAndBumpOpponents(color, piece.pos);
+        await checkAndBumpOpponents(color, idx, piece.pos);
         return;
       }
 
@@ -2599,7 +2915,7 @@
         const w = getPieceTargetWorldPos(color, idx);
         playSound('open');
         await animateHopStep(color, idx, w.x, w.z, 420, 1.6);
-        await checkAndBumpOpponents(color, piece.pos);
+        await checkAndBumpOpponents(color, idx, piece.pos);
 
         // 若同色跳正好跳进虚线捷径点，触发经典二段飞跃！
         if (piece.pos === fac.shortcutTrigger) {
@@ -2608,12 +2924,105 @@
           piece.steps += 12;
           const w2 = getPieceTargetWorldPos(color, idx);
           await animateHopStep(color, idx, w2.x, w2.z, 550, 2.3);
-          await checkAndBumpOpponents(color, piece.pos);
+          await checkAndBumpOpponents(color, idx, piece.pos);
         }
       }
     }
 
-    async function checkAndBumpOpponents(activeColor, tilePos) {
+    function animateBoardImpactJolt() {
+      if (!boardGroup) return;
+      const start = performance.now();
+      function jolt(now) {
+        const p = Math.min(1, (now - start) / 240);
+        boardGroup.position.y = -Math.sin(p * Math.PI) * 0.14;
+        if (p < 1) requestAnimationFrame(jolt);
+        else boardGroup.position.y = 0;
+      }
+      requestAnimationFrame(jolt);
+    }
+
+    function animateStompCrushAndFlyHome(attackerColor, attackerIdx, victimColor, victimIdx, destX, destZ) {
+      return new Promise(resolve => {
+        const attackerMesh = birdMeshes[attackerColor]?.[attackerIdx];
+        const victimMesh = birdMeshes[victimColor]?.[victimIdx];
+        if (!victimMesh) return resolve();
+
+        if (attackerMesh) attackerMesh.userData.isMovingAnim = true;
+        victimMesh.userData.isMovingAnim = true;
+
+        const impactX = victimMesh.position.x;
+        const impactZ = victimMesh.position.z;
+        const attStartX = attackerMesh ? attackerMesh.position.x : impactX;
+        const attStartZ = attackerMesh ? attackerMesh.position.z : impactZ;
+        const settledAtt = getPieceTargetWorldPos(attackerColor, attackerIdx);
+        const t0 = performance.now();
+
+        // 阶段1 (0..140ms): 进攻方腾空扑踩到目标正中心 + 受击方压扁变饼 + 3D烟花轰然爆开！
+        let fxTriggered = false;
+        function stageCrush(now) {
+          const elapsed = now - t0;
+          if (elapsed < 140) {
+            const p = elapsed / 140;
+            if (attackerMesh) {
+              attackerMesh.position.x = attStartX + (settledAtt.x - attStartX) * p;
+              attackerMesh.position.z = attStartZ + (settledAtt.z - attStartZ) * p;
+              attackerMesh.position.y = Math.sin(p * Math.PI) * 0.78;
+              attackerMesh.scale.set(1 - 0.08 * p, 1 + 0.16 * (1 - p), 1 - 0.08 * p);
+            }
+            requestAnimationFrame(stageCrush);
+          } else {
+            if (!fxTriggered) {
+              fxTriggered = true;
+              if (attackerMesh) {
+                attackerMesh.position.set(settledAtt.x, 0, settledAtt.z);
+                attackerMesh.scale.set(1, 1, 1);
+              }
+              // 压扁定格特效 + 棋盘震动 + 绚丽烟花！
+              victimMesh.scale.set(1.55, 0.20, 1.55);
+              victimMesh.position.y = 0.02;
+              playSound('firework');
+              animateBoardImpactJolt();
+              spawnStompFireworks(impactX, impactZ, attackerColor, victimColor);
+            }
+            if (elapsed < 340) {
+              requestAnimationFrame(stageCrush);
+            } else {
+              // 阶段2 (340..960ms): 被踩成饼的小鸟晕眩旋转高抛飞回自家停机坪！
+              const flyStart = performance.now();
+              const flyDur = 620;
+              function stageFlyHome(now2) {
+                const fp = Math.min(1, (now2 - flyStart) / flyDur);
+                const easeOut = 1 - Math.pow(1 - fp, 2);
+                victimMesh.position.x = impactX + (destX - impactX) * easeOut;
+                victimMesh.position.z = impactZ + (destZ - impactZ) * easeOut;
+                victimMesh.position.y = Math.sin(fp * Math.PI) * 3.35;
+                // 缓慢恢复体型并在半空高速旋转摇晃
+                const sqRecover = Math.min(1, fp * 3.2);
+                victimMesh.scale.set(1.55 - 0.55 * sqRecover, 0.20 + 0.80 * sqRecover, 1.55 - 0.55 * sqRecover);
+                victimMesh.rotation.y += 0.34;
+                victimMesh.rotation.z = Math.sin(fp * Math.PI * 6) * 0.45 * (1 - fp);
+
+                if (fp < 1) {
+                  requestAnimationFrame(stageFlyHome);
+                } else {
+                  victimMesh.position.set(destX, 0, destZ);
+                  victimMesh.scale.set(1, 1, 1);
+                  victimMesh.rotation.set(0, FACTIONS_CONFIG[victimColor].faceRotationY, 0);
+                  victimMesh.userData.isMovingAnim = false;
+                  if (attackerMesh) attackerMesh.userData.isMovingAnim = false;
+                  playSound('hop');
+                  resolve();
+                }
+              }
+              requestAnimationFrame(stageFlyHome);
+            }
+          }
+        }
+        requestAnimationFrame(stageCrush);
+      });
+    }
+
+    async function checkAndBumpOpponents(activeColor, activeIdx, tilePos) {
       for (const otherColor of players) {
         if (otherColor === activeColor) continue;
         for (let oi = 0; oi < 4; oi++) {
@@ -2621,11 +3030,10 @@
           if (ob.state === 'active' && ob.pos === tilePos) {
             ob.state = 'home';
             ob.steps = 0;
-            playSound('bump');
             const dest = getPieceTargetWorldPos(otherColor, oi);
             const logEl = document.getElementById('game-event-log');
-            if (logEl) logEl.innerText += ` 💥凌空击落【${FACTIONS_CONFIG[otherColor].name}】！`;
-            await animateHopStep(otherColor, oi, dest.x, dest.z, 450, 2.5);
+            if (logEl) logEl.innerText += ` 💥🎇 【${FACTIONS_CONFIG[activeColor].name}】凌空一脚踩爆【${FACTIONS_CONFIG[otherColor].name}】，烟花齐放并踹回基地！`;
+            await animateStompCrushAndFlyHome(activeColor, activeIdx, otherColor, oi, dest.x, dest.z);
           }
         }
       }
@@ -2677,16 +3085,16 @@
         if (iconEl) iconEl.innerText = '☀️';
         if (statusEl) statusEl.innerText = '白昼晴空 (顺风气流)';
         if (firefliesEl) firefliesEl.style.opacity = '0.25';
-        if (ambientLight) ambientLight.color.setHex(0xFFFBEB);
-        if (sunLight) { sunLight.color.setHex(0xFFF3C4); sunLight.intensity = 1.15; }
+        if (ambientLight) ambientLight.color.setHex(0xF8FAFC);
+        if (sunLight) { sunLight.color.setHex(0xFEF3C7); sunLight.intensity = 0.88; }
         if (logEl) logEl.innerText = '【昼夜更替】晨光映照星湖！白昼顺风机制激活！';
       } else {
         if (bgEl) bgEl.className = 'night-atmosphere';
         if (iconEl) iconEl.innerText = '🌙';
         if (statusEl) statusEl.innerText = '极夜星月湖畔 (夜袭迷雾)';
         if (firefliesEl) firefliesEl.style.opacity = '1.0';
-        if (ambientLight) ambientLight.color.setHex(0xC7D2FE);
-        if (sunLight) { sunLight.color.setHex(0x93C5FD); sunLight.intensity = 0.85; }
+        if (ambientLight) ambientLight.color.setHex(0xCBD5E1);
+        if (sunLight) { sunLight.color.setHex(0x93C5FD); sunLight.intensity = 0.88; }
         if (logEl) logEl.innerText = '【昼夜更替】弯月映水萤火起舞！黑夜夜袭机制激活！';
       }
     }
