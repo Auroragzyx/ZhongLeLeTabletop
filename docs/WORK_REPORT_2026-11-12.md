@@ -2,7 +2,7 @@
 
 - **项目仓库**：[Auroragzyx/ZhongLeLeTabletop](https://github.com/Auroragzyx/ZhongLeLeTabletop)（分支 `main`）
 - **报告日期**：2026 年 11 月 12 日
-- **当日代码增量**：`index.html` 增至 `248,076` 字节（`5,204` 行），累计完成 2 个里程碑提交
+- **当日代码增量**：`index.html` 增至 `275,197` 字节（`5,777` 行），新增宇宙星云背景 `assets/bg_gomoku_cosmos.jpg`，累计完成 3 个里程碑阶段
 
 ---
 
@@ -38,39 +38,56 @@
    - 落地时机判断：由于席位控制状态机属于核心回合推进基础设施，提前与观众席/AI 轮转合并实现，比联机阶段再大改 `endTurn()` 更平滑。
    - 已实现通用席位控制层：`seatControllers`、`isHumanActiveTurn(color)`、`hasSeatFinished(color)` 与 `setSeatAITakeover(color, active)`，将原有写死的 `'blue'` 判断彻底替换为通用席位状态机；单机调用或后续联机心跳断线时即可显示 `(🤖 AI接管)` 并代打，联机阶段只需挂载 WebSocket/WebRTC 断线与重连回调。
 
+### 阶段 C：飞行棋去作弊与开局摇骰定序、五子棋宇宙舞台/日月双星环/悔棋规则体系完善
+
+1. **今日新增内容**：
+   - **飞行棋开局摇骰定先手（`#modal-aero-opening-roll`）**：开局及「再来一局」新增四方开局掷骰阶段（`startOpeningRollPhase` / `evaluateOpeningRolls`），按点数大小降序锁定出手顺序，同点自动加赛重掷，并在玩家卡片显示 `[第1先手] ~ [第4顺位]` 徽章。
+   - **五子棋 6 秒悔棋等待窗与次数规则（`#sel-gomoku-undo-limit`）**：建房向导第 3 步新增「关闭悔棋 / 允许 1~3 次」配置；落子后触发 6 秒悔棋等待进度条（`#gomoku-undo-wait-bar`）及 `⏭️ 确认落子 (跳过等待)` 快捷按钮，按钮实时显示剩余次数。
+   - **五子棋对手悔棋裁决弹窗（`#modal-gomoku-undo-consent`）**：构建 10 秒倒计时「是否同意敌方悔棋？（同意 / 不同意）」弹窗与 `GomokuApp.receiveOpponentUndoRequest()` 接入点，供后续真人联机或对手申请时裁决。
+   - **新资源文件**：引入 `assets/bg_gomoku_cosmos.jpg`（宇宙行星星云全景图）。
+2. **今日修改内容**：
+   - **移除飞行棋作弊控件**：彻底删除 `#test-custom-dice-panel`（1–6 指定点数骰子按钮、`testForceRollDice`）与 `#btn-test-win`（一键直接胜利、`testForceVictory`），并精简 `executeDiceRoll()` 为纯粹随机掷骰。
+   - **重构五子棋双星环与日月图标**：将 `astrolabeRing` 拆分为 `yellowRingGroup`（黄圈 + 太阳图标，顺时针公转）与 `purpleRingGroup`（紫圈 + 月亮图标，逆时针公转），移除水平悬浮底座，将太阳与月亮定位到 `y = 0` 并加装两侧串珠扣环，实现「直接串在星环上」的立体效果。
+   - **更换五子棋对局背景**：将 `#gomoku-scenic-bg.astral-atmosphere` 由湖畔贴图切换为 `assets/bg_gomoku_cosmos.jpg`。
+3. **今日完善内容**：
+   - **开局摇骰结果停留时长**：将定序完成后的自动开局等待由 2.2 秒延长至 **8 秒实时倒计时**，确保玩家看清四方点数与顺位（仍支持随时点击或按 `Space` 提前开局）。
+   - **人机悔棋交互合理化**：区分人机与真人对手逻辑——AI 对局申请悔棋时由 `requestUndoFromAI()` 自动回应并在额度内同意撤回，消除「自己发起又自己点同意」的违和弹窗；当悔棋关闭或次数耗尽（`0/X`）时自动跳过 6 秒等待，保持对局节奏流畅。
+
 ---
 
 ## 二、实机验证记录（2026-11-12）
 
-通过静态 DOM / 内联回调完整性检查 + Chrome Headless（SwiftShader WebGL，`1350×709`）端到端测试验证，汇总如下：
+通过静态 DOM / 内联回调完整性检查 + Chrome Headless（SwiftShader WebGL，`1350×760`）端到端测试验证，汇总如下：
 
 | 验证项 | 验证手段 | 验证结果 |
 | :--- | :--- | :--- |
-| DOM ID / 内联事件静态核查 | 脚本扫描 `#view-game-*` / 弹窗节点与 `onclick` 引用 | `Static missing DOM IDs: []`、`Static missing inline fns: []` |
+| DOM ID / 内联事件 / 资源静态核查 | 脚本扫描 `#view-game-*` / 弹窗节点、`onclick` 引用、作弊标记与 `assets/*` | 作弊残留 `[]`、缺失 ID `[]`、缺失回调 `[]`、缺失资源 `[]` |
 | 飞行棋：直接胜利作弊 & 15s 投票弹窗 | 点击 `#btn-test-win` 校验 `#modal-endgame-vote` 与 `#aero-spectator-box` | 正常弹出投票窗与观众席面板（`True \| spec= True`） |
-| 飞行棋：关闭投票进入观众席观战 | 手动关闭投票窗，观察 AI 推进与已完赛列表 | `voteHidden: True`、`curIdx: 1`、`matchEnded: False`、`finLen: 1` |
+| 飞行棋：去作弊 & 开局摇骰 8s 停留 | 启动飞行棋校验作弊面板已移除、开局摇骰定序（含同点加赛）及 8 秒停留 | `cheatPanelGone: True`、`phase: 'done'`、`autoSecondsLeft: 8`（3.2s 后仍停留） |
 | 飞行棋：4 位玩家全部完赛总榜 | 推进至 4 名玩家全部完赛后校验 `#modal-victory` | 正确展示 `第 1 名 ~ 第 4 名` 完整排行榜（`True`） |
 | 飞行棋：3 票提前结束 & AI 接管 | Rematch 后测试 `setSeatAITakeover('blue', true)` 与 `testSimulateThreeEndVotes()` | `全场投「结束」满 3 票，提前结算最终排行榜！`（`True`） |
-| 飞行棋：跑道超步折返 & AI 踩子优先 | 从 `pos=26` 执行 8 步进入跑道；校验 AI 选子优先级 | 折返停在 `{finalPos: 3, finalState: 'runway'}`；AI 优先选子 `0` 踩敌 |
-| 建房向导：`tycoon` 未开放模式拦截 | 选择 `tycoon` 进入第 3 步并点击确认开房 | `aeroHidden: True`、`wizStillOpen: True`（正确拦截） |
-| 《星轨五子棋 3D》真实鼠标交互与共鸣 | 鼠标真实点击 `H8 (7,7)`、星象推演、双退悔棋、3 连共鸣 | `resB=1, resW=1` 紫金共鸣光束点亮正常 |
-| 《星轨五子棋 3D》五连胜利结算闭环 | 达成 5 连后校验 `#modal-victory`、换先、步数、返回大厅 | `gameOver= True \| modalVisible= True` |
+| 《星轨五子棋 3D》宇宙背景与日月双环 | 校验 `bg_gomoku_cosmos.jpg` 加载与太阳黄圈顺时针/月亮紫圈逆时针串环渲染 | 画面清晰居中，太阳/月亮串接在双环上无遮挡 |
+| 《星轨五子棋 3D》6s 悔棋窗、次数限制与裁决弹窗 | 验证 `允许 1 次` / `关闭 (0)`、AI 自动同意扣次、耗尽跳过等待与 `receiveOpponentUndoRequest()` | 全流程状态流转与 10 秒裁决弹窗正常 |
 | 全量浏览器控制台与运行时稳定性 | 全程监听 Chrome `console.error` / `pageerror` | `ALL E2E CHECKS PASSED WITH 0 JS ERRORS!` |
 
 ---
 
 ## 三、仓库核心文件一览
 
-- `index.html`：桌游合集单页主程序（`248,076` 字节 / `5,204` 行），承载大厅、建房向导、《日夜飞行棋 3D》与《星轨五子棋 3D》引擎、观众席与投票结算模块
+- `index.html`：桌游合集单页主程序（`275,197` 字节 / `5,777` 行），承载大厅、建房向导、《日夜飞行棋 3D》与《星轨五子棋 3D》引擎、观众席与投票结算模块
 - `启动游戏.bat`：Windows 本地独立窗口（`--app`）快捷启动脚本
-- `assets/three.min.js`、`assets/bg_aero_lake.jpg`：离线 `Three.js` 引擎库与星月湖畔实景舞台贴图
+- `assets/three.min.js`、`assets/bg_aero_lake.jpg`、`assets/bg_gomoku_cosmos.jpg`：离线 `Three.js` 引擎库、飞行棋星月湖畔舞台贴图与五子棋宇宙行星星云背景图
 - `docs/WORK_REPORT_2026-11-11.md`、`docs/WORK_REPORT_2026-11-12.md`：每日研发工作报告归档
 - `README.md`：项目主说明与当前已实现模式索引
 
 ---
 
-## 四、后续待办方向
+## 四、下一步开发计划建议
 
-1. **移除 `[TEST-ONLY]` 调试控件（待验收后按需清理）**：清理飞行棋 1–6 自定义测试骰子、`#btn-test-win`（直接胜利）及投票窗内 `testSimulateThreeEndVotes()` 快捷按钮。
-2. **模式三《机械大亨 (Gear Tycoon)》立项**：设计蒸汽齿轮工坊 3D 棋盘、资源卡牌与建房向导分支接入。
-3. **局域网 / 多人联机房间通信层**：接入 WebSocket / WebRTC 信令同步，并将现有 `seatControllers` / `setSeatAITakeover` 与真实玩家心跳断线重连事件对接。
+1. **局域网 / 多人联机通信层与真人协议打通（优先推荐）**：
+   - 将房间大厅现有的「局域网 / 多人联机」向导与 WebSocket / WebRTC 信令打通，把飞行棋 `seatControllers` 断线 AI 接管、15 秒投票同步，以及五子棋 `receiveOpponentUndoRequest()`（10 秒是否同意悔棋弹窗）接入真实对手客户端消息。
+   - 同步清理 `#modal-endgame-vote` 内仅用于单机测试的 `[TEST-ONLY]` `testSimulateThreeEndVotes()` 按钮。
+2. **模式三《机械大亨 (Gear Tycoon)》原型立项**：
+   - 设计蒸汽齿轮工坊 3D 环形棋盘、地格升级、齿轮资源与命运卡牌体系，替换建房向导中的筹备预告面板并正式接入开房分流。
+3. **对局体验与 Steam 客户端化打磨**：
+   - 补充飞行棋/五子棋局内规则速览浮窗、音频静音快捷键与本地战绩/胜率统计持久化（`localStorage`），为后续 Electron / Steamworks 打包做准备。

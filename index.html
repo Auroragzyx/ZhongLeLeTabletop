@@ -271,7 +271,9 @@
       filter: brightness(0.96) contrast(1.06) saturate(1.05);
     }
     #gomoku-scenic-bg.astral-atmosphere {
-      filter: brightness(0.76) contrast(1.14) saturate(1.15) hue-rotate(12deg);
+      background-image: url('assets/bg_gomoku_cosmos.jpg');
+      background-position: center center;
+      filter: brightness(0.94) contrast(1.06) saturate(1.06);
     }
 
     /* 湖畔柔和暗角遮罩，让中心3D棋盘和两侧HUD对比更立体 */
@@ -626,7 +628,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-yellow" class="portrait-thumb" alt="2P 晨曦灵雀">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #FDE68A;">2P 晨曦灵雀 <span id="seat-status-yellow" style="font-size: 10px; color: #FCD34D;">(AI)</span></div>
+              <div style="font-size: 13px; font-weight: 900; color: #FDE68A;">2P 晨曦灵雀 <span id="seat-status-yellow" style="font-size: 10px; color: #FCD34D;">(AI)</span> <span id="seat-order-yellow" style="font-size: 10px; color: #FDE047;"></span></div>
               <div style="font-size: 11px; color: #FCD34D; font-weight: 700;">凯旋加冕: <span id="cnt-yellow-done">0</span>/4</div>
             </div>
           </div>
@@ -641,7 +643,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-blue" class="portrait-thumb" alt="1P 蓝羽夜鸮">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #93C5FD;">1P 蓝羽夜鸮 <span id="seat-status-blue" style="font-size: 10px; color: #60A5FA;">(你)</span></div>
+              <div style="font-size: 13px; font-weight: 900; color: #93C5FD;">1P 蓝羽夜鸮 <span id="seat-status-blue" style="font-size: 10px; color: #60A5FA;">(你)</span> <span id="seat-order-blue" style="font-size: 10px; color: #FDE047;"></span></div>
               <div style="font-size: 11px; color: #60A5FA; font-weight: 700;">凯旋加冕: <span id="cnt-blue-done">0</span>/4</div>
             </div>
           </div>
@@ -660,7 +662,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-purple" class="portrait-thumb" alt="3P 冥夜紫鸦">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #E9D5FF;">3P 冥夜紫鸦 <span id="seat-status-purple" style="font-size: 10px; color: #C084FC;">(AI)</span></div>
+              <div style="font-size: 13px; font-weight: 900; color: #E9D5FF;">3P 冥夜紫鸦 <span id="seat-status-purple" style="font-size: 10px; color: #C084FC;">(AI)</span> <span id="seat-order-purple" style="font-size: 10px; color: #FDE047;"></span></div>
               <div style="font-size: 11px; color: #C084FC; font-weight: 700;">凯旋加冕: <span id="cnt-purple-done">0</span>/4</div>
             </div>
           </div>
@@ -675,7 +677,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-pink" class="portrait-thumb" alt="4P 霞光粉鹦">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #FBCFE8;">4P 霞光粉鹦 <span id="seat-status-pink" style="font-size: 10px; color: #F472B6;">(AI)</span></div>
+              <div style="font-size: 13px; font-weight: 900; color: #FBCFE8;">4P 霞光粉鹦 <span id="seat-status-pink" style="font-size: 10px; color: #F472B6;">(AI)</span> <span id="seat-order-pink" style="font-size: 10px; color: #FDE047;"></span></div>
               <div style="font-size: 11px; color: #F472B6; font-weight: 700;">凯旋加冕: <span id="cnt-pink-done">0</span>/4</div>
             </div>
           </div>
@@ -708,22 +710,6 @@
               ⏩ 观战倍速: 1x (正常)
             </button>
           </div>
-          <!-- [TEST-ONLY START] 自定义测试骰子与直接胜利面板（测试完毕后可整块删除） -->
-          <div id="test-custom-dice-panel" style="width: 100%; margin-top: 4px; padding-top: 8px; border-top: 1px dashed rgba(251, 191, 36, 0.4); display: flex; flex-direction: column; gap: 6px;">
-            <div style="font-size: 10px; font-weight: 800; color: #FCD34D; text-align: center;">🧪 测试指定点数 (可随时删除)</div>
-            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;">
-              <button type="button" onclick="testForceRollDice(1)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">1</button>
-              <button type="button" onclick="testForceRollDice(2)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">2</button>
-              <button type="button" onclick="testForceRollDice(3)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">3</button>
-              <button type="button" onclick="testForceRollDice(4)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">4</button>
-              <button type="button" onclick="testForceRollDice(5)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">5</button>
-              <button type="button" onclick="testForceRollDice(6)" class="scenic-hud-btn" style="padding: 4px 0; justify-content: center; font-size: 11px;">6</button>
-            </div>
-            <button id="btn-test-win" type="button" onclick="testForceVictory()" class="scenic-hud-btn" style="width: 100%; padding: 5px 8px; justify-content: center; font-size: 11px; background: rgba(16, 185, 129, 0.25); border-color: rgba(52, 211, 153, 0.65); color: #A7F3D0;">
-              🏆 测试作弊：一键直接胜利
-            </button>
-          </div>
-          <!-- [TEST-ONLY END] -->
         </div>
       </div>
     </div>
@@ -827,8 +813,20 @@
           <div id="gomoku-last-coord" style="font-size: 11px; font-weight: 800; color: #FDE68A; text-align: center; background: rgba(15, 23, 42, 0.65); padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);">
             等待落子（推荐 H8 天元）
           </div>
+          <div id="gomoku-undo-wait-bar" class="hidden" style="background: rgba(139, 92, 246, 0.22); border: 1px solid rgba(196, 181, 253, 0.55); border-radius: 10px; padding: 7px 9px; display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; color: #FDE68A;">
+              <span>⏳ 悔棋等待窗</span>
+              <span id="gomoku-undo-wait-sec" style="font-family: monospace; color: #FFF;">6s</span>
+            </div>
+            <div style="width: 100%; height: 5px; background: rgba(15, 23, 42, 0.6); border-radius: 999px; overflow: hidden;">
+              <div id="gomoku-undo-wait-progress" style="width: 100%; height: 100%; background: linear-gradient(90deg, #A855F7, #FBBF24); transition: width 0.25s linear;"></div>
+            </div>
+            <button id="btn-gomoku-skip-wait" type="button" onclick="GomokuApp.skipUndoWait()" class="scenic-hud-btn" style="width: 100%; padding: 4px 6px; justify-content: center; font-size: 10px; border-color: rgba(250, 204, 21, 0.5); color: #FEF08A;">
+              ⏭️ 确认落子 (跳过等待)
+            </button>
+          </div>
           <button id="btn-gomoku-undo" onclick="GomokuApp.undoMove()" class="scenic-hud-btn" style="width: 100%; justify-content: center;">
-            ↩️ 悔棋一步 (双退)
+            ↩️ 申请悔棋 (落子后6s)
           </button>
           <button id="btn-gomoku-hint" onclick="GomokuApp.showHint()" class="scenic-hud-btn" style="width: 100%; justify-content: center; border-color: rgba(250, 204, 21, 0.55); color: #FEF08A;">
             💡 星象推演 (最佳一手)
@@ -1092,11 +1090,19 @@
               </select>
             </div>
 
-            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(139, 92, 246, 0.35); display: flex; flex-direction: column; gap: 8px;">
-              <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                <span class="night-text-main" style="font-size: 12px; font-weight: 800;">↩️ 允许局内双退悔棋一步</span>
-                <input type="checkbox" id="chk-gomoku-undo" checked style="width: 18px; height: 18px; accent-color: #7C3AED;">
-              </label>
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(139, 92, 246, 0.35); display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div>
+                  <div class="night-text-main" style="font-size: 12px; font-weight: 900; color: #292524;">↩️ 悔棋次数与规则</div>
+                  <div class="night-subtext" style="font-size: 11px; color: #78716C;">落子后 6 秒内可申请悔棋（需对手同意）</div>
+                </div>
+                <select id="sel-gomoku-undo-limit" style="background: #FAF5FF; border: 1px solid #8B5CF6; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 900; color: #5B21B6; outline: none;">
+                  <option value="0">🚫 关闭悔棋</option>
+                  <option value="1">允许 1 次</option>
+                  <option value="2">允许 2 次</option>
+                  <option value="3" selected>允许 3 次 (默认)</option>
+                </select>
+              </div>
               <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                 <span class="night-text-main" style="font-size: 12px; font-weight: 800;">🔢 默认在棋子顶面显示落子手数</span>
                 <input type="checkbox" id="chk-gomoku-numbers" checked style="width: 18px; height: 18px; accent-color: #7C3AED;">
@@ -1308,6 +1314,53 @@
         🧪 [单机测试辅助] 模拟 AI 补满 3 票「结束」直接看终局排行榜
       </button>
       <!-- [TEST-ONLY END] -->
+    </div>
+  </div>
+
+  <!-- 7. 飞行棋开局摇骰定先手顺序弹窗 -->
+  <div id="modal-aero-opening-roll" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 510px; gap: 12px; text-align: center; align-items: center;">
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+        <span style="padding: 3px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.22); color: #B45309; font-size: 11px; font-weight: 900;">🎲 开局定序 • 点数大者先手</span>
+        <span style="font-size: 11px; font-weight: 800; color: #78716C;">同点自动加赛重掷</span>
+      </div>
+      <h2 class="night-text-main" style="font-size: 20px; font-weight: 900; color: #92400E;">开局摇骰决定出手顺序</h2>
+      <p id="opening-roll-status" class="night-subtext" style="font-size: 12px; color: #57534E; font-weight: 700;">
+        请点击下方按钮（或按 SPACE）投掷你的开局先手骰子！
+      </p>
+      <div id="opening-roll-grid" style="width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; text-align: left;"></div>
+      <div id="opening-roll-summary" class="hidden" style="width: 100%; padding: 8px 12px; border-radius: 10px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 12px; font-weight: 900; color: #92400E;"></div>
+      <button id="btn-opening-roll-action" type="button" onclick="handleOpeningRollAction()" class="primary-gold-btn" style="width: 100%; padding: 10px 14px; font-size: 14px;">
+        🎲 投掷开局骰子 (SPACE)
+      </button>
+    </div>
+  </div>
+
+  <!-- 8. 星轨五子棋：对手同意悔棋 10 秒确认弹窗 -->
+  <div id="modal-gomoku-undo-consent" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 450px; gap: 12px; text-align: center; align-items: center;">
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+        <span style="padding: 3px 10px; border-radius: 999px; background: rgba(139, 92, 246, 0.18); color: #6D28D9; font-size: 11px; font-weight: 900;">↩️ 悔棋请求 • 对手裁决</span>
+        <span style="font-size: 11px; font-weight: 800; color: #78716C;">超时自动拒绝</span>
+      </div>
+      <div style="font-size: 40px; line-height: 1;">⏳</div>
+      <h2 class="night-text-main" style="font-size: 20px; font-weight: 900; color: #4C1D95;">是否同意敌方悔棋？</h2>
+      <p id="gomoku-undo-consent-desc" class="night-subtext" style="font-size: 12px; color: #57534E; font-weight: 700; line-height: 1.55;">
+        敌方申请撤销刚才落下的棋子，请在 10 秒内做出选择：
+      </p>
+      <div style="width: 100%; background: rgba(139, 92, 246, 0.1); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.35);">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 900; margin-bottom: 6px;">
+          <span class="night-text-main">⏱️ 剩余选择时间</span>
+          <span style="color: #7C3AED; font-family: monospace; font-size: 14px;"><span id="gomoku-consent-countdown">10</span> 秒</span>
+        </div>
+        <div style="width: 100%; height: 7px; background: rgba(148, 163, 184, 0.25); border-radius: 999px; overflow: hidden;">
+          <div id="gomoku-consent-progress-bar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #8B5CF6, #F59E0B); transition: width 0.25s linear;"></div>
+        </div>
+      </div>
+      <div style="display: flex; width: 100%; gap: 10px; padding-top: 2px;">
+        <button id="btn-gomoku-consent-yes" type="button" onclick="GomokuApp.respondUndoConsent(true)" class="primary-gold-btn" style="flex: 1;">✅ 同意</button>
+        <button id="btn-gomoku-consent-no" type="button" onclick="GomokuApp.respondUndoConsent(false)" class="glass-btn" style="flex: 1;">❌ 不同意</button>
+      </div>
     </div>
   </div>
 
@@ -2888,8 +2941,11 @@
     // =========================================================================
     // 5. 日夜飞行棋 3D 走棋动画与完整规则对战引擎
     // =========================================================================
-    const players = ['blue', 'yellow', 'purple', 'pink'];
+    const BASE_PLAYERS = ['blue', 'yellow', 'purple', 'pink'];
+    let players = [...BASE_PLAYERS];
     let activePlayerIdx = 0;
+    let isOpeningRollPhase = false;
+    let openingRollState = null;
     let isDayTime = true;
     let currentRound = 1;
     let lastDiceValue = 1;
@@ -3053,10 +3109,226 @@
       snapAll3DMeeplesImmediately();
       updateGameUI();
       updateTurnAtmosphereVisuals();
+      startOpeningRollPhase();
+    }
+
+    function stopOpeningRollTimers() {
+      if (openingRollState && openingRollState.timers) {
+        openingRollState.timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+        openingRollState.timers = [];
+      }
+    }
+
+    function renderOpeningRollModal() {
+      if (!openingRollState) return;
+      const st = openingRollState;
+      const gridEl = document.getElementById('opening-roll-grid');
+      const statusEl = document.getElementById('opening-roll-status');
+      const summaryEl = document.getElementById('opening-roll-summary');
+      const btnEl = document.getElementById('btn-opening-roll-action');
+      const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+      if (gridEl) {
+        const orderToShow = st.phase === 'done' && st.finalOrder.length === 4 ? st.finalOrder : BASE_PLAYERS;
+        const rankTags = ['🥇 第1先手', '🥈 第2顺位', '🥉 第3顺位', '🏅 第4顺位'];
+        gridEl.innerHTML = orderToShow.map((c, idx) => {
+          const fac = FACTIONS_CONFIG[c];
+          const clr = COLOR_MAP[c].main;
+          const rolls = st.scores[c] || [];
+          const isTied = st.tiedColors.includes(c);
+          const lastVal = rolls.length > 0 ? rolls[rolls.length - 1] : null;
+          const face = lastVal ? diceFaces[lastVal - 1] : '🎲';
+          const scoreText = rolls.length === 0
+            ? '等待掷骰'
+            : (rolls.length === 1 ? `${rolls[0]} 点` : `${rolls[0]} 点 (加赛 ${rolls.slice(1).join(' / ')})`);
+          const badge = st.phase === 'done'
+            ? `<span style="color:#B45309;font-weight:900;">${rankTags[idx]}</span>`
+            : (isTied ? `<span style="color:#DC2626;font-weight:900;">⚡ 同点待加赛</span>` : `<span style="color:#78716C;">${rolls.length ? '已掷' : '未掷'}</span>`);
+
+          return `<div class="night-card-bg" style="padding:10px 12px;border-radius:12px;background:#F8F5EE;border:1.5px solid ${isTied ? '#EF4444' : clr};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="min-width:0;">
+              <div style="font-size:12px;font-weight:900;color:${COLOR_MAP[c].dark};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${fac.name}</div>
+              <div style="font-size:11px;font-weight:700;color:#57534E;margin-top:2px;">${scoreText} · ${badge}</div>
+            </div>
+            <div style="font-size:28px;line-height:1;flex-shrink:0;">${face}</div>
+          </div>`;
+        }).join('');
+      }
+
+      if (st.phase === 'waiting_human') {
+        if (statusEl) statusEl.innerText = '请 1P 蓝羽夜鸮 (你) 点击掷骰，随后其余选手依次掷骰定序！';
+        if (summaryEl) summaryEl.classList.add('hidden');
+        if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.innerText = '🎲 投掷开局骰子 (SPACE)'; }
+      } else if (st.phase === 'rolling') {
+        if (statusEl) statusEl.innerText = '🎲 正在投掷开局先手骰子...';
+        if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.6'; btnEl.innerText = '🎲 掷骰判定中...'; }
+      } else if (st.phase === 'tie_waiting_human') {
+        if (statusEl) statusEl.innerText = '⚡ 你与对手投出相同点数！请点击（或按 SPACE）加赛重掷决定先后！';
+        if (summaryEl) summaryEl.classList.add('hidden');
+        if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.innerText = '⚡ 同点加赛重掷 (SPACE)'; }
+      } else if (st.phase === 'done') {
+        const orderNames = st.finalOrder.map((c, i) => `${i + 1}.${FACTIONS_CONFIG[c].name.split(' ')[1]}`).join(' → ');
+        if (statusEl) statusEl.innerText = `✅ 先手顺序已锁定！由【${FACTIONS_CONFIG[st.finalOrder[0]].name}】率先开局！`;
+        if (summaryEl) {
+          summaryEl.classList.remove('hidden');
+          summaryEl.innerText = `出手顺序：${orderNames}`;
+        }
+        const rem = typeof st.autoSecondsLeft === 'number' ? st.autoSecondsLeft : 8;
+        if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.innerText = `🚀 立即开始对局 (${rem}s 后自动开局 / SPACE)`; }
+      }
+    }
+
+    function compareOpeningScores(a, b, scores) {
+      const sa = scores[a] || [];
+      const sb = scores[b] || [];
+      const len = Math.max(sa.length, sb.length);
+      for (let i = 0; i < len; i++) {
+        const va = sa[i] || 0;
+        const vb = sb[i] || 0;
+        if (va !== vb) return vb - va;
+      }
+      return 0;
+    }
+
+    function evaluateOpeningRolls() {
+      if (!openingRollState) return;
+      const st = openingRollState;
+      const sorted = [...BASE_PLAYERS].sort((a, b) => compareOpeningScores(a, b, st.scores));
+      const tiedSet = new Set();
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (compareOpeningScores(sorted[i], sorted[i + 1], st.scores) === 0) {
+          tiedSet.add(sorted[i]);
+          tiedSet.add(sorted[i + 1]);
+        }
+      }
+
+      if (tiedSet.size > 0) {
+        st.tiedColors = BASE_PLAYERS.filter(c => tiedSet.has(c));
+        if (st.tiedColors.includes('blue')) {
+          st.phase = 'tie_waiting_human';
+          renderOpeningRollModal();
+        } else {
+          st.phase = 'rolling';
+          renderOpeningRollModal();
+          const tid = setTimeout(() => {
+            if (!openingRollState) return;
+            st.tiedColors.forEach(c => st.scores[c].push(Math.floor(Math.random() * 6) + 1));
+            playSound('dice');
+            evaluateOpeningRolls();
+          }, 550);
+          st.timers.push(tid);
+        }
+        return;
+      }
+
+      st.tiedColors = [];
+      st.finalOrder = sorted;
+      st.phase = 'done';
+      st.autoSecondsLeft = 8;
+      players = [...sorted];
+      activePlayerIdx = 0;
+      const rankLabels = ['第1先手', '第2顺位', '第3顺位', '第4顺位'];
+      players.forEach((c, idx) => {
+        const badge = document.getElementById(`seat-order-${c}`);
+        if (badge) badge.innerText = `[${rankLabels[idx]}]`;
+      });
+      playSound('open');
+      renderOpeningRollModal();
+      const countdownTid = setInterval(() => {
+        if (!isOpeningRollPhase || !openingRollState || openingRollState.phase !== 'done') {
+          clearInterval(countdownTid);
+          return;
+        }
+        openingRollState.autoSecondsLeft--;
+        renderOpeningRollModal();
+        if (openingRollState.autoSecondsLeft <= 0) {
+          clearInterval(countdownTid);
+          finishOpeningRollPhase();
+        }
+      }, 1000);
+      st.timers.push(countdownTid);
+    }
+
+    function finishOpeningRollPhase() {
+      if (!isOpeningRollPhase) return;
+      stopOpeningRollTimers();
+      isOpeningRollPhase = false;
+      const modal = document.getElementById('modal-aero-opening-roll');
+      if (modal) modal.classList.add('hidden');
+      updateGameUI();
+      updateTurnIndicator();
+
+      const firstColor = players[0];
+      const orderStr = players.map((c, i) => `${i + 1}.${FACTIONS_CONFIG[c].name}`).join(' → ');
+      const logEl = document.getElementById('game-event-log');
+      if (logEl) logEl.innerText = `【先手顺序】${orderStr}！请【${FACTIONS_CONFIG[firstColor].name}】率先掷骰！`;
+
+      if (!isHumanActiveTurn(firstColor)) {
+        aiCallingRoll = true;
+        setTimeout(playerRollDice, getAeroDelay(700));
+      }
+    }
+
+    function handleOpeningRollAction() {
+      if (!isOpeningRollPhase || !openingRollState) return;
+      const st = openingRollState;
+      if (st.phase === 'done') {
+        finishOpeningRollPhase();
+        return;
+      }
+      if (st.phase === 'waiting_human') {
+        st.phase = 'rolling';
+        playSound('dice');
+        st.scores.blue.push(Math.floor(Math.random() * 6) + 1);
+        renderOpeningRollModal();
+
+        const aiList = ['yellow', 'purple', 'pink'];
+        aiList.forEach((c, idx) => {
+          const tid = setTimeout(() => {
+            if (!openingRollState) return;
+            st.scores[c].push(Math.floor(Math.random() * 6) + 1);
+            playSound('dice');
+            renderOpeningRollModal();
+            if (idx === aiList.length - 1) {
+              const finTid = setTimeout(evaluateOpeningRolls, 320);
+              st.timers.push(finTid);
+            }
+          }, 220 * (idx + 1));
+          st.timers.push(tid);
+        });
+      } else if (st.phase === 'tie_waiting_human') {
+        st.phase = 'rolling';
+        playSound('dice');
+        st.tiedColors.forEach(c => st.scores[c].push(Math.floor(Math.random() * 6) + 1));
+        renderOpeningRollModal();
+        const tid = setTimeout(evaluateOpeningRolls, 360);
+        st.timers.push(tid);
+      }
+    }
+
+    function startOpeningRollPhase() {
+      stopOpeningRollTimers();
+      isOpeningRollPhase = true;
+      openingRollState = {
+        phase: 'waiting_human',
+        scores: { blue: [], yellow: [], purple: [], pink: [] },
+        tiedColors: [],
+        finalOrder: [],
+        timers: []
+      };
+      renderOpeningRollModal();
+      const modal = document.getElementById('modal-aero-opening-roll');
+      if (modal) modal.classList.remove('hidden');
+      const logEl = document.getElementById('game-event-log');
+      if (logEl) logEl.innerText = '【开局定序】请先摇骰子决定四位玩家的出手顺序（点数越大越先）！';
     }
 
     function returnToMainMenu() {
       playSound('click');
+      stopOpeningRollTimers();
+      isOpeningRollPhase = false;
+      const openModalEl = document.getElementById('modal-aero-opening-roll');
+      if (openModalEl) openModalEl.classList.add('hidden');
       stopEndgameVoteTimer();
       const voteModal = document.getElementById('modal-endgame-vote');
       if (voteModal) voteModal.classList.add('hidden');
@@ -3071,12 +3343,17 @@
     }
 
     function resetGameData() {
+      stopOpeningRollTimers();
+      isOpeningRollPhase = false;
+      const openModalEl = document.getElementById('modal-aero-opening-roll');
+      if (openModalEl) openModalEl.classList.add('hidden');
       stopEndgameVoteTimer();
       const voteModal = document.getElementById('modal-endgame-vote');
       if (voteModal) voteModal.classList.add('hidden');
       const vicModal = document.getElementById('modal-victory');
       if (vicModal) vicModal.classList.add('hidden');
 
+      players = [...BASE_PLAYERS];
       activePlayerIdx = 0;
       isDayTime = true;
       currentRound = 1;
@@ -3096,6 +3373,8 @@
 
       players.forEach(p => {
         gameState[p] = [0, 1, 2, 3].map(() => ({ state: 'home', pos: 0, steps: 0 }));
+        const ordBadge = document.getElementById(`seat-order-${p}`);
+        if (ordBadge) ordBadge.innerText = '';
       });
       document.getElementById('game-round-counter').innerText = `昼夜轮换: 第 1 / ${roundCycleLimit} 大回合`;
       document.getElementById('action-hint-box').classList.add('hidden');
@@ -3105,7 +3384,7 @@
       if (speedBtn) speedBtn.innerText = '⏩ 观战倍速: 1x (正常)';
       const rollBtn = document.getElementById('btn-roll-dice');
       if (rollBtn) { rollBtn.disabled = false; rollBtn.style.opacity = '1'; }
-      document.getElementById('game-event-log').innerText = '【开局就绪】左键拖拽旋转可全角度欣赏 3D 灵禽棋子！请 1P 蓝羽夜鸮掷骰！';
+      document.getElementById('game-event-log').innerText = '【开局就绪】左键拖拽旋转可全角度欣赏 3D 灵禽棋子！请先摇骰定出先手顺序！';
       updateTurnIndicator();
     }
 
@@ -3123,7 +3402,7 @@
     }
 
     function playerRollDice() {
-      if (matchEnded || isVotePaused || isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
+      if (isOpeningRollPhase || matchEnded || isVotePaused || isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
       const curColor = players[activePlayerIdx];
       if (hasSeatFinished(curColor)) { endTurn(); return; }
       if (isHumanActiveTurn(curColor) || aiCallingRoll) {
@@ -3132,61 +3411,26 @@
     }
 
     let aiCallingRoll = false;
-    function executeDiceRoll(forcedValue = null) {
+    function executeDiceRoll() {
       isDiceRolling = true;
       playSound('dice');
       const cube = document.getElementById('dice-cube');
       cube.classList.add('animate-dice-roll');
-      document.getElementById('dice-result-text').innerText = forcedValue ? `🎯 测试指定 【${forcedValue} 点】中...` : '骰子翻滚中...';
+      document.getElementById('dice-result-text').innerText = '骰子翻滚中...';
 
       setTimeout(() => {
         cube.classList.remove('animate-dice-roll');
-        if (matchEnded || isVotePaused || hasSeatFinished(players[activePlayerIdx])) { isDiceRolling = false; aiCallingRoll = false; return; }
-        lastDiceValue = (forcedValue >= 1 && forcedValue <= 6) ? forcedValue : (Math.floor(Math.random() * 6) + 1);
+        if (isOpeningRollPhase || matchEnded || isVotePaused || hasSeatFinished(players[activePlayerIdx])) { isDiceRolling = false; aiCallingRoll = false; return; }
+        lastDiceValue = Math.floor(Math.random() * 6) + 1;
         const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
         cube.innerText = diceFaces[lastDiceValue - 1];
-        document.getElementById('dice-result-text').innerText = forcedValue ? `🎯 指定投出 【${lastDiceValue} 点】!` : `掷出了 【${lastDiceValue} 点】!`;
+        document.getElementById('dice-result-text').innerText = `掷出了 【${lastDiceValue} 点】!`;
         isDiceRolling = false;
         aiCallingRoll = false;
 
         processTurnStep(lastDiceValue);
-      }, getAeroDelay(forcedValue ? 240 : 650));
+      }, getAeroDelay(650));
     }
-
-    // [TEST-ONLY START] 自定义测试骰子与直接胜利执行入口（测试完毕可连同 HTML 按钮整块删除）
-    function testForceRollDice(num) {
-      if (matchEnded || isVotePaused || isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
-      const curColor = players[activePlayerIdx];
-      if (!isHumanActiveTurn(curColor)) {
-        const logEl = document.getElementById('game-event-log');
-        if (logEl) logEl.innerText = '🧪 [测试提示] 请等待轮到【1P 蓝羽夜鸮 (你)】可操作回合后再指定点数！';
-        return;
-      }
-      executeDiceRoll(num);
-    }
-
-    function testForceVictory() {
-      if (matchEnded || hasSeatFinished('blue')) return;
-      isDiceRolling = false;
-      isAnimatingMove = false;
-      waitingForPlayerChoice = false;
-      const hintBox = document.getElementById('action-hint-box');
-      if (hintBox) hintBox.classList.add('hidden');
-
-      const fac = FACTIONS_CONFIG.blue;
-      gameState.blue.forEach(piece => {
-        piece.state = 'done';
-        piece.pos = 5;
-        piece.steps = 43;
-      });
-      snapAll3DMeeplesImmediately();
-      updateGameUI();
-
-      const logEl = document.getElementById('game-event-log');
-      if (logEl) logEl.innerText = `🧪 [测试作弊] 【${fac.name}】四只 3D 神鸟一键完赛加冕，进入观众席并触发胜出投票！`;
-      handleAeroPlayerFinished('blue');
-    }
-    // [TEST-ONLY END]
 
     function processTurnStep(dice) {
       const curColor = players[activePlayerIdx];
@@ -4081,7 +4325,9 @@
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && !document.getElementById('view-game-aero').classList.contains('hidden')) {
         e.preventDefault();
-        if (!isVotePaused && !matchEnded && isHumanActiveTurn(players[activePlayerIdx])) {
+        if (isOpeningRollPhase) {
+          handleOpeningRollAction();
+        } else if (!isVotePaused && !matchEnded && isHumanActiveTurn(players[activePlayerIdx])) {
           if (waitingForPlayerChoice) autoPickMove();
           else playerRollDice();
         }
@@ -4104,7 +4350,9 @@
         humanColor: 1, // 1=黑(先手), 2=白(后手)
         aiColor: 2,
         difficulty: 'hard',
+        maxUndos: 3,
         allowUndo: true,
+        vsAI: true,
         showNumbers: true
       };
 
@@ -4116,8 +4364,17 @@
       let matchGen = 0; // 防异步 AI 过期落子
       let lastResCount = { 1: 0, 2: 0 };
 
+      let undoUsed = 0;
+      let undoWindowActive = false;
+      let undoWindowSec = 0;
+      let undoWindowTimer = null;
+      let undoConsentPending = false;
+      let undoConsentSec = 0;
+      let undoConsentTimer = null;
+      let aiUndoTimeout = null;
+
       let scene = null, camera = null, renderer = null, boardGroup = null;
-      let astrolabeRing = null, starDustPoints = null;
+      let yellowRingGroup = null, purpleRingGroup = null, starDustPoints = null;
       let stonesGroup = null, resonanceGroup = null, fxGroup = null;
       let lastMoveRing = null, hoverGroup = null, hoverStoneMesh = null, hintGroup = null;
       let stoneMeshes = new Map(); // "r,c" -> Group
@@ -4292,6 +4549,82 @@
         return tex;
       }
 
+      function createCelestialBadgeTexture(type) {
+        const cv = document.createElement('canvas');
+        cv.width = 160; cv.height = 160;
+        const g = cv.getContext('2d');
+        const cx = 80, cy = 80;
+        g.clearRect(0, 0, 160, 160);
+
+        if (type === 'sun') {
+          // 金色太阳外晕与光芒
+          const halo = g.createRadialGradient(cx, cy, 14, cx, cy, 74);
+          halo.addColorStop(0, 'rgba(254, 240, 138, 1)');
+          halo.addColorStop(0.45, 'rgba(251, 191, 36, 0.72)');
+          halo.addColorStop(1, 'rgba(245, 158, 11, 0)');
+          g.fillStyle = halo;
+          g.beginPath(); g.arc(cx, cy, 74, 0, Math.PI * 2); g.fill();
+
+          g.fillStyle = '#FDE047';
+          for (let i = 0; i < 12; i++) {
+            const ang = (i / 12) * Math.PI * 2;
+            const x1 = cx + Math.cos(ang - 0.12) * 34;
+            const y1 = cy + Math.sin(ang - 0.12) * 34;
+            const x2 = cx + Math.cos(ang + 0.12) * 34;
+            const y2 = cy + Math.sin(ang + 0.12) * 34;
+            const tipR = i % 2 === 0 ? 64 : 52;
+            const xt = cx + Math.cos(ang) * tipR;
+            const yt = cy + Math.sin(ang) * tipR;
+            g.beginPath();
+            g.moveTo(x1, y1);
+            g.lineTo(xt, yt);
+            g.lineTo(x2, y2);
+            g.closePath();
+            g.fill();
+          }
+
+          const coreGrad = g.createRadialGradient(cx - 6, cy - 6, 4, cx, cy, 32);
+          coreGrad.addColorStop(0, '#FFFBEB');
+          coreGrad.addColorStop(0.65, '#FACC15');
+          coreGrad.addColorStop(1, '#EA580C');
+          g.fillStyle = coreGrad;
+          g.beginPath(); g.arc(cx, cy, 31, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = '#FEF08A';
+          g.lineWidth = 3;
+          g.stroke();
+        } else {
+          // 紫银星环弯月图标
+          const halo = g.createRadialGradient(cx, cy, 12, cx, cy, 74);
+          halo.addColorStop(0, 'rgba(221, 214, 254, 0.92)');
+          halo.addColorStop(0.45, 'rgba(168, 85, 247, 0.58)');
+          halo.addColorStop(1, 'rgba(139, 92, 246, 0)');
+          g.fillStyle = halo;
+          g.beginPath(); g.arc(cx, cy, 74, 0, Math.PI * 2); g.fill();
+
+          // 使用离屏图层精确扣出新月形状
+          const moonCv = document.createElement('canvas');
+          moonCv.width = 160; moonCv.height = 160;
+          const mg = moonCv.getContext('2d');
+          const moonGrad = mg.createLinearGradient(42, 36, 116, 124);
+          moonGrad.addColorStop(0, '#F5F3FF');
+          moonGrad.addColorStop(0.55, '#DDD6FE');
+          moonGrad.addColorStop(1, '#A855F7');
+          mg.fillStyle = moonGrad;
+          mg.beginPath(); mg.arc(cx, cy, 38, 0, Math.PI * 2); mg.fill();
+          mg.globalCompositeOperation = 'destination-out';
+          mg.beginPath(); mg.arc(cx + 18, cy - 10, 31, 0, Math.PI * 2); mg.fill();
+          mg.globalCompositeOperation = 'source-over';
+          g.drawImage(moonCv, 0, 0);
+
+          // 月伴微星点缀
+          g.fillStyle = '#F5F3FF';
+          [[108, 54, 5], [120, 74, 3.2], [50, 114, 3]].forEach(([sx, sy, sr]) => {
+            g.beginPath(); g.arc(sx, sy, sr, 0, Math.PI * 2); g.fill();
+          });
+        }
+        return new THREE.CanvasTexture(cv);
+      }
+
       function createStoneGroup(color, moveNum) {
         const grp = new THREE.Group();
         const isBlack = color === 1;
@@ -4404,31 +4737,88 @@
           boardGroup.add(b);
         });
 
-        // 悬停旋转外星轨占星铜环
-        astrolabeRing = new THREE.Group();
+        // 双独立星环：黄色外环 + 太阳（顺时针），紫色内环 + 月亮（逆时针），日月直接串在星环上
+        yellowRingGroup = new THREE.Group();
+        yellowRingGroup.position.y = -0.18;
         const outerTorus = new THREE.Mesh(
-          new THREE.TorusGeometry(9.05, 0.055, 10, 96),
-          new THREE.MeshStandardMaterial({ color: 0xFBBF24, emissive: 0xB45309, emissiveIntensity: 0.4, metalness: 0.75, roughness: 0.25 })
+          new THREE.TorusGeometry(9.05, 0.06, 12, 96),
+          new THREE.MeshStandardMaterial({ color: 0xFBBF24, emissive: 0xB45309, emissiveIntensity: 0.45, metalness: 0.75, roughness: 0.25 })
         );
         outerTorus.rotation.x = Math.PI / 2;
-        astrolabeRing.add(outerTorus);
-        const innerVioletTorus = new THREE.Mesh(
-          new THREE.TorusGeometry(8.72, 0.035, 8, 96),
-          new THREE.MeshBasicMaterial({ color: 0xA855F7, transparent: true, opacity: 0.55 })
-        );
-        innerVioletTorus.rotation.x = Math.PI / 2;
-        astrolabeRing.add(innerVioletTorus);
-        for (let i = 0; i < 12; i++) {
-          const ang = (i / 12) * Math.PI * 2;
+        yellowRingGroup.add(outerTorus);
+        for (let i = 0; i < 6; i++) {
+          const ang = (i / 6) * Math.PI * 2;
           const pip = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.14, 0),
-            new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0xFDE047 : 0xC4B5FD })
+            new THREE.OctahedronGeometry(0.13, 0),
+            new THREE.MeshBasicMaterial({ color: 0xFDE047 })
           );
           pip.position.set(Math.cos(ang) * 9.05, 0, Math.sin(ang) * 9.05);
-          astrolabeRing.add(pip);
+          yellowRingGroup.add(pip);
         }
-        astrolabeRing.position.y = -0.18;
-        boardGroup.add(astrolabeRing);
+
+        const sunAng = -Math.PI * 0.68;
+        const sunMount = new THREE.Group();
+        sunMount.position.set(Math.cos(sunAng) * 9.05, 0, Math.sin(sunAng) * 9.05);
+        sunMount.rotation.y = -sunAng;
+        const sunCollarGeo = new THREE.TorusGeometry(0.105, 0.032, 8, 24);
+        const sunCollarMat = new THREE.MeshStandardMaterial({ color: 0xFDE047, emissive: 0xD97706, emissiveIntensity: 0.55, metalness: 0.8, roughness: 0.2 });
+        [-0.48, 0.48].forEach(zOff => {
+          const collar = new THREE.Mesh(sunCollarGeo, sunCollarMat);
+          collar.position.set(0, 0, zOff);
+          sunMount.add(collar);
+        });
+        const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: createCelestialBadgeTexture('sun'),
+          transparent: true,
+          depthWrite: false
+        }));
+        sunSprite.scale.set(1.42, 1.42, 1);
+        sunSprite.position.set(0, 0, 0);
+        sunSprite.renderOrder = 3;
+        sunMount.add(sunSprite);
+        yellowRingGroup.add(sunMount);
+        boardGroup.add(yellowRingGroup);
+
+        purpleRingGroup = new THREE.Group();
+        purpleRingGroup.position.y = -0.18;
+        const innerVioletTorus = new THREE.Mesh(
+          new THREE.TorusGeometry(8.72, 0.045, 10, 96),
+          new THREE.MeshBasicMaterial({ color: 0xA855F7, transparent: true, opacity: 0.65 })
+        );
+        innerVioletTorus.rotation.x = Math.PI / 2;
+        purpleRingGroup.add(innerVioletTorus);
+        for (let i = 0; i < 6; i++) {
+          const ang = (i / 6) * Math.PI * 2 + Math.PI / 6;
+          const pip = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.11, 0),
+            new THREE.MeshBasicMaterial({ color: 0xC4B5FD })
+          );
+          pip.position.set(Math.cos(ang) * 8.72, 0, Math.sin(ang) * 8.72);
+          purpleRingGroup.add(pip);
+        }
+
+        const moonAng = -Math.PI * 0.32;
+        const moonMount = new THREE.Group();
+        moonMount.position.set(Math.cos(moonAng) * 8.72, 0, Math.sin(moonAng) * 8.72);
+        moonMount.rotation.y = -moonAng;
+        const moonCollarGeo = new THREE.TorusGeometry(0.095, 0.028, 8, 24);
+        const moonCollarMat = new THREE.MeshStandardMaterial({ color: 0xDDD6FE, emissive: 0x7C3AED, emissiveIntensity: 0.55, metalness: 0.75, roughness: 0.25 });
+        [-0.44, 0.44].forEach(zOff => {
+          const collar = new THREE.Mesh(moonCollarGeo, moonCollarMat);
+          collar.position.set(0, 0, zOff);
+          moonMount.add(collar);
+        });
+        const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: createCelestialBadgeTexture('moon'),
+          transparent: true,
+          depthWrite: false
+        }));
+        moonSprite.scale.set(1.34, 1.34, 1);
+        moonSprite.position.set(0, 0, 0);
+        moonSprite.renderOrder = 3;
+        moonMount.add(moonSprite);
+        purpleRingGroup.add(moonMount);
+        boardGroup.add(purpleRingGroup);
 
         // 宇宙浮动星尘粒子
         const starPos = new Float32Array(180 * 3);
@@ -4553,7 +4943,7 @@
             }
           }
 
-          if (!gameOver && !aiThinking && currentTurn === cfg.humanColor) {
+          if (!gameOver && !aiThinking && !undoWindowActive && !undoConsentPending && currentTurn === cfg.humanColor) {
             const cell = screenToBoardCell(e.clientX, e.clientY);
             if (cell && grid[cell.r][cell.c] === 0) {
               const w = gridToWorld(cell.r, cell.c);
@@ -4574,7 +4964,7 @@
           isDragging = false;
           const gView = document.getElementById('view-game-gomoku');
           if (!gView || gView.classList.contains('hidden')) return;
-          if (movedDist < 7 && !gameOver && !aiThinking && currentTurn === cfg.humanColor) {
+          if (movedDist < 7 && !gameOver && !aiThinking && !undoWindowActive && !undoConsentPending && currentTurn === cfg.humanColor) {
             const cell = screenToBoardCell(e.clientX, e.clientY);
             if (cell && grid[cell.r][cell.c] === 0) {
               hoverGroup.visible = false;
@@ -4613,7 +5003,8 @@
           );
           camera.lookAt(0, 0, 0);
 
-          if (astrolabeRing) astrolabeRing.rotation.y += dt * 0.12;
+          if (yellowRingGroup) yellowRingGroup.rotation.y -= dt * 0.14; // 太阳与黄圈：顺时针
+          if (purpleRingGroup) purpleRingGroup.rotation.y += dt * 0.16; // 月亮与紫圈：逆时针
           if (starDustPoints) starDustPoints.rotation.y -= dt * 0.04;
 
           // 新落子弹跳入位动画
@@ -4814,10 +5205,14 @@
         }
 
         currentTurn = color === 1 ? 2 : 1;
-        updateHudUI(`【第 ${moveNum} 手】${sideLabel}${isHuman ? '(你)' : '(AI)'} 落子于 ${coord}！`);
 
-        if (currentTurn === cfg.aiColor) {
-          scheduleAIMove();
+        if (isHuman && cfg.allowUndo && undoUsed < cfg.maxUndos && currentTurn === cfg.aiColor) {
+          startUndoWaitWindow(moveNum, coord, sideLabel);
+        } else {
+          updateHudUI(`【第 ${moveNum} 手】${sideLabel}${isHuman ? '(你)' : '(AI)'} 落子于 ${coord}！`);
+          if (currentTurn === cfg.aiColor) {
+            scheduleAIMove();
+          }
         }
         return true;
       }
@@ -5072,6 +5467,12 @@
           if (gameOver) {
             turnPill.innerText = '🏆 星盘决胜已分';
             turnPill.style.background = '#10B981';
+          } else if (undoConsentPending) {
+            turnPill.innerText = `⏳ 对手确认悔棋中 (${undoConsentSec}s)`;
+            turnPill.style.background = '#7C3AED';
+          } else if (undoWindowActive) {
+            turnPill.innerText = `⏳ 悔棋等待中 (${undoWindowSec}s)`;
+            turnPill.style.background = '#8B5CF6';
           } else if (currentTurn === 1) {
             turnPill.innerText = cfg.humanColor === 1 ? '⚫ 轮到你落子 (黑先)' : '🤖 AI 思考落子中 (黑)';
             turnPill.style.background = '#7C3AED';
@@ -5083,11 +5484,30 @@
         if (cardB) cardB.style.boxShadow = (!gameOver && currentTurn === 1) ? '0 0 0 2px #A855F7, 0 8px 24px rgba(139, 92, 246, 0.35)' : '';
         if (cardW) cardW.style.boxShadow = (!gameOver && currentTurn === 2) ? '0 0 0 2px #FBBF24, 0 8px 24px rgba(251, 191, 36, 0.35)' : '';
 
+        const waitBar = document.getElementById('gomoku-undo-wait-bar');
+        const waitSecEl = document.getElementById('gomoku-undo-wait-sec');
+        const waitProgEl = document.getElementById('gomoku-undo-wait-progress');
+        if (waitBar) waitBar.classList.toggle('hidden', !undoWindowActive);
+        if (waitSecEl) waitSecEl.innerText = `${undoWindowSec}s`;
+        if (waitProgEl) waitProgEl.style.width = `${Math.max(0, Math.min(100, (undoWindowSec / 6) * 100))}%`;
+
         const btnUndo = document.getElementById('btn-gomoku-undo');
         if (btnUndo) {
-          const canUndo = cfg.allowUndo && !aiThinking && !gameOver && moveHistory.length > 0 && !(moveHistory.length === 1 && cfg.humanColor === 2);
+          const remain = Math.max(0, cfg.maxUndos - undoUsed);
+          const canUndo = cfg.allowUndo && remain > 0 && undoWindowActive && !undoConsentPending && !aiThinking && !gameOver && moveHistory.length > 0;
           btnUndo.disabled = !canUndo;
           btnUndo.style.opacity = canUndo ? '1' : '0.45';
+          if (!cfg.allowUndo || cfg.maxUndos <= 0) {
+            btnUndo.innerText = '↩️ 本局已关闭悔棋';
+          } else if (remain <= 0) {
+            btnUndo.innerText = `↩️ 悔棋次数已用尽 (0/${cfg.maxUndos})`;
+          } else if (undoConsentPending && cfg.vsAI) {
+            btnUndo.innerText = '🤖 等待 AI 回应悔棋...';
+          } else if (undoWindowActive) {
+            btnUndo.innerText = `↩️ 申请悔棋 (${undoWindowSec}s · 剩${remain}次)`;
+          } else {
+            btnUndo.innerText = `↩️ 申请悔棋 (剩${remain}/${cfg.maxUndos}次)`;
+          }
         }
         const btnNum = document.getElementById('btn-gomoku-num');
         if (btnNum) btnNum.innerText = `🔢 步数标号: ${cfg.showNumbers ? '开启' : '关闭'}`;
@@ -5098,8 +5518,165 @@
         }
       }
 
+      function clearUndoTimers() {
+        if (undoWindowTimer) { clearInterval(undoWindowTimer); undoWindowTimer = null; }
+        if (undoConsentTimer) { clearInterval(undoConsentTimer); undoConsentTimer = null; }
+        if (aiUndoTimeout) { clearTimeout(aiUndoTimeout); aiUndoTimeout = null; }
+        undoWindowActive = false;
+        undoWindowSec = 0;
+        undoConsentPending = false;
+        undoConsentSec = 0;
+        const waitBar = document.getElementById('gomoku-undo-wait-bar');
+        if (waitBar) waitBar.classList.add('hidden');
+        const consentModal = document.getElementById('modal-gomoku-undo-consent');
+        if (consentModal) consentModal.classList.add('hidden');
+      }
+
+      function startUndoWaitWindow(moveNum, coord, sideLabel) {
+        clearUndoTimers();
+        undoWindowActive = true;
+        undoWindowSec = 6;
+        const remain = Math.max(0, cfg.maxUndos - undoUsed);
+        const curGen = matchGen;
+        updateHudUI(`【第 ${moveNum} 手】${sideLabel}(你) 落子于 ${coord}！6 秒内可申请悔棋（剩 ${remain}/${cfg.maxUndos} 次）。`);
+
+        undoWindowTimer = setInterval(() => {
+          if (curGen !== matchGen || gameOver || !undoWindowActive) {
+            clearUndoTimers();
+            return;
+          }
+          undoWindowSec--;
+          if (undoWindowSec <= 0) {
+            skipUndoWait(true);
+          } else {
+            updateHudUI();
+          }
+        }, 1000);
+      }
+
+      function skipUndoWait(expired = false) {
+        if (!undoWindowActive) return;
+        if (undoWindowTimer) { clearInterval(undoWindowTimer); undoWindowTimer = null; }
+        undoWindowActive = false;
+        undoWindowSec = 0;
+        if (!expired) playSound('click');
+        updateHudUI(expired ? '⏱️ 6 秒悔棋等待结束，轮到对手落子！' : '⏭️ 已确认落子，轮到对手思考！');
+        if (!gameOver && currentTurn === cfg.aiColor) {
+          scheduleAIMove();
+        }
+      }
+
+      function applyAgreedUndo(prefixLabel = '对手') {
+        playSound('open');
+        if (hintGroup) hintGroup.visible = false;
+        popOneMove();
+        undoUsed++;
+        currentTurn = cfg.humanColor;
+        if (moveHistory.length > 0) {
+          const prev = moveHistory[moveHistory.length - 1];
+          const wp = gridToWorld(prev.r, prev.c);
+          if (lastMoveRing) {
+            lastMoveRing.position.set(wp.x, 0.025, wp.z);
+            lastMoveRing.material.color.setHex(prev.color === 1 ? 0xC084FC : 0xFDE047);
+            lastMoveRing.visible = true;
+          }
+        } else if (lastMoveRing) {
+          lastMoveRing.visible = false;
+        }
+        lastResCount = scanResonanceSegments();
+        const remain = Math.max(0, cfg.maxUndos - undoUsed);
+        updateHudUI(`✅ ${prefixLabel}同意悔棋！已撤回上一步落子（本局剩余悔棋 ${remain}/${cfg.maxUndos} 次），请重新落子！`);
+      }
+
+      function requestUndoFromAI() {
+        clearUndoTimers();
+        if (moveHistory.length === 0) return;
+        const last = moveHistory[moveHistory.length - 1];
+        const coord = coordText(last.r, last.c);
+        undoConsentPending = true;
+        const curGen = matchGen;
+        updateHudUI(`🤖 已向 AI 对手发起悔棋申请（第 ${moveHistory.length} 手 ${coord}），等待 AI 回应...`);
+
+        aiUndoTimeout = setTimeout(() => {
+          aiUndoTimeout = null;
+          if (curGen !== matchGen || gameOver || !undoConsentPending) return;
+          undoConsentPending = false;
+          if (undoUsed < cfg.maxUndos) {
+            applyAgreedUndo('AI 对手');
+          } else {
+            playSound('click');
+            updateHudUI('❌ AI 对手拒绝了你的悔棋申请（本局悔棋次数已用尽），轮到 AI 落子！');
+            if (!gameOver && currentTurn === cfg.aiColor) scheduleAIMove();
+          }
+        }, 850);
+      }
+
+      function renderUndoConsentModal() {
+        const secEl = document.getElementById('gomoku-consent-countdown');
+        const barEl = document.getElementById('gomoku-consent-progress-bar');
+        if (secEl) secEl.innerText = Math.max(0, undoConsentSec);
+        if (barEl) barEl.style.width = `${Math.max(0, Math.min(100, (undoConsentSec / 10) * 100))}%`;
+      }
+
+      function openUndoConsentModal() {
+        clearUndoTimers();
+        if (moveHistory.length === 0) return;
+        const last = moveHistory[moveHistory.length - 1];
+        const coord = coordText(last.r, last.c);
+        const sideName = last.color === 1 ? '黑方 • 虚空星核' : '白方 • 耀斑恒星';
+
+        undoConsentPending = true;
+        undoConsentSec = 10;
+        const descEl = document.getElementById('gomoku-undo-consent-desc');
+        if (descEl) {
+          descEl.innerText = `敌方（${sideName}）申请撤销第 ${moveHistory.length} 手（${coord}），请在 10 秒内选择「同意」或「不同意」：`;
+        }
+        renderUndoConsentModal();
+        const modal = document.getElementById('modal-gomoku-undo-consent');
+        if (modal) modal.classList.remove('hidden');
+        updateHudUI(`📩 对手向你发起悔棋申请（第 ${moveHistory.length} 手 ${coord}），请在 10 秒内做出选择...`);
+
+        const curGen = matchGen;
+        undoConsentTimer = setInterval(() => {
+          if (curGen !== matchGen || !undoConsentPending || gameOver) {
+            clearUndoTimers();
+            return;
+          }
+          undoConsentSec--;
+          renderUndoConsentModal();
+          if (undoConsentSec <= 0) {
+            respondUndoConsent(false, true);
+          } else {
+            updateHudUI();
+          }
+        }, 1000);
+      }
+
+      function respondUndoConsent(agreed, timedOut = false) {
+        if (!undoConsentPending) return;
+        if (undoConsentTimer) { clearInterval(undoConsentTimer); undoConsentTimer = null; }
+        undoConsentPending = false;
+        undoConsentSec = 0;
+        const modal = document.getElementById('modal-gomoku-undo-consent');
+        if (modal) modal.classList.add('hidden');
+
+        if (agreed) {
+          applyAgreedUndo('你已');
+        } else {
+          playSound('click');
+          updateHudUI(timedOut
+            ? '⏱️ 10 秒内未回应，默认不同意敌方悔棋，对局继续！'
+            : '❌ 已拒绝敌方悔棋申请，保留当前棋局继续对战！');
+          if (!gameOver && currentTurn === cfg.aiColor) {
+            scheduleAIMove();
+          }
+        }
+      }
+
       function clearBoardState() {
         matchGen++;
+        clearUndoTimers();
+        undoUsed = 0;
         grid = Array.from({ length: GRID_N }, () => Array(GRID_N).fill(0));
         moveHistory = [];
         currentTurn = 1;
@@ -5132,14 +5709,17 @@
         const styleEl = document.querySelector('input[name="gomoku-rule-style"]:checked');
         const sideEl = document.getElementById('sel-gomoku-side');
         const diffEl = document.getElementById('sel-gomoku-diff');
-        const undoEl = document.getElementById('chk-gomoku-undo');
+        const undoLimitEl = document.getElementById('sel-gomoku-undo-limit');
         const numEl = document.getElementById('chk-gomoku-numbers');
 
         cfg.ruleStyle = styleEl ? styleEl.value : 'astral';
         cfg.humanColor = sideEl && sideEl.value === '2' ? 2 : 1;
         cfg.aiColor = cfg.humanColor === 1 ? 2 : 1;
         cfg.difficulty = diffEl ? diffEl.value : 'hard';
-        cfg.allowUndo = undoEl ? undoEl.checked : true;
+        const parsedLimit = undoLimitEl ? parseInt(undoLimitEl.value, 10) : 3;
+        cfg.maxUndos = Number.isNaN(parsedLimit) ? 3 : Math.max(0, Math.min(3, parsedLimit));
+        cfg.allowUndo = cfg.maxUndos > 0;
+        cfg.vsAI = true;
         cfg.showNumbers = numEl ? numEl.checked : true;
 
         playSound('open');
@@ -5162,6 +5742,7 @@
       function exitToMenu() {
         playSound('click');
         matchGen++;
+        clearUndoTimers();
         aiThinking = false;
         document.getElementById('view-game-gomoku').classList.add('hidden');
         document.getElementById('view-menu').classList.remove('hidden');
@@ -5206,34 +5787,17 @@
       }
 
       function undoMove() {
-        if (!cfg.allowUndo || aiThinking || gameOver || moveHistory.length === 0) return;
+        if (!cfg.allowUndo || undoUsed >= cfg.maxUndos || !undoWindowActive || undoConsentPending || aiThinking || gameOver || moveHistory.length === 0) return;
         playSound('click');
-        if (hintGroup) hintGroup.visible = false;
-        if (currentTurn === cfg.humanColor && moveHistory.length >= 2) {
-          popOneMove(); // 撤销 AI 上一步
-          popOneMove(); // 撤销玩家上一步
+        if (cfg.vsAI) {
+          requestUndoFromAI();
         } else {
-          popOneMove();
+          openUndoConsentModal();
         }
-        currentTurn = moveHistory.length % 2 === 0 ? 1 : 2;
-        if (moveHistory.length > 0) {
-          const prev = moveHistory[moveHistory.length - 1];
-          const wp = gridToWorld(prev.r, prev.c);
-          if (lastMoveRing) {
-            lastMoveRing.position.set(wp.x, 0.025, wp.z);
-            lastMoveRing.material.color.setHex(prev.color === 1 ? 0xC084FC : 0xFDE047);
-            lastMoveRing.visible = true;
-          }
-        } else if (lastMoveRing) {
-          lastMoveRing.visible = false;
-        }
-        lastResCount = scanResonanceSegments();
-        updateHudUI('↩️ 已双退悔棋一步，请重新斟酌星轨落点！');
-        if (currentTurn === cfg.aiColor && !gameOver) scheduleAIMove();
       }
 
       function showHint() {
-        if (gameOver || aiThinking || currentTurn !== cfg.humanColor) return;
+        if (gameOver || aiThinking || undoWindowActive || undoConsentPending || currentTurn !== cfg.humanColor) return;
         playSound('resonance');
         const mv = computeBestMoveFor(cfg.humanColor, 'hard');
         if (!mv || !hintGroup) return;
@@ -5265,6 +5829,9 @@
         toggleCamera,
         toggleMoveNumbers,
         undoMove,
+        skipUndoWait,
+        respondUndoConsent,
+        receiveOpponentUndoRequest: openUndoConsentModal,
         showHint,
         swapAndRestart,
         restart,
@@ -5273,6 +5840,12 @@
           moves: moveHistory.map(m => ({ r: m.r, c: m.c, color: m.color })),
           currentTurn,
           gameOver,
+          undoUsed,
+          maxUndos: cfg.maxUndos,
+          undoWindowActive,
+          undoWindowSec,
+          undoConsentPending,
+          undoConsentSec,
           cfg,
           stoneCount: stoneMeshes.size
         })
