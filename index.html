@@ -626,7 +626,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-yellow" class="portrait-thumb" alt="2P 晨曦灵雀">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #FDE68A;">2P 晨曦灵雀 (AI)</div>
+              <div style="font-size: 13px; font-weight: 900; color: #FDE68A;">2P 晨曦灵雀 <span id="seat-status-yellow" style="font-size: 10px; color: #FCD34D;">(AI)</span></div>
               <div style="font-size: 11px; color: #FCD34D; font-weight: 700;">凯旋加冕: <span id="cnt-yellow-done">0</span>/4</div>
             </div>
           </div>
@@ -641,7 +641,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-blue" class="portrait-thumb" alt="1P 蓝羽夜鸮">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #93C5FD;">1P 蓝羽夜鸮 (你)</div>
+              <div style="font-size: 13px; font-weight: 900; color: #93C5FD;">1P 蓝羽夜鸮 <span id="seat-status-blue" style="font-size: 10px; color: #60A5FA;">(你)</span></div>
               <div style="font-size: 11px; color: #60A5FA; font-weight: 700;">凯旋加冕: <span id="cnt-blue-done">0</span>/4</div>
             </div>
           </div>
@@ -660,7 +660,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-purple" class="portrait-thumb" alt="3P 冥夜紫鸦">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #E9D5FF;">3P 冥夜紫鸦 (AI)</div>
+              <div style="font-size: 13px; font-weight: 900; color: #E9D5FF;">3P 冥夜紫鸦 <span id="seat-status-purple" style="font-size: 10px; color: #C084FC;">(AI)</span></div>
               <div style="font-size: 11px; color: #C084FC; font-weight: 700;">凯旋加冕: <span id="cnt-purple-done">0</span>/4</div>
             </div>
           </div>
@@ -675,7 +675,7 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <img id="hud-portrait-pink" class="portrait-thumb" alt="4P 霞光粉鹦">
             <div>
-              <div style="font-size: 13px; font-weight: 900; color: #FBCFE8;">4P 霞光粉鹦 (AI)</div>
+              <div style="font-size: 13px; font-weight: 900; color: #FBCFE8;">4P 霞光粉鹦 <span id="seat-status-pink" style="font-size: 10px; color: #F472B6;">(AI)</span></div>
               <div style="font-size: 11px; color: #F472B6; font-weight: 700;">凯旋加冕: <span id="cnt-pink-done">0</span>/4</div>
             </div>
           </div>
@@ -698,6 +698,14 @@
           <div id="action-hint-box" class="hidden" style="width: 100%; margin-top: 2px;">
             <button onclick="autoPickMove()" class="scenic-hud-btn" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.75); border-color: #93C5FD; font-size: 11px;">
               ✨ 推荐走法 / 点棋子出战
+            </button>
+          </div>
+          <!-- 完赛玩家观众席观战面板 -->
+          <div id="aero-spectator-box" class="hidden" style="width: 100%; padding: 8px 10px; border-radius: 10px; background: rgba(59, 130, 246, 0.22); border: 1px solid rgba(147, 197, 253, 0.65); text-align: center; display: flex; flex-direction: column; gap: 5px;">
+            <div id="spectator-rank-title" style="font-size: 12px; font-weight: 900; color: #93C5FD;">👀 观众席 • 第 1 名</div>
+            <div style="font-size: 10px; color: #CBD5E1;">你已完赛，正观战其余选手角逐！</div>
+            <button id="btn-spectator-speed" type="button" onclick="toggleSpectatorSpeed()" class="scenic-hud-btn" style="width: 100%; padding: 4px 6px; justify-content: center; font-size: 11px; border-color: rgba(250, 204, 21, 0.55); color: #FEF08A;">
+              ⏩ 观战倍速: 1x (正常)
             </button>
           </div>
           <!-- [TEST-ONLY START] 自定义测试骰子与直接胜利面板（测试完毕后可整块删除） -->
@@ -1258,6 +1266,48 @@
         <button onclick="handleVictoryMenu()" class="glass-btn" style="flex: 1;">🏠 返回大厅</button>
         <button onclick="handleVictoryRematch()" class="primary-gold-btn" style="flex: 1;">🔄 再来一局</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 6. 首名玩家胜出后：15秒全员投票是否结束整场对局弹窗 -->
+  <div id="modal-endgame-vote" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 490px; gap: 12px; text-align: center; align-items: center;">
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+        <span style="padding: 3px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.22); color: #B45309; font-size: 11px; font-weight: 900;">🗳️ 首名胜者诞生 • 全场投票</span>
+        <button type="button" onclick="closeEndgameVoteModal(true)" title="手动关闭弹窗并继续观战" style="background: none; border: none; font-size: 18px; font-weight: 900; color: #78716C; cursor: pointer; padding: 2px 6px;" class="night-text-main">✕</button>
+      </div>
+      <div style="font-size: 42px; line-height: 1;">👑</div>
+      <h2 id="vote-modal-title" class="night-text-main" style="font-size: 19px; font-weight: 900; color: #92400E;">【1P 蓝羽夜鸮】率先全员登顶！</h2>
+      <p id="vote-modal-subtitle" class="night-subtext" style="font-size: 12px; color: #57534E; font-weight: 700; line-height: 1.5;">
+        首位胜者已进入<strong>观众席</strong>观战！是否直接结束整场对局并按当前进度结算？<br>
+        （投<strong>「结束」达 3 票</strong>则立刻结算；否则保留棋局直到全部玩家完赛）
+      </p>
+
+      <!-- 15秒倒计时进度条 -->
+      <div style="width: 100%; background: rgba(245, 158, 11, 0.12); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.35);">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 900; margin-bottom: 6px;">
+          <span class="night-text-main">⏱️ 投票倒计时：<span id="vote-countdown" style="color: #D97706; font-family: monospace; font-size: 14px;">15</span> 秒</span>
+          <span class="night-subtext" style="font-size: 11px; color: #78716C;">结束 <strong id="vote-cnt-end" style="color: #DC2626;">0</strong>/3 票 · 不结束 <strong id="vote-cnt-cont" style="color: #059669;">0</strong> 票</span>
+        </div>
+        <div style="width: 100%; height: 7px; background: rgba(148, 163, 184, 0.25); border-radius: 999px; overflow: hidden;">
+          <div id="vote-progress-bar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #F59E0B, #EA580C); transition: width 0.25s linear;"></div>
+        </div>
+      </div>
+
+      <!-- 4席投票实况 -->
+      <div id="vote-seats-row" style="width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; text-align: left;"></div>
+
+      <!-- 玩家投票操作按钮 -->
+      <div style="display: flex; width: 100%; gap: 10px; padding-top: 2px;">
+        <button id="btn-vote-end" type="button" onclick="castEndgameVote('end')" class="primary-gold-btn" style="flex: 1;">🛑 投：结束对局</button>
+        <button id="btn-vote-cont" type="button" onclick="castEndgameVote('continue')" class="glass-btn" style="flex: 1;">🎮 投：不结束 (继续观战)</button>
+      </div>
+
+      <!-- [TEST-ONLY START] 单机测试辅助：模拟AI附议投结束凑满3票 -->
+      <button id="btn-test-fill-votes" type="button" onclick="testSimulateThreeEndVotes()" class="glass-btn" style="width: 100%; font-size: 11px; padding: 6px 10px; border-style: dashed; border-color: rgba(245, 158, 11, 0.55); color: #B45309;">
+        🧪 [单机测试辅助] 模拟 AI 补满 3 票「结束」直接看终局排行榜
+      </button>
+      <!-- [TEST-ONLY END] -->
     </div>
   </div>
 
@@ -2802,8 +2852,8 @@
             const piece = gameState[c][idx];
             if (!mesh) return;
 
-            // 是否处于等待 1P 点击选择的状态
-            const canPick = waitingForPlayerChoice && c === 'blue' && isPieceEligibleForMove(piece, pendingDice);
+            // 是否处于等待本地人类玩家点击选择的状态
+            const canPick = waitingForPlayerChoice && c === curPlayerColor && isHumanActiveTurn(c) && isPieceEligibleForMove(piece, pendingDice);
             if (canPick && ringSlot < 4) {
               const ring = highlightRings[ringSlot++];
               ring.visible = true;
@@ -2847,6 +2897,53 @@
     let isDiceRolling = false;
     let isAnimatingMove = false;
     let waitingForPlayerChoice = false;
+    let isVotePaused = false;
+    let matchEnded = false;
+    let firstWinnerVoteShown = false;
+    let spectatorFastMode = false;
+    let finishedOrder = [];
+    let activeVoteState = null;
+
+    // 席位控制权架构：支持本地玩家 / AI / 掉线离场后 AI 无缝接管 / 完赛观众席
+    const seatControllers = {
+      blue:   { isLocal: true,  isAI: false, aiTakeover: false },
+      yellow: { isLocal: false, isAI: true,  aiTakeover: false },
+      purple: { isLocal: false, isAI: true,  aiTakeover: false },
+      pink:   { isLocal: false, isAI: true,  aiTakeover: false }
+    };
+
+    function hasSeatFinished(color) {
+      return finishedOrder.includes(color) || (gameState[color] && gameState[color].length === 4 && gameState[color].every(b => b.state === 'done'));
+    }
+
+    function isHumanActiveTurn(color) {
+      const s = seatControllers[color];
+      return !matchEnded && !hasSeatFinished(color) && !!s && s.isLocal && !s.isAI && !s.aiTakeover;
+    }
+
+    function getAeroDelay(ms) {
+      return spectatorFastMode ? Math.max(45, Math.round(ms * 0.25)) : ms;
+    }
+
+    function setSeatAITakeover(color, active = true) {
+      const s = seatControllers[color];
+      if (!s) return;
+      s.aiTakeover = !!active;
+      updateGameUI();
+      const logEl = document.getElementById('game-event-log');
+      if (logEl) {
+        logEl.innerText = active
+          ? `🤖 【${FACTIONS_CONFIG[color].name}】已由 AI 自动接管代打！`
+          : `👤 【${FACTIONS_CONFIG[color].name}】已恢复玩家手动操控！`;
+      }
+      if (active && players[activePlayerIdx] === color && !hasSeatFinished(color) && !matchEnded && !isVotePaused && !isDiceRolling && !isAnimatingMove) {
+        waitingForPlayerChoice = false;
+        const hintBox = document.getElementById('action-hint-box');
+        if (hintBox) hintBox.classList.add('hidden');
+        aiCallingRoll = true;
+        setTimeout(playerRollDice, getAeroDelay(450));
+      }
+    }
 
     let gameState = {
       blue: [], yellow: [], purple: [], pink: []
@@ -2924,8 +3021,9 @@
         }
 
         const startTime = performance.now();
+        const effDur = getAeroDelay(durationMs);
         function frame(now) {
-          const p = Math.min(1, (now - startTime) / durationMs);
+          const p = Math.min(1, (now - startTime) / effDur);
           mesh.position.x = startX + dx * p;
           mesh.position.z = startZ + dz * p;
           mesh.position.y = Math.sin(p * Math.PI) * arcHeight;
@@ -2959,6 +3057,11 @@
 
     function returnToMainMenu() {
       playSound('click');
+      stopEndgameVoteTimer();
+      const voteModal = document.getElementById('modal-endgame-vote');
+      if (voteModal) voteModal.classList.add('hidden');
+      isVotePaused = false;
+      matchEnded = true;
       isAnimatingMove = false;
       waitingForPlayerChoice = false;
       document.getElementById('view-game-aero').classList.add('hidden');
@@ -2968,18 +3071,40 @@
     }
 
     function resetGameData() {
+      stopEndgameVoteTimer();
+      const voteModal = document.getElementById('modal-endgame-vote');
+      if (voteModal) voteModal.classList.add('hidden');
+      const vicModal = document.getElementById('modal-victory');
+      if (vicModal) vicModal.classList.add('hidden');
+
       activePlayerIdx = 0;
       isDayTime = true;
       currentRound = 1;
       isDiceRolling = false;
       isAnimatingMove = false;
       waitingForPlayerChoice = false;
+      isVotePaused = false;
+      matchEnded = false;
+      firstWinnerVoteShown = false;
+      spectatorFastMode = false;
+      finishedOrder = [];
+
+      seatControllers.blue = { isLocal: true, isAI: false, aiTakeover: false };
+      seatControllers.yellow = { isLocal: false, isAI: true, aiTakeover: false };
+      seatControllers.purple = { isLocal: false, isAI: true, aiTakeover: false };
+      seatControllers.pink = { isLocal: false, isAI: true, aiTakeover: false };
 
       players.forEach(p => {
         gameState[p] = [0, 1, 2, 3].map(() => ({ state: 'home', pos: 0, steps: 0 }));
       });
       document.getElementById('game-round-counter').innerText = `昼夜轮换: 第 1 / ${roundCycleLimit} 大回合`;
       document.getElementById('action-hint-box').classList.add('hidden');
+      const specBox = document.getElementById('aero-spectator-box');
+      if (specBox) specBox.classList.add('hidden');
+      const speedBtn = document.getElementById('btn-spectator-speed');
+      if (speedBtn) speedBtn.innerText = '⏩ 观战倍速: 1x (正常)';
+      const rollBtn = document.getElementById('btn-roll-dice');
+      if (rollBtn) { rollBtn.disabled = false; rollBtn.style.opacity = '1'; }
       document.getElementById('game-event-log').innerText = '【开局就绪】左键拖拽旋转可全角度欣赏 3D 灵禽棋子！请 1P 蓝羽夜鸮掷骰！';
       updateTurnIndicator();
     }
@@ -2998,9 +3123,12 @@
     }
 
     function playerRollDice() {
-      if (isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
-      if (players[activePlayerIdx] !== 'blue' && !aiCallingRoll) return;
-      executeDiceRoll();
+      if (matchEnded || isVotePaused || isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
+      const curColor = players[activePlayerIdx];
+      if (hasSeatFinished(curColor)) { endTurn(); return; }
+      if (isHumanActiveTurn(curColor) || aiCallingRoll) {
+        executeDiceRoll();
+      }
     }
 
     let aiCallingRoll = false;
@@ -3013,6 +3141,7 @@
 
       setTimeout(() => {
         cube.classList.remove('animate-dice-roll');
+        if (matchEnded || isVotePaused || hasSeatFinished(players[activePlayerIdx])) { isDiceRolling = false; aiCallingRoll = false; return; }
         lastDiceValue = (forcedValue >= 1 && forcedValue <= 6) ? forcedValue : (Math.floor(Math.random() * 6) + 1);
         const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
         cube.innerText = diceFaces[lastDiceValue - 1];
@@ -3021,21 +3150,23 @@
         aiCallingRoll = false;
 
         processTurnStep(lastDiceValue);
-      }, forcedValue ? 240 : 650);
+      }, getAeroDelay(forcedValue ? 240 : 650));
     }
 
     // [TEST-ONLY START] 自定义测试骰子与直接胜利执行入口（测试完毕可连同 HTML 按钮整块删除）
     function testForceRollDice(num) {
-      if (isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
-      if (players[activePlayerIdx] !== 'blue') {
+      if (matchEnded || isVotePaused || isDiceRolling || isAnimatingMove || waitingForPlayerChoice) return;
+      const curColor = players[activePlayerIdx];
+      if (!isHumanActiveTurn(curColor)) {
         const logEl = document.getElementById('game-event-log');
-        if (logEl) logEl.innerText = '🧪 [测试提示] 请等待轮到【1P 蓝羽夜鸮 (你)】的回合后再指定点数！';
+        if (logEl) logEl.innerText = '🧪 [测试提示] 请等待轮到【1P 蓝羽夜鸮 (你)】可操作回合后再指定点数！';
         return;
       }
       executeDiceRoll(num);
     }
 
     function testForceVictory() {
+      if (matchEnded || hasSeatFinished('blue')) return;
       isDiceRolling = false;
       isAnimatingMove = false;
       waitingForPlayerChoice = false;
@@ -3052,26 +3183,8 @@
       updateGameUI();
 
       const logEl = document.getElementById('game-event-log');
-      if (logEl) logEl.innerText = `🧪 [测试作弊] 【${fac.name}】四只 3D 神鸟一键加冕会师，正在展示胜利结算画面！`;
-
-      playSound('firework');
-      spawnFireworksInto(scene, activeFireworkBursts, 0, 0, COLOR_MAP.blue.hex, 0xFDE047, {
-        starCount: 44,
-        aerialCount: 34,
-        aerialHeight: 1.9
-      });
-
-      setTimeout(() => {
-        playSound('victory');
-        const roundText = document.getElementById('game-round-counter')?.innerText || '';
-        showVictoryModal({
-          mode: 'aero',
-          icon: '👑',
-          title: `【${fac.name}】勇夺冠军！`,
-          subtitle: `四只 3D 灵禽全部会师中央皇冠终点，荣耀登顶！`,
-          statsHtml: `冠军阵营：<strong>${fac.name}</strong><br>轮换周期：${roundText}<br>完赛战绩：<strong>4 / 4 冠礼圆满</strong>`
-        });
-      }, 280);
+      if (logEl) logEl.innerText = `🧪 [测试作弊] 【${fac.name}】四只 3D 神鸟一键完赛加冕，进入观众席并触发胜出投票！`;
+      handleAeroPlayerFinished('blue');
     }
     // [TEST-ONLY END]
 
@@ -3095,7 +3208,7 @@
         } else if (rand >= 8 && rand < 10 && chkP && chkP.checked) {
           log += ` 💨触发白昼【逆风滞留】(2%)，遇强气流本回合原地待命！`;
           document.getElementById('game-event-log').innerText = log;
-          setTimeout(endTurn, 900);
+          setTimeout(endTurn, getAeroDelay(900));
           return;
         }
       } else if (!isDayTime && dice === nightTrig) {
@@ -3117,7 +3230,7 @@
             log += ` ⚠️触发黑夜【迷航失联】(2%)，在途 1 只灵禽被迫飞返停机坪！`;
             snapAll3DMeeplesImmediately();
             document.getElementById('game-event-log').innerText = log;
-            setTimeout(endTurn, 900);
+            setTimeout(endTurn, getAeroDelay(900));
             return;
           }
         }
@@ -3131,24 +3244,23 @@
       if (eligibleIndices.length === 0) {
         log += ` 无可移动棋子，回合移交下家。`;
         document.getElementById('game-event-log').innerText = log;
-        setTimeout(endTurn, 900);
+        setTimeout(endTurn, getAeroDelay(900));
         return;
       }
 
-      if (curColor === 'blue') {
+      if (isHumanActiveTurn(curColor)) {
         // 如果只有一个可选动作且无需二选一，或让玩家亲自在 3D 棋盘上点击
-        if (eligibleIndices.length === 1 && gameState.blue.filter(b => b.state !== 'home' && b.state !== 'done').length === 0) {
-          // 唯一可出库棋子，自动快捷出击并配合动画
-          document.getElementById('game-event-log').innerText = log + ` 🛫 满足起飞条件，蓝羽夜鸮飞出停机坪！`;
-          performPieceAction('blue', eligibleIndices[0], dice + extraSteps);
+        if (eligibleIndices.length === 1 && gameState[curColor].filter(b => b.state !== 'home' && b.state !== 'done').length === 0) {
+          document.getElementById('game-event-log').innerText = log + ` 🛫 满足起飞条件，【${fac.name}】飞出停机坪！`;
+          performPieceAction(curColor, eligibleIndices[0], dice + extraSteps);
         } else {
           waitingForPlayerChoice = true;
           pendingDice = dice + extraSteps;
           document.getElementById('action-hint-box').classList.remove('hidden');
-          document.getElementById('game-event-log').innerText = log + ` 👇 请在 3D 棋盘上点击闪烁高亮的蓝色夜鸮（或点右侧推荐走法）！`;
+          document.getElementById('game-event-log').innerText = log + ` 👇 请在 3D 棋盘上点击闪烁高亮的灵禽（或点右侧推荐走法）！`;
         }
       } else {
-        // AI 智能挑选走法：评估踩子、终点冲刺、跨盘捷径、同色连跳与起飞收益
+        // AI / 托管挑选走法：评估踩子、终点冲刺、跨盘捷径、同色连跳与起飞收益
         const totalSteps = dice + extraSteps;
         const bestIdx = pickBestAeroAIMove(curColor, totalSteps, eligibleIndices);
         document.getElementById('game-event-log').innerText = log;
@@ -3226,26 +3338,27 @@
     }
 
     function autoPickMove() {
-      if (!waitingForPlayerChoice) return;
+      if (!waitingForPlayerChoice || isVotePaused || matchEnded) return;
+      const curColor = players[activePlayerIdx];
+      if (!isHumanActiveTurn(curColor)) return;
       const eligible = [];
-      gameState.blue.forEach((b, idx) => {
+      gameState[curColor].forEach((b, idx) => {
         if (isPieceEligibleForMove(b, lastDiceValue)) eligible.push(idx);
       });
       if (eligible.length > 0) {
-        // 优先走最靠前的在途棋子，否则出巢
-        let pick = eligible.find(i => gameState.blue[i].state === 'runway' || gameState.blue[i].state === 'active');
+        let pick = eligible.find(i => gameState[curColor][i].state === 'runway' || gameState[curColor][i].state === 'active');
         if (pick === undefined) pick = eligible[0];
-        on3DBirdClicked('blue', pick);
+        on3DBirdClicked(curColor, pick);
       }
     }
 
     function on3DBirdClicked(color, idx) {
-      if (!waitingForPlayerChoice || color !== 'blue' || isAnimatingMove) return;
-      if (!isPieceEligibleForMove(gameState.blue[idx], lastDiceValue)) return;
+      if (!waitingForPlayerChoice || isVotePaused || matchEnded || color !== players[activePlayerIdx] || !isHumanActiveTurn(color) || isAnimatingMove) return;
+      if (!isPieceEligibleForMove(gameState[color][idx], lastDiceValue)) return;
 
       waitingForPlayerChoice = false;
       document.getElementById('action-hint-box').classList.add('hidden');
-      performPieceAction('blue', idx, pendingDice);
+      performPieceAction(color, idx, pendingDice);
     }
 
     async function performPieceAction(color, idx, steps) {
@@ -3323,31 +3436,21 @@
       isAnimatingMove = false;
       updateGameUI();
 
-      // 判定胜利
+      // 判定当前玩家是否全员完赛 -> 进入观众席 & 首次完赛触发 15 秒全员投票
       if (gameState[color].every(b => b.state === 'done')) {
-        playSound('victory');
-        setTimeout(() => {
-          const roundText = document.getElementById('game-round-counter')?.innerText || '';
-          showVictoryModal({
-            mode: 'aero',
-            icon: '👑',
-            title: `【${fac.name}】勇夺冠军！`,
-            subtitle: `四只 3D 灵禽全部会师中央皇冠终点，荣耀登顶！`,
-            statsHtml: `冠军阵营：<strong>${fac.name}</strong><br>轮换周期：${roundText}<br>完赛战绩：<strong>4 / 4 冠礼圆满</strong>`
-          });
-        }, 320);
+        handleAeroPlayerFinished(color);
         return;
       }
 
       // 掷出 6 点奖励额外连掷一次！
       if (lastDiceValue === 6) {
         if (logEl) logEl.innerText = `🎲 【${fac.name}】掷出 6 点极佳运气，奖励再掷一次！`;
-        if (color !== 'blue') {
+        if (!isHumanActiveTurn(color)) {
           aiCallingRoll = true;
-          setTimeout(playerRollDice, 750);
+          setTimeout(playerRollDice, getAeroDelay(750));
         }
       } else {
-        setTimeout(endTurn, 500);
+        setTimeout(endTurn, getAeroDelay(500));
       }
     }
 
@@ -3516,11 +3619,262 @@
       if (logEl) logEl.innerText = `👑 辉煌时刻！【${FACTIONS_CONFIG[color].name}】1 只神鸟抵达中央箭头加冕！`;
     }
 
+    function stopEndgameVoteTimer() {
+      if (!activeVoteState) return;
+      if (activeVoteState.timerId) clearInterval(activeVoteState.timerId);
+      if (activeVoteState.aiTimeouts) activeVoteState.aiTimeouts.forEach(id => clearTimeout(id));
+      activeVoteState = null;
+    }
+
+    function renderEndgameVoteModal() {
+      if (!activeVoteState) return;
+      const st = activeVoteState;
+      const cdEl = document.getElementById('vote-countdown');
+      const barEl = document.getElementById('vote-progress-bar');
+      const endEl = document.getElementById('vote-cnt-end');
+      const contEl = document.getElementById('vote-cnt-cont');
+      const rowEl = document.getElementById('vote-seats-row');
+
+      let endCnt = 0, contCnt = 0;
+      players.forEach(c => {
+        if (st.votes[c] === 'end') endCnt++;
+        else if (st.votes[c] === 'continue') contCnt++;
+      });
+
+      if (cdEl) cdEl.innerText = st.secondsLeft;
+      if (barEl) barEl.style.width = `${Math.max(0, (st.secondsLeft / 15) * 100)}%`;
+      if (endEl) endEl.innerText = endCnt;
+      if (contEl) contEl.innerText = contCnt;
+
+      if (rowEl) {
+        rowEl.innerHTML = players.map(c => {
+          const v = st.votes[c];
+          const fac = FACTIONS_CONFIG[c];
+          const isHumanSeat = seatControllers[c].isLocal && !seatControllers[c].isAI && !seatControllers[c].aiTakeover;
+          const badgeText = v === 'end' ? '🛑 结束' : (v === 'continue' ? '🎮 不结束' : '⏳ 思考中');
+          const bg = v === 'end' ? 'rgba(239, 68, 68, 0.14)' : (v === 'continue' ? 'rgba(16, 185, 129, 0.14)' : 'rgba(148, 163, 184, 0.12)');
+          const bd = v === 'end' ? '#EF4444' : (v === 'continue' ? '#10B981' : 'rgba(148, 163, 184, 0.35)');
+          const clr = v === 'end' ? '#DC2626' : (v === 'continue' ? '#059669' : '#64748B');
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;background:${bg};border:1px solid ${bd};font-size:11px;font-weight:800;">
+            <span class="night-text-main">${fac.name}${isHumanSeat ? '' : ''}</span>
+            <span style="color:${clr};">${badgeText}</span>
+          </div>`;
+        }).join('');
+      }
+
+      const humanVoted = st.votes.blue !== null;
+      const btnEnd = document.getElementById('btn-vote-end');
+      const btnCont = document.getElementById('btn-vote-cont');
+      if (btnEnd) { btnEnd.disabled = humanVoted; btnEnd.style.opacity = humanVoted ? '0.6' : '1'; }
+      if (btnCont) { btnCont.disabled = humanVoted; btnCont.style.opacity = humanVoted ? '0.6' : '1'; }
+    }
+
+    function checkEndgameVoteThreshold() {
+      if (!activeVoteState) return;
+      const st = activeVoteState;
+      const endCnt = players.filter(c => st.votes[c] === 'end').length;
+      const contCnt = players.filter(c => st.votes[c] === 'continue').length;
+
+      if (endCnt >= 3) {
+        stopEndgameVoteTimer();
+        const modal = document.getElementById('modal-endgame-vote');
+        if (modal) modal.classList.add('hidden');
+        isVotePaused = false;
+        matchEnded = true;
+        playSound('victory');
+        showAeroFinalLeaderboard(true);
+      } else if (contCnt >= 2 && st.votes.blue !== null) {
+        // 至少2票不结束，已不可能凑满3票结束
+        stopEndgameVoteTimer();
+        setTimeout(() => {
+          closeEndgameVoteModal(false, '反对票已过半（无法凑满 3 票结束），已进入观众席继续观战！');
+        }, 700);
+      }
+    }
+
+    function castEndgameVote(choice, voterColor = 'blue') {
+      if (!activeVoteState) return;
+      if (activeVoteState.votes[voterColor] !== null) return;
+      playSound('click');
+      activeVoteState.votes[voterColor] = choice;
+      renderEndgameVoteModal();
+      checkEndgameVoteThreshold();
+    }
+
+    // [TEST-ONLY START] 单机测试辅助：模拟其余AI席位一并投赞成结束以触发满3票结算
+    function testSimulateThreeEndVotes() {
+      if (!activeVoteState) return;
+      playSound('click');
+      activeVoteState.votes.blue = 'end';
+      let need = 3 - players.filter(c => activeVoteState.votes[c] === 'end').length;
+      for (const c of players) {
+        if (need <= 0) break;
+        if (activeVoteState.votes[c] !== 'end') {
+          activeVoteState.votes[c] = 'end';
+          need--;
+        }
+      }
+      renderEndgameVoteModal();
+      checkEndgameVoteThreshold();
+    }
+    // [TEST-ONLY END]
+
+    function closeEndgameVoteModal(manual = false, customLog = null) {
+      stopEndgameVoteTimer();
+      const modal = document.getElementById('modal-endgame-vote');
+      if (modal) modal.classList.add('hidden');
+      if (matchEnded) return;
+      isVotePaused = false;
+      playSound('click');
+      const logEl = document.getElementById('game-event-log');
+      if (logEl) {
+        logEl.innerText = customLog || (manual
+          ? '👀 已关闭投票弹窗，进入观众席继续观战其余玩家，直到全部完赛！'
+          : '⏱️ 15 秒投票结束（未满 3 票），保留棋局进入观众席继续对战！');
+      }
+      updateGameUI();
+      setTimeout(endTurn, getAeroDelay(420));
+    }
+
+    function openEndgameVoteModal(winnerColor) {
+      stopEndgameVoteTimer();
+      isVotePaused = true;
+      activeVoteState = {
+        winnerColor,
+        secondsLeft: 15,
+        votes: { blue: null, yellow: null, purple: null, pink: null },
+        timerId: null,
+        aiTimeouts: []
+      };
+      const titleEl = document.getElementById('vote-modal-title');
+      if (titleEl) titleEl.innerText = `【${FACTIONS_CONFIG[winnerColor].name}】率先全员登顶！`;
+
+      renderEndgameVoteModal();
+      const modal = document.getElementById('modal-endgame-vote');
+      if (modal) modal.classList.remove('hidden');
+
+      // 非本地人类控制的 AI 席位错峰自动投票（大概率继续观战角逐二三名）
+      const aiSeats = players.filter(c => !isHumanActiveTurn(c) && c !== winnerColor);
+      aiSeats.forEach((c, i) => {
+        const tid = setTimeout(() => {
+          if (!activeVoteState) return;
+          const doneCnt = gameState[c].filter(b => b.state === 'done').length;
+          const vote = (doneCnt === 0 && Math.random() < 0.25) ? 'end' : 'continue';
+          castEndgameVote(vote, c);
+        }, 1200 + i * 750);
+        activeVoteState.aiTimeouts.push(tid);
+      });
+
+      // 如果电脑获胜且玩家在场外也可投票；每秒递减 15s 倒计时
+      activeVoteState.timerId = setInterval(() => {
+        if (!activeVoteState) return;
+        activeVoteState.secondsLeft--;
+        renderEndgameVoteModal();
+        if (activeVoteState.secondsLeft <= 0) {
+          closeEndgameVoteModal(false);
+        }
+      }, 1000);
+    }
+
+    function toggleSpectatorSpeed() {
+      playSound('click');
+      spectatorFastMode = !spectatorFastMode;
+      const btn = document.getElementById('btn-spectator-speed');
+      if (btn) btn.innerText = spectatorFastMode ? '⏩ 观战倍速: 4x (快进中)' : '⏩ 观战倍速: 1x (正常)';
+    }
+
+    function showAeroFinalLeaderboard(endedByVote = false) {
+      const roundText = document.getElementById('game-round-counter')?.innerText || '';
+      const remaining = players
+        .filter(c => !finishedOrder.includes(c))
+        .sort((a, b) => {
+          const doneDiff = gameState[b].filter(p => p.state === 'done').length - gameState[a].filter(p => p.state === 'done').length;
+          if (doneDiff !== 0) return doneDiff;
+          const stepsA = gameState[a].reduce((s, p) => s + (p.steps || 0), 0);
+          const stepsB = gameState[b].reduce((s, p) => s + (p.steps || 0), 0);
+          return stepsB - stepsA;
+        });
+      const finalOrder = [...finishedOrder, ...remaining];
+      const medals = ['🥇 第 1 名 (冠军)', '🥈 第 2 名 (亚军)', '🥉 第 3 名 (季军)', '🏅 第 4 名'];
+      const rowsHtml = finalOrder.map((c, i) => {
+        const doneCnt = gameState[c].filter(p => p.state === 'done').length;
+        const finTag = finishedOrder.includes(c) ? '全部终点' : `${doneCnt}/4 终点`;
+        return `<div style="display:flex;justify-content:space-between;padding:3px 0;${i === 0 ? 'color:#B45309;font-weight:900;' : ''}">
+          <span>${medals[i]} · ${FACTIONS_CONFIG[c].name}</span>
+          <span>${finTag}</span>
+        </div>`;
+      }).join('');
+
+      const champion = finalOrder[0];
+      showVictoryModal({
+        mode: 'aero',
+        icon: '👑',
+        title: `【${FACTIONS_CONFIG[champion].name}】夺得本局冠军！`,
+        subtitle: endedByVote
+          ? `全场投「结束」满 3 票，提前结算最终排行榜！`
+          : `四位玩家已全部抵达中央终点，对局圆满收官！`,
+        statsHtml: `<div style="text-align:left;">${rowsHtml}</div><div style="margin-top:6px;padding-top:6px;border-top:1px dashed rgba(245,158,11,0.35);font-size:11px;">轮换周期：${roundText}</div>`
+      });
+    }
+
+    function handleAeroPlayerFinished(color) {
+      if (matchEnded || finishedOrder.includes(color)) return;
+      finishedOrder.push(color);
+      const rank = finishedOrder.length;
+      const fac = FACTIONS_CONFIG[color];
+
+      playSound('firework');
+      spawnFireworksInto(scene, activeFireworkBursts, 0, 0, COLOR_MAP[color].hex, 0xFDE047, {
+        starCount: 44,
+        aerialCount: 34,
+        aerialHeight: 1.9
+      });
+      playSound('victory');
+      updateGameUI();
+
+      const logEl = document.getElementById('game-event-log');
+      if (logEl) {
+        logEl.innerText = `👑 【${fac.name}】全员会师中央皇冠！荣获第 ${rank} 名并进入【观众席】！`;
+      }
+
+      // 全部 4 位玩家都胜利完赛 -> 弹出总榜结算
+      if (finishedOrder.length >= players.length) {
+        matchEnded = true;
+        isVotePaused = false;
+        stopEndgameVoteTimer();
+        const voteModal = document.getElementById('modal-endgame-vote');
+        if (voteModal) voteModal.classList.add('hidden');
+        setTimeout(() => showAeroFinalLeaderboard(false), 450);
+        return;
+      }
+
+      // 首名玩家胜利时：弹出 15 秒全员是否结束对局投票弹窗
+      if (finishedOrder.length === 1 && !firstWinnerVoteShown) {
+        firstWinnerVoteShown = true;
+        setTimeout(() => openEndgameVoteModal(color), 320);
+        return;
+      }
+
+      // 其余玩家陆续完赛继续移交下一位仍在场的选手
+      setTimeout(endTurn, getAeroDelay(650));
+    }
+
     function endTurn() {
       if (document.getElementById('view-game-aero').classList.contains('hidden')) return;
+      if (matchEnded || isVotePaused || finishedOrder.length >= players.length) return;
 
-      activePlayerIdx = (activePlayerIdx + 1) % 4;
-      if (activePlayerIdx === 0) {
+      const prevIdx = activePlayerIdx;
+      let nextIdx = prevIdx;
+      for (let step = 1; step <= 4; step++) {
+        const candidate = (prevIdx + step) % 4;
+        if (!hasSeatFinished(players[candidate])) {
+          nextIdx = candidate;
+          break;
+        }
+      }
+      activePlayerIdx = nextIdx;
+
+      if (nextIdx <= prevIdx) {
         currentRound++;
         if (currentRound > roundCycleLimit) {
           currentRound = 1;
@@ -3532,9 +3886,10 @@
       }
 
       updateTurnIndicator();
-      if (players[activePlayerIdx] !== 'blue') {
+      const nextColor = players[activePlayerIdx];
+      if (!isHumanActiveTurn(nextColor)) {
         aiCallingRoll = true;
-        setTimeout(playerRollDice, 750);
+        setTimeout(playerRollDice, getAeroDelay(750));
       }
     }
 
@@ -3568,16 +3923,19 @@
       const curColor = players[activePlayerIdx];
       const lbl = document.getElementById('lbl-active-player');
       if (lbl) {
-        lbl.innerText = FACTIONS_CONFIG[curColor].name;
+        lbl.innerText = hasSeatFinished('blue') && !matchEnded
+          ? `👀 观战中 · 当前: ${FACTIONS_CONFIG[curColor].name}`
+          : FACTIONS_CONFIG[curColor].name;
         lbl.style.backgroundColor = COLOR_MAP[curColor].dark;
       }
       players.forEach(c => {
         const card = document.getElementById(`card-player-${c}`);
-        if (card) card.classList.toggle('active-turn-card', c === curColor);
+        if (card) card.classList.toggle('active-turn-card', !matchEnded && c === curColor);
       });
     }
 
     function updateGameUI() {
+      const rankMedals = ['🥇第1名', '🥈第2名', '🥉第3名', '🏅第4名'];
       players.forEach(p => {
         const homeCnt = gameState[p].filter(b => b.state === 'home').length;
         const activeCnt = gameState[p].filter(b => b.state === 'ready' || b.state === 'active' || b.state === 'runway').length;
@@ -3588,7 +3946,36 @@
         if (hEl) hEl.innerText = homeCnt;
         if (aEl) aEl.innerText = activeCnt;
         if (dEl) dEl.innerText = doneCnt;
+
+        const seatBadge = document.getElementById(`seat-status-${p}`);
+        if (seatBadge) {
+          const finIdx = finishedOrder.indexOf(p);
+          if (finIdx !== -1) {
+            seatBadge.innerText = `(${rankMedals[finIdx]}·观众席)`;
+            seatBadge.style.color = '#FDE047';
+          } else if (seatControllers[p].aiTakeover) {
+            seatBadge.innerText = '(🤖 AI接管)';
+            seatBadge.style.color = '#FCA5A5';
+          } else {
+            seatBadge.innerText = seatControllers[p].isAI ? '(AI)' : '(你)';
+          }
+        }
       });
+
+      const blueFinished = hasSeatFinished('blue');
+      const specBox = document.getElementById('aero-spectator-box');
+      const specTitle = document.getElementById('spectator-rank-title');
+      const rollBtn = document.getElementById('btn-roll-dice');
+      if (specBox) specBox.classList.toggle('hidden', !blueFinished || matchEnded);
+      if (blueFinished && specTitle) {
+        const rank = finishedOrder.indexOf('blue') + 1;
+        specTitle.innerText = `👀 观众席 • 第 ${rank} 名完赛`;
+      }
+      if (rollBtn) {
+        rollBtn.disabled = blueFinished || matchEnded;
+        rollBtn.style.opacity = (blueFinished || matchEnded) ? '0.45' : '1';
+      }
+      updateTurnIndicator();
     }
 
     // =========================================================================
@@ -3694,7 +4081,7 @@
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && !document.getElementById('view-game-aero').classList.contains('hidden')) {
         e.preventDefault();
-        if (players[activePlayerIdx] === 'blue') {
+        if (!isVotePaused && !matchEnded && isHumanActiveTurn(players[activePlayerIdx])) {
           if (waitingForPlayerChoice) autoPickMove();
           else playerRollDice();
         }
