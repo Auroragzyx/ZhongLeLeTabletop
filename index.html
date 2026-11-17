@@ -6631,18 +6631,167 @@
       // =========================================================================
       // 3. 图2精髓：中央赛博朋克夜景大都市 (闪烁霓虹、摩天楼、全息能源球与飞艇)
       // =========================================================================
+// =========================================================================
+      // 3. 图2精髓：中央赛博朋克夜景大都市 (高质感霓虹窗户/全息立面/轮廓发光/告别黑方块)
+      // =========================================================================
       function buildCenterCyberCity(halfW, halfH, mapSize) {
         const grp = new THREE.Group();
 
-        // 平台底盘高科技基座
-        const padW = halfW * 1.6;
-        const padH = halfH * 1.6;
+        // 1. 动态生成高质感赛博地面贴图 (高科技网格与电路走向，告别纯青色实心板)
+        function createCyberGroundTexture() {
+          const cvs = document.createElement('canvas');
+          cvs.width = 512; cvs.height = 512;
+          const ctx = cvs.getContext('2d');
+          ctx.fillStyle = '#060B14';
+          ctx.fillRect(0, 0, 512, 512);
+
+          // 细微网格
+          ctx.strokeStyle = '#0F1D33';
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i <= 512; i += 32) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+          }
+
+          // 科技电路网络走线
+          ctx.strokeStyle = '#0284C7';
+          ctx.lineWidth = 2.5;
+          const circuits = [
+            [[32, 32], [96, 32], [128, 64], [128, 160], [192, 192]],
+            [[480, 480], [416, 480], [384, 448], [384, 352], [320, 320]],
+            [[32, 480], [96, 480], [160, 416], [256, 416]],
+            [[480, 32], [416, 32], [352, 96], [352, 192]]
+          ];
+          circuits.forEach(path => {
+            ctx.beginPath();
+            ctx.moveTo(path[0][0], path[0][1]);
+            for (let k = 1; k < path.length; k++) {
+              ctx.lineTo(path[k][0], path[k][1]);
+            }
+            ctx.stroke();
+          });
+
+          // 电路发光节点
+          ctx.fillStyle = '#00E5FF';
+          [[192, 192], [320, 320], [256, 416], [352, 192], [256, 256]].forEach(([nx, ny]) => {
+            ctx.beginPath();
+            ctx.arc(nx, ny, 5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          const tex = new THREE.CanvasTexture(cvs);
+          tex.wrapS = THREE.RepeatWrapping;
+          tex.wrapT = THREE.RepeatWrapping;
+          tex.repeat.set(3, 3);
+          return tex;
+        }
+
+        // 2. 动态生成高质感摩天大楼赛博窗户夜景贴图 (512×512，自发光不黑屏)
+        function createSkyscraperWindowTexture() {
+          const cvs = document.createElement('canvas');
+          cvs.width = 512; cvs.height = 512;
+          const ctx = cvs.getContext('2d');
+
+          // 深色幕墙底色
+          ctx.fillStyle = '#09101F';
+          ctx.fillRect(0, 0, 512, 512);
+
+          // 楼层横梁分割线
+          ctx.strokeStyle = '#1E293B';
+          ctx.lineWidth = 4;
+          for (let y = 0; y <= 512; y += 32) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(512, y); ctx.stroke();
+          }
+          // 纵向百叶立柱
+          ctx.strokeStyle = '#0F172A';
+          ctx.lineWidth = 3;
+          for (let x = 0; x <= 512; x += 16) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
+          }
+
+          // 璀璨夜景霓虹发光窗口 (高密度自发光矩阵)
+          const colors = [
+            '#00E5FF', '#38BDF8', '#67E8F9',  // 赛博青蓝
+            '#EC4899', '#F472B6',            // 霓虹紫粉
+            '#FDE047', '#FBBF24',            // 科技明黄
+            '#A855F7', '#C084FC',            // 量子深紫
+            '#FFFFFF',                       // 亮白照明
+            '#060C18', '#060C18'             // 未点亮暗窗
+          ];
+
+          for (let row = 4; row < 512; row += 16) {
+            for (let col = 3; col < 512; col += 16) {
+              const c = colors[Math.floor(Math.random() * colors.length)];
+              ctx.fillStyle = c;
+              ctx.fillRect(col, row, 10, 8);
+            }
+          }
+
+          const tex = new THREE.CanvasTexture(cvs);
+          tex.wrapS = THREE.RepeatWrapping;
+          tex.wrapT = THREE.RepeatWrapping;
+          return tex;
+        }
+
+        // 3. 动态生成商业科技全息巨幕贴图 (带霓虹巨幅广告)
+        function createHoloAdTexture(textLabel, accentColor) {
+          const cvs = document.createElement('canvas');
+          cvs.width = 512; cvs.height = 256;
+          const ctx = cvs.getContext('2d');
+
+          // 屏幕深色反光底
+          ctx.fillStyle = '#050811';
+          ctx.fillRect(0, 0, 512, 256);
+
+          // 动态全息边框
+          ctx.strokeStyle = accentColor;
+          ctx.lineWidth = 8;
+          ctx.strokeRect(10, 10, 492, 236);
+
+          // 扫描线质感
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+          for (let y = 0; y < 256; y += 4) {
+            ctx.fillRect(10, y, 492, 2);
+          }
+
+          // 发光文字
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '900 68px "Arial Black", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.shadowColor = accentColor;
+          ctx.shadowBlur = 24;
+          ctx.fillText(textLabel, 256, 140);
+          ctx.shadowBlur = 0;
+
+          // 底部副标
+          ctx.fillStyle = accentColor;
+          ctx.font = 'bold 26px monospace';
+          ctx.fillText('CYBER METROPOLIS 2077', 256, 195);
+
+          const tex = new THREE.CanvasTexture(cvs);
+          return tex;
+        }
+
+        // 实例化高品质贴图
+        const groundTex = createCyberGroundTexture();
+        const winTex = createSkyscraperWindowTexture();
+        const adTexList = [
+          createHoloAdTexture('CYBER CORP', '#00E5FF'),
+          createHoloAdTexture('NEON CITY', '#EC4899'),
+          createHoloAdTexture('AI MATRIX', '#FDE047'),
+          createHoloAdTexture('G-TYCOON', '#38BDF8')
+        ];
+
+        // 平台底盘复合高科技基座 (深暗高反光，告别纯青板)
+        const padW = halfW * 1.58;
+        const padH = halfH * 1.58;
         const podGeo = new THREE.BoxGeometry(padW, 0.45, padH);
         const podMat = new THREE.MeshStandardMaterial({
-          color: 0x070B14,
-          emissive: 0x0284C7,
-          emissiveIntensity: 0.12,
-          metalness: 0.92,
+          color: 0xFFFFFF,
+          map: groundTex,
+          emissive: 0x051326,
+          emissiveIntensity: 0.25,
+          metalness: 0.88,
           roughness: 0.25
         });
         const podium = new THREE.Mesh(podGeo, podMat);
@@ -6650,37 +6799,30 @@
         podium.receiveShadow = true;
         grp.add(podium);
 
-        // 基座外围电弧霓虹青光导轨
-        const rimGeo = new THREE.BoxGeometry(padW + 0.2, 0.08, padH + 0.2);
-        const rimMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF });
-        const rim = new THREE.Mesh(rimGeo, rimMat);
-        rim.position.y = 0.02;
-        grp.add(rim);
-
-        // 动态生成建筑霓虹夜景窗户贴图
-        const winCvs = document.createElement('canvas');
-        winCvs.width = 128; winCvs.height = 128;
-        const wctx = winCvs.getContext('2d');
-        wctx.fillStyle = '#060A14';
-        wctx.fillRect(0, 0, 128, 128);
-        const winColors = ['#00E5FF', '#38BDF8', '#FDE047', '#EC4899', '#A855F7', '#060A14', '#060A14'];
-        for (let wy = 4; wy < 124; wy += 8) {
-          for (let wx = 4; wx < 124; wx += 8) {
-            wctx.fillStyle = winColors[Math.floor(Math.random() * winColors.length)];
-            wctx.fillRect(wx, wy, 5, 5);
-          }
+        // 四周精致霓虹青光导轨 (仅围绕在平台边缘四周，宽度 0.18，绝不遮挡地面！)
+        function addEdgeRims() {
+          const rimMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF });
+          const rw = padW, rh = padH, rwThick = 0.18, ry = 0.02;
+          // 北边与南边导轨
+          const northSGeo = new THREE.BoxGeometry(rw + rwThick, 0.06, rwThick);
+          const northM = new THREE.Mesh(northSGeo, rimMat); northM.position.set(0, ry, rh / 2); grp.add(northM);
+          const southM = new THREE.Mesh(northSGeo, rimMat); southM.position.set(0, ry, -rh / 2); grp.add(southM);
+          // 西边与东边导轨
+          const westEGeo = new THREE.BoxGeometry(rwThick, 0.06, rh + rwThick);
+          const westM = new THREE.Mesh(westEGeo, rimMat); westM.position.set(-rw / 2, ry, 0); grp.add(westM);
+          const eastM = new THREE.Mesh(westEGeo, rimMat); eastM.position.set(rw / 2, ry, 0); grp.add(eastM);
         }
-        const winTex = new THREE.CanvasTexture(winCvs);
-        winTex.wrapS = THREE.RepeatWrapping;
-        winTex.wrapT = THREE.RepeatWrapping;
+        addEdgeRims();
 
+        // 摩天大楼通用自发光高亮材质 (map + emissiveMap 双通道自发光，确保夜景中绝不黑漆漆！)
         const bldgMat = new THREE.MeshStandardMaterial({
-          color: 0x0B1220,
-          emissive: 0x1E293B,
-          emissiveIntensity: 0.35,
-          metalness: 0.88,
-          roughness: 0.2,
-          map: winTex
+          color: 0xFFFFFF,
+          map: winTex,
+          emissive: 0xCCDDF4,
+          emissiveMap: winTex,
+          emissiveIntensity: 0.95,
+          metalness: 0.85,
+          roughness: 0.25
         });
 
         const bldgCount = (mapSize === 128 ? 26 : (mapSize === 48 ? 14 : 18));
@@ -6688,140 +6830,236 @@
         const innerH = halfH * 0.65;
         const beacons = [];
 
-        // 摩天大楼集群
+        // 摩天大楼集群构建
         for (let i = 0; i < bldgCount; i++) {
-          const bw = 1.6 + Math.random() * 1.8;
-          const bd = 1.6 + Math.random() * 1.8;
-          const bh = 3.5 + Math.random() * (mapSize === 128 ? 12.0 : 8.5);
+          const bw = 1.8 + Math.random() * 1.6;
+          const bd = 1.8 + Math.random() * 1.6;
+          const bh = 3.8 + Math.random() * (mapSize === 128 ? 11.5 : 8.0);
 
-          let bx = (Math.random() - 0.5) * innerW * 1.8;
-          let bz = (Math.random() - 0.5) * innerH * 1.8;
-          if (Math.hypot(bx, bz) < 4.8) {
-            bx += (bx >= 0 ? 3.8 : -3.8);
-            bz += (bz >= 0 ? 3.8 : -3.8);
+          let bx = (Math.random() - 0.5) * innerW * 1.85;
+          let bz = (Math.random() - 0.5) * innerH * 1.85;
+          // 避让中央地标核心区域 (半径 4.5)
+          if (Math.hypot(bx, bz) < 4.5) {
+            bx += (bx >= 0 ? 3.6 : -3.6);
+            bz += (bz >= 0 ? 3.6 : -3.6);
           }
 
-          const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bldgMat);
+          // 1. 主楼体 (自发光绚丽摩天大楼)
+          const bGeo = new THREE.BoxGeometry(bw, bh, bd);
+          const bMesh = new THREE.Mesh(bGeo, bldgMat);
           bMesh.position.set(bx, bh / 2, bz);
           bMesh.castShadow = true;
           bMesh.receiveShadow = true;
           grp.add(bMesh);
 
-          // 楼顶天线与闪烁霓虹航空警示灯
-          const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8, 8), new THREE.MeshBasicMaterial({ color: 0x64748B }));
-          ant.position.set(bx, bh + 0.9, bz);
+          // 2. 赛博建筑轮廓发光线条 (EdgesGeometry 线框微光，图2精髓)
+          const edgeGeo = new THREE.EdgesGeometry(bGeo);
+          const edgeColor = (i % 3 === 0 ? 0x00E5FF : (i % 3 === 1 ? 0xEC4899 : 0x38BDF8));
+          const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.85 });
+          const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+          bMesh.add(edgeLines);
+
+          // 3. 楼顶分层结构 (顶楼小阁楼 / 机房 / 天台停机坪)
+          const roofH = 0.8 + Math.random() * 1.0;
+          const roofW = bw * 0.65;
+          const roofD = bd * 0.65;
+          const roofGeo = new THREE.BoxGeometry(roofW, roofH, roofD);
+          const roofMat = new THREE.MeshStandardMaterial({
+            color: 0x0E1A2F,
+            emissive: edgeColor,
+            emissiveIntensity: 0.35,
+            metalness: 0.9,
+            roughness: 0.2
+          });
+          const roofMesh = new THREE.Mesh(roofGeo, roofMat);
+          roofMesh.position.set(bx, bh + roofH / 2, bz);
+          grp.add(roofMesh);
+
+          // 4. 楼顶通讯天线与按周期脉冲呼吸的航空警示灯
+          const antH = 1.4 + Math.random() * 1.2;
+          const ant = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.04, 0.04, antH, 8),
+            new THREE.MeshBasicMaterial({ color: 0x94A3B8 })
+          );
+          ant.position.set(bx, bh + roofH + antH / 2, bz);
           grp.add(ant);
 
           const tipColor = (i % 2 === 0 ? 0x00E5FF : 0xEF4444);
           const tipMat = new THREE.MeshBasicMaterial({ color: tipColor, transparent: true, opacity: 1.0 });
-          const tip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), tipMat);
-          tip.position.set(bx, bh + 1.8, bz);
+          const tip = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), tipMat);
+          tip.position.set(bx, bh + roofH + antH, bz);
           grp.add(tip);
-          beacons.push({ mesh: tip, phase: Math.random() * Math.PI * 2, speed: 4.5 + Math.random() * 2.0 });
+          beacons.push({ mesh: tip, phase: Math.random() * Math.PI * 2, speed: 4.0 + Math.random() * 2.0 });
 
-          // 楼顶霓虹全息广告牌
-          if (i % 3 === 0) {
-            const signMat = new THREE.MeshBasicMaterial({ color: (i % 2 === 0 ? 0xEC4899 : 0x00E5FF) });
-            const sign = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.9, 0.6, 0.1), signMat);
-            sign.position.set(bx, bh + 0.35, bz + bd * 0.45);
-            grp.add(sign);
+          // 5. 大楼外立面悬挂巨型全息发光霓虹广告牌 (Holographic LED Screen)
+          if (i % 2 === 0) {
+            const adTex = adTexList[i % adTexList.length];
+            const adGeo = new THREE.PlaneGeometry(bw * 0.95, bw * 0.48);
+            const adMat = new THREE.MeshBasicMaterial({
+              map: adTex,
+              transparent: true,
+              opacity: 0.95,
+              side: THREE.DoubleSide
+            });
+            const adMesh = new THREE.Mesh(adGeo, adMat);
+            // 贴在面向中心或前方的大楼外侧面
+            const outOffset = (bz > 0 ? bd / 2 + 0.05 : -bd / 2 - 0.05);
+            adMesh.position.set(bx, bh * 0.65, bz + outOffset);
+            if (bz <= 0) adMesh.rotation.y = Math.PI;
+            grp.add(adMesh);
           }
         }
 
-        // 中心核心地标 (Central Landmark)
+        // 中心核心地标 (Central Landmark) - 完美契合图2
         const centerHub = new THREE.Group();
         centerHub.position.set(0, 0, 0);
 
         if (mapSize === 64) {
-          // 64格：霓虹港湾中央全息能源球 + 圆柱基座 (完全对标图2左下)
-          const baseCol = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.8, 1.8, 32), bldgMat);
-          baseCol.position.y = 0.9;
-          centerHub.add(baseCol);
-
-          const midCol = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 2.4, 32), bldgMat);
-          midCol.position.y = 3.0;
-          centerHub.add(midCol);
-
-          // 蓝色全息发光球体
-          const orbMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(1.35, 24, 24),
-            new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.85 })
+          // 【64格：霓虹港湾中央全息能源球 + 双层圆环基座 (图2左下同款)】
+          const baseCyl = new THREE.Mesh(
+            new THREE.CylinderGeometry(3.6, 4.0, 0.6, 24),
+            new THREE.MeshStandardMaterial({ color: 0x0C1A30, emissive: 0x00E5FF, emissiveIntensity: 0.35, metalness: 0.92, roughness: 0.2 })
           );
-          orbMesh.position.y = 5.6;
+          baseCyl.position.y = 0.3;
+          centerHub.add(baseCyl);
+
+          // 能源台阶与光柱
+          const midCyl = new THREE.Mesh(
+            new THREE.CylinderGeometry(2.4, 2.6, 0.5, 24),
+            new THREE.MeshStandardMaterial({ color: 0x112340, emissive: 0x38BDF8, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.2 })
+          );
+          midCyl.position.y = 0.85;
+          centerHub.add(midCyl);
+
+          // 悬浮全息发光球体
+          const orbMat = new THREE.MeshStandardMaterial({
+            color: 0x00E5FF,
+            emissive: 0x00E5FF,
+            emissiveIntensity: 1.2,
+            metalness: 0.3,
+            roughness: 0.1,
+            wireframe: true
+          });
+          const orbMesh = new THREE.Mesh(new THREE.SphereGeometry(1.4, 20, 20), orbMat);
+          orbMesh.position.y = 2.6;
           centerHub.add(orbMesh);
 
-          const orbRing = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.06, 8, 32), new THREE.MeshBasicMaterial({ color: 0x38BDF8 }));
-          orbRing.rotation.x = Math.PI / 3;
-          orbRing.position.y = 5.6;
+          // 悬浮能量光环 (倾斜自转)
+          const ringGeo = new THREE.TorusGeometry(2.2, 0.08, 12, 36);
+          const ringMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8 });
+          const orbRing = new THREE.Mesh(ringGeo, ringMat);
+          orbRing.position.y = 2.6;
+          orbRing.rotation.x = Math.PI / 4;
           centerHub.add(orbRing);
 
-          const orbLight = new THREE.PointLight(0x00E5FF, 3.2, 36);
-          orbLight.position.y = 5.6;
-          centerHub.add(orbLight);
+          // 4 根垂直能量导管
+          for (let pi = 0; pi < 4; pi++) {
+            const ang = (pi / 4) * Math.PI * 2;
+            const pCyl = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.12, 0.12, 1.8, 12),
+              new THREE.MeshBasicMaterial({ color: 0x00E5FF })
+            );
+            pCyl.position.set(Math.cos(ang) * 2.8, 1.4, Math.sin(ang) * 2.8);
+            centerHub.add(pCyl);
+          }
 
-          centerHub.userData = { orbMesh, orbRing, orbLight };
+          centerHub.userData = { orbMesh, orbRing };
+
         } else if (mapSize === 48) {
-          // 48格：天际走廊通讯天线塔 (对标图2右下)
-          const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 8.5, 16), bldgMat);
-          tower.position.y = 4.25;
-          centerHub.add(tower);
+          // 【48格：空中都市中央高耸天际通讯塔 (图2右下同款)】
+          const towerBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(2.2, 2.6, 0.6, 16),
+            new THREE.MeshStandardMaterial({ color: 0x0E1F38, emissive: 0x38BDF8, emissiveIntensity: 0.4, metalness: 0.9 })
+          );
+          towerBase.position.y = 0.3;
+          centerHub.add(towerBase);
 
-          const deck1 = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 0.35, 24), new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true }));
-          deck1.position.y = 5.8;
-          centerHub.add(deck1);
-
-          const deck2 = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 0.3, 24), new THREE.MeshBasicMaterial({ color: 0xEC4899, wireframe: true }));
-          deck2.position.y = 7.5;
-          centerHub.add(deck2);
-
-          const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 4.0, 8), new THREE.MeshBasicMaterial({ color: 0xFDE047 }));
-          spire.position.y = 10.5;
+          // 通讯主塔身
+          const spire = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.35, 1.1, 7.5, 16),
+            new THREE.MeshStandardMaterial({ color: 0x1E293B, emissive: 0x00E5FF, emissiveIntensity: 0.5, metalness: 0.88 })
+          );
+          spire.position.y = 4.3;
           centerHub.add(spire);
 
-          const topBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00E5FF }));
-          topBeacon.position.y = 12.6;
-          centerHub.add(topBeacon);
-          beacons.push({ mesh: topBeacon, phase: 0, speed: 6.0 });
-        } else {
-          // 128格：超大都市中央帝国赛博堡垒 (对标图2上方)
-          const baseTower = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 5.5, 4.5, 32), bldgMat);
-          baseTower.position.y = 2.25;
-          centerHub.add(baseTower);
+          // 塔顶环形观景台与旋转天线雷达
+          const deck = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.6, 1.6, 0.4, 16),
+            new THREE.MeshBasicMaterial({ color: 0x00E5FF })
+          );
+          deck.position.y = 7.0;
+          centerHub.add(deck);
 
-          const midTower = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.8, 6.0, 32), bldgMat);
-          midTower.position.y = 7.5;
+          // 冲天垂直全息激光束
+          const beamGeo = new THREE.CylinderGeometry(0.08, 0.08, 22, 8);
+          const beamMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.75 });
+          const beam = new THREE.Mesh(beamGeo, beamMat);
+          beam.position.y = 15.0;
+          centerHub.add(beam);
+
+          centerHub.userData = { spire, deck };
+
+        } else {
+          // 【128格：超大都市中央未来帝国核心主堡垒 (图2上方同款)】
+          const castleBase = new THREE.Mesh(
+            new THREE.BoxGeometry(7.0, 1.2, 7.0),
+            new THREE.MeshStandardMaterial({ color: 0x0A1526, emissive: 0xA855F7, emissiveIntensity: 0.45, metalness: 0.9 })
+          );
+          castleBase.position.y = 0.6;
+          centerHub.add(castleBase);
+
+          const midTower = new THREE.Mesh(
+            new THREE.BoxGeometry(4.4, 3.2, 4.4),
+            new THREE.MeshStandardMaterial({ color: 0x111E36, emissive: 0x00E5FF, emissiveIntensity: 0.55, metalness: 0.85 })
+          );
+          midTower.position.y = 2.8;
           centerHub.add(midTower);
 
-          const highSpire = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, 7.0, 24), bldgMat);
-          highSpire.position.y = 14.0;
-          centerHub.add(highSpire);
+          const highTower = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.6, 1.4, 8.5, 16),
+            new THREE.MeshStandardMaterial({ color: 0x1E293B, emissive: 0xEC4899, emissiveIntensity: 0.6, metalness: 0.9 })
+          );
+          highTower.position.y = 8.5;
+          centerHub.add(highTower);
 
-          const needle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.3, 6.0, 8), new THREE.MeshBasicMaterial({ color: 0x00E5FF }));
-          needle.position.y = 20.5;
-          centerHub.add(needle);
+          // 顶部全息紫金光柱
+          const grandBeam = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.2, 0.2, 28, 8),
+            new THREE.MeshBasicMaterial({ color: 0xC084FC, transparent: true, opacity: 0.85 })
+          );
+          grandBeam.position.y = 22.0;
+          centerHub.add(grandBeam);
 
-          const topBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshBasicMaterial({ color: 0xEC4899 }));
-          topBeacon.position.y = 23.6;
-          centerHub.add(topBeacon);
-          beacons.push({ mesh: topBeacon, phase: 0, speed: 5.0 });
-
-          const citadelLight = new THREE.PointLight(0xD946EF, 4.5, 60);
-          citadelLight.position.y = 18.0;
-          centerHub.add(citadelLight);
+          centerHub.userData = { castleBase, midTower, highTower };
         }
+
         grp.add(centerHub);
 
-        // 巡航穿梭飞艇 (Cruising Cyber Airship)
+        // 空中巡航飞艇 (带双引擎喷气尾流，在摩天楼群上空平稳巡航)
         const shipGrp = new THREE.Group();
-        const shipBody = new THREE.Mesh(
-          new THREE.ConeGeometry(0.65, 2.6, 8),
-          new THREE.MeshStandardMaterial({ color: 0x0284C7, metalness: 0.9, roughness: 0.2 })
-        );
-        shipBody.rotation.x = Math.PI / 2;
-        shipGrp.add(shipBody);
+        const hullGeo = new THREE.ConeGeometry(0.7, 3.2, 12);
+        hullGeo.rotateX(Math.PI / 2);
+        const hullMat = new THREE.MeshStandardMaterial({
+          color: 0x1E293B,
+          emissive: 0x00E5FF,
+          emissiveIntensity: 0.45,
+          metalness: 0.92,
+          roughness: 0.2
+        });
+        const hull = new THREE.Mesh(hullGeo, hullMat);
+        shipGrp.add(hull);
 
-        const thrusterL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.4, 8), new THREE.MeshBasicMaterial({ color: 0xEC4899 }));
-        thrusterL.rotation.x = Math.PI / 2;
+        // 飞艇双侧发光尾翼与喷气火光
+        const finGeo = new THREE.BoxGeometry(1.6, 0.06, 0.6);
+        const finMat = new THREE.MeshBasicMaterial({ color: 0xEC4899 });
+        const fin = new THREE.Mesh(finGeo, finMat);
+        fin.position.z = -0.7;
+        shipGrp.add(fin);
+
+        const thrusterGeo = new THREE.CylinderGeometry(0.12, 0.02, 0.8, 8);
+        thrusterGeo.rotateX(Math.PI / 2);
+        const thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF });
+        const thrusterL = new THREE.Mesh(thrusterGeo, thrusterMat);
         thrusterL.position.set(-0.35, 0, -1.3);
         const thrusterR = thrusterL.clone();
         thrusterR.position.x = 0.35;
