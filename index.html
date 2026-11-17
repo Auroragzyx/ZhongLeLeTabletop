@@ -6282,12 +6282,12 @@
     })();
 
 // =========================================================================
-    // 7. 《机械大亨 (Gear Tycoon)》3D 赛博齿轮大都会棋盘引擎 (第三人称追焦 & 大富翁10圆角大道)
+    // 7. 《机械大亨 (Gear Tycoon)》3D 赛博朋克夜景大都会棋盘引擎 (完全对标图2设计)
     // =========================================================================
     window.TycoonApp = (() => {
       // 核心配置与状态
       const cfg = {
-        mapSize: 64,      // 48 (小地图), 64 (中地图), 128 (大地图)
+        mapSize: 64,      // 48 (空中都市), 64 (霓虹港湾), 128 (超大都市)
         playerCount: 4,   // 2 ~ 6 人
         startCash: 15000  // 初始现金
       };
@@ -6310,34 +6310,22 @@
       let isRollingDice = false;
       let animFrameId = null;
 
-      // 摄像机模式：'follow' (第三人称跟随主角，默认推荐) | 'orbit' (3D自由轨道) | 'top' (正交俯视)
-      let cameraMode = 'follow';
+      // 视角模式：'isometric' (全景大都会，图2推荐) | 'follow' (第三人称跟随) | 'orbit' (自由旋转) | 'top' (正交俯视)
+      let cameraMode = 'isometric';
 
       // Three.js 核心对象
       let scene, camera, renderer, raycaster;
-      let boardGroup, roadGroup, gearsGroup, reactorGroup, steamGroup, pawnsGroup, markersGroup, billboardsGroup;
+      let boardGroup, roadGroup, cityGroup, pawnsGroup, markersGroup;
       let selectionBoxMesh, hoverBoxMesh;
-      let reactorLight;
-
-      // 齿轮系统
-      let gears = [];
-      let reactorRpm = 120;
-      let reactorTargetRpm = 120;
-
-      // 蒸汽粒子系统
-      let steamTimer = 0;
-      let steamBurstTimer = 0;
-      let steamNozzles = [];
-      let steamParticles = [];
-      const MAX_STEAM_PARTICLES = 140;
+      let cityData = null;
 
       // 摄像机控制变量
-      let camYaw = 0.0;
-      let camPitch = 0.85;
-      let camDist = 36.0;
-      let targetYaw = 0.0;
-      let targetPitch = 0.85;
-      let targetDist = 36.0;
+      let camYaw = 0.75;
+      let camPitch = 0.65;
+      let camDist = 52.0;
+      let targetYaw = 0.75;
+      let targetPitch = 0.65;
+      let targetDist = 52.0;
       let curLookAt = new THREE.Vector3(0, 0, 0);
       let targetLookAt = new THREE.Vector3(0, 0, 0);
 
@@ -6355,30 +6343,34 @@
       }
 
       // =========================================================================
-      // 大富翁10风格圆角大道地图生成算法 (48 / 64 / 128格 连续赛博街区环路)
+      // 1. 图2对标：大富翁赛博平台与大幅面地格算法 (48 / 64 / 128格)
       // =========================================================================
-      function buildRoundedTycoonTrack(N) {
-        let W = 15.5;
-        let Rc = 4.2;
-        let tileSize = 1.65;
-        let roadWidth = 2.7;
+      function buildBlueprintMapTrack(N) {
+        let Nx = 18, Nz = 14;
+        let tileSpacingX = 2.4, tileSpacingZ = 2.4;
+        let tileW = 2.25, tileD = 2.25;
 
         if (N === 48) {
-          W = 12.5;
-          Rc = 3.6;
-          tileSize = 1.75;
-          roadWidth = 2.8;
-        } else if (N === 128) {
-          W = 25.0;
-          Rc = 6.0;
-          tileSize = 1.38;
-          roadWidth = 2.5;
+          // 48格：空中都市 · 天际走廊 (长条椭圆赛道，图2右下)
+          Nx = 16; Nz = 8;
+          tileSpacingX = 2.4; tileSpacingZ = 2.4;
+          tileW = 2.25; tileD = 2.25;
+        } else if (N === 64) {
+          // 64格：霓虹港湾 · 科技之都 (标准方形港湾，图2左下)
+          Nx = 18; Nz = 14;
+          tileSpacingX = 2.4; tileSpacingZ = 2.4;
+          tileW = 2.25; tileD = 2.25;
+        } else {
+          // 128格：超大都市 · 未来之城 (宏伟超大都市，图2上方)
+          Nx = 36; Nz = 28;
+          tileSpacingX = 2.1; tileSpacingZ = 2.1;
+          tileW = 1.95; tileD = 1.95;
         }
 
-        const L_straight = 2.0 * (W - Rc);
-        const L_arc = 0.5 * Math.PI * Rc;
-        const totalPerimeter = 4.0 * L_straight + 4.0 * L_arc;
-        const ds = totalPerimeter / N;
+        const halfW = (Nx * tileSpacingX) / 2.0;
+        const halfH = (Nz * tileSpacingZ) / 2.0;
+        const dx = (2.0 * halfW) / Nx;
+        const dz = (2.0 * halfH) / Nz;
 
         const propertyNames = [
           { name: '钛合金锻造坊', isTech: false },
@@ -6408,104 +6400,72 @@
         const S = Math.floor(N / 4);
 
         for (let i = 0; i < N; i++) {
-          const s = i * ds;
-          const segLens = [L_straight, L_arc, L_straight, L_arc, L_straight, L_arc, L_straight, L_arc];
-          let rem = s;
-          let segIdx = 0;
-          while (segIdx < 7 && rem > segLens[segIdx]) {
-            rem -= segLens[segIdx];
-            segIdx++;
-          }
-
-          const u = rem;
           let x = 0, z = 0, tx = 1, tz = 0;
 
-          if (segIdx === 0) {
-            x = (-W + Rc) + u;
-            z = -W;
+          if (i < Nx) {
+            // 底边：从 (-halfW, halfH) 到 (halfW, halfH)，朝向 +X
+            x = -halfW + i * dx;
+            z = halfH;
             tx = 1; tz = 0;
-          } else if (segIdx === 1) {
-            const ang = -0.5 * Math.PI + (u / L_arc) * (0.5 * Math.PI);
-            x = (W - Rc) + Rc * Math.cos(ang);
-            z = (-W + Rc) + Rc * Math.sin(ang);
-            tx = -Math.sin(ang);
-            tz = Math.cos(ang);
-          } else if (segIdx === 2) {
-            x = W;
-            z = (-W + Rc) + u;
-            tx = 0; tz = 1;
-          } else if (segIdx === 3) {
-            const ang = 0.0 + (u / L_arc) * (0.5 * Math.PI);
-            x = (W - Rc) + Rc * Math.cos(ang);
-            z = (W - Rc) + Rc * Math.sin(ang);
-            tx = -Math.sin(ang);
-            tz = Math.cos(ang);
-          } else if (segIdx === 4) {
-            x = (W - Rc) - u;
-            z = W;
-            tx = -1; tz = 0;
-          } else if (segIdx === 5) {
-            const ang = 0.5 * Math.PI + (u / L_arc) * (0.5 * Math.PI);
-            x = (-W + Rc) + Rc * Math.cos(ang);
-            z = (W - Rc) + Rc * Math.sin(ang);
-            tx = -Math.sin(ang);
-            tz = Math.cos(ang);
-          } else if (segIdx === 6) {
-            x = -W;
-            z = (W - Rc) - u;
+          } else if (i < Nx + Nz) {
+            // 右边：从 (halfW, halfH) 到 (halfW, -halfH)，朝向 -Z
+            const k = i - Nx;
+            x = halfW;
+            z = halfH - k * dz;
             tx = 0; tz = -1;
-          } else if (segIdx === 7) {
-            const ang = Math.PI + (u / L_arc) * (0.5 * Math.PI);
-            x = (-W + Rc) + Rc * Math.cos(ang);
-            z = (-W + Rc) + Rc * Math.sin(ang);
-            tx = -Math.sin(ang);
-            tz = Math.cos(ang);
+          } else if (i < 2 * Nx + Nz) {
+            // 顶边：从 (halfW, -halfH) 到 (-halfW, -halfH)，朝向 -X
+            const k = i - (Nx + Nz);
+            x = halfW - k * dx;
+            z = -halfH;
+            tx = -1; tz = 0;
+          } else {
+            // 左边：从 (-halfW, -halfH) 到 (-halfW, halfH)，朝向 +Z
+            const k = i - (2 * Nx + Nz);
+            x = -halfW;
+            z = -halfH + k * dz;
+            tx = 0; tz = 1;
           }
 
-          const tLen = Math.hypot(tx, tz) || 1;
-          tx /= tLen;
-          tz /= tLen;
           const yaw = Math.atan2(tx, tz);
-          const nx = -tz;
-          const nz = tx;
 
-          // 判定地格类型
+          // 丰富多彩的色盘（对标图2六色高亮色调）
           let type = 'property';
           let name = '';
           let subType = '';
           let icon = '🏙️';
-          let color = '#64748B';
+          let color = '#0284C7';
           let desc = '';
           let price = 1200 + (i % 8) * 400;
           let rent = Math.floor(price * 0.25);
           let isTech = false;
 
-          // 四大核心角地标
+          // 核心地标固定于四角
           if (i === 0) {
             type = 'start';
-            name = '赛博起点 (Cyber Start)';
-            subType = '核心地标 • 周期发薪区';
+            name = 'GO 起点发薪';
+            subType = '核心地标 • 周期发薪';
             icon = '🏁';
-            color = '#00E5FF';
+            color = '#EC4899';
             desc = '大都会环路起点发薪枢纽。每次经过或停驻即可领取启动津贴 2,000 齿轮币，机体能源充满！';
             price = 0; rent = 0;
-          } else if (i === S) {
+          } else if (i === Nx) {
             type = 'hospital';
-            name = '赛博朋克重症医院';
-            subType = '核心地标 • 隔离住院(关3天) & 属性改装';
+            name = '赛博重症医院';
+            subType = '核心地标 • 隔离住院(关3天)';
             icon = '🏥';
             color = '#10B981';
-            desc = '夜之城顶尖生化医疗中心。停驻此处将触发：①住院机制：因机体过载或触电被收治时，强制住院隔离3天（3回合无法行动，可掷出双骰提前出院）；②义体属性改造：可消耗齿轮币升级动力与算力属性（即将开放改装）！';
+            desc = '夜之城顶尖生化医疗中心。停驻此处将触发：①住院机制：因机体过载或触电被收治时，强制住院隔离3天（3回合无法行动）；②义体属性改造：可消耗齿轮币升级动力与算力属性！';
             price = 0; rent = 0;
-          } else if (i === 2 * S) {
+          } else if (i === Nx + Nz) {
             type = 'bank';
             name = '义体中央银行';
-            subType = '核心地标 • 储备金库 & 能源分红';
+            subType = '核心地标 • 存款分红';
             icon = '🏦';
             color = '#F59E0B';
-            desc = '赛博大都会核心储备金库。每次停驻可结算并领取机体能源存款分红 1,200 齿轮币，并可追加存款！';
+            desc = '赛博大都会核心储备金库。每次停驻可结算并领取机体能源存款分红 1,200 齿轮币！';
             price = 0; rent = 0;
-          } else if (i === 3 * S) {
+          } else if (i === 2 * Nx + Nz) {
             type = 'cage';
             name = '机械囚笼';
             subType = '核心地标 • 智能困人禁锢';
@@ -6524,48 +6484,48 @@
 
             if (k === k_item) {
               type = 'item';
-              name = '机械黑市道具店';
-              subType = '隐秘集市 • 特种机件补给';
+              name = '机械黑市道具';
+              subType = '隐秘集市 • 特种机件';
               icon = '🛠️';
               color = '#F59E0B';
               desc = '地下黑市义体工坊。可购置遥控骰子、反重力跃迁推进器、机体避雷绝缘层等高科技战术机件！';
               price = 0; rent = 0;
             } else if (k === k_emp) {
               type = 'emp_grid';
-              name = '电子笼网';
+              name = '电子笼网 (电击)';
               subType = '高危陷阱 • 强电击送进医院';
               icon = '⚡';
-              color = '#38BDF8';
+              color = '#00E5FF';
               desc = '非法架设的高压EMP电子笼网！踩中立刻遭遇高压脉冲强力电击，机体电路严重烧毁，直接强制移送进【赛博医院】隔离住院3天！';
               price = 0; rent = 0;
             } else if (k === k_rew) {
               type = 'reward';
               name = '天基赛博空投';
-              subType = '随机事件 • 巨额能源补给';
+              subType = '随机事件 • 巨额补给';
               icon = '🎁';
               color = '#34D399';
               desc = '巨型空投运输机截获的科技盲盒。立刻获得 1,500 齿轮资金与机体过载冷却液！';
               price = 0; rent = 0;
             } else if (k === k_port) {
               type = 'portal';
-              name = '量子折跃传送门';
-              subType = '空间奇点 • 对角瞬移折跃';
+              name = '量子折跃门';
+              subType = '空间奇点 • 对角瞬移';
               icon = '🌀';
               color = '#A855F7';
               desc = '超空间微型虫洞发射井。踩中即可打破空间曲率，瞬间量子折跃传送至对角的折跃门，抢占关键赛区！';
               price = 0; rent = 0;
             } else if (k === k_lot) {
               type = 'lottery';
-              name = '霓虹博彩彩票店';
-              subType = '街区娱乐 • 随机大奖翻盘';
+              name = '霓虹彩票店';
+              subType = '街区娱乐 • 随机大奖';
               icon = '🎰';
               color = '#EC4899';
               desc = '全息霓虹老虎机与刮刮乐投注站。停驻可免费旋转大转盘，随机赢取 800~3,000 齿轮币暴击奖金并获赠幸运彩票！';
               price = 0; rent = 0;
             } else if (k === k_pen) {
               type = 'penalty';
-              name = '反应堆过载惩罚';
-              subType = '高危隐患 • 紧急排热罚金';
+              name = '反应堆过载';
+              subType = '高危隐患 • 罚金';
               icon = '⚠️';
               color = '#F87171';
               desc = '机体微型核聚变炉过热警报！为防止熔融，必须缴纳 1,000 齿轮币应急排热冷却处理费！';
@@ -6576,25 +6536,21 @@
               type = 'property';
               name = pInfo.name;
               isTech = pInfo.isTech;
-              subType = isTech ? '高新科技企业 • 战略研发资产' : '赛博地产 • 可购置与建设升级';
+              subType = isTech ? '战略科技企业' : '赛博工坊地产';
               icon = isTech ? '🏢' : '🏙️';
-              color = isTech ? '#A855F7' : '#38BDF8';
+              color = isTech ? '#8B5CF6' : (propIdx % 2 === 0 ? '#0284C7' : '#06B6D4');
               desc = `赛博大都会街区资产。无主时可以基础价格购置；进驻已购置工坊需支付过路租金 ${rent} 齿轮币！`;
             }
           }
 
           list.push({
             index: i,
-            x: Number(x.toFixed(3)),
+            x: Number(x.toFixed(2)),
             y: 0,
-            z: Number(z.toFixed(3)),
-            tx: Number(tx.toFixed(3)),
-            tz: Number(tz.toFixed(3)),
-            nx: Number(nx.toFixed(3)),
-            nz: Number(nz.toFixed(3)),
-            yaw: Number(yaw.toFixed(3)),
-            size: tileSize,
-            roadWidth,
+            z: Number(z.toFixed(2)),
+            yaw: Number(yaw.toFixed(2)),
+            tileW,
+            tileD,
             type,
             name,
             subType,
@@ -6609,58 +6565,62 @@
           });
         }
 
-        return { list, W, Rc, roadWidth, tileSize, S };
+        return { list, halfW, halfH, Nx, Nz, tileW, tileD };
       }
 
       // =========================================================================
-      // 高清晰度 256×256 动态 Canvas 贴图生成器（解决文字看不清问题）
+      // 2. 超清 512×512 动态地格贴图（大字体、醒目图标、高对比，彻底解决看不清）
       // =========================================================================
-      function createHighResTileTexture(tile) {
+      function createChunkyTileTexture(tile) {
         const cvs = document.createElement('canvas');
-        cvs.width = 256;
-        cvs.height = 256;
+        cvs.width = 512;
+        cvs.height = 512;
         const ctx = cvs.getContext('2d');
 
-        // 深色金属柏油底板
-        ctx.fillStyle = '#0B1120';
-        ctx.fillRect(0, 0, 256, 256);
+        // 深暗高反光底板
+        ctx.fillStyle = '#070D1A';
+        ctx.fillRect(0, 0, 512, 512);
 
-        // 顶栏高亮色块
+        // 顶栏鲜亮色带 (高度 140px，占据近 1/3)
         ctx.fillStyle = tile.color;
-        ctx.fillRect(0, 0, 256, 56);
+        ctx.fillRect(0, 0, 512, 140);
 
-        // 赛博边框与圆角辉光
+        // 高光边框与内发光环
         ctx.strokeStyle = tile.color;
-        ctx.lineWidth = 8;
-        ctx.strokeRect(4, 4, 248, 248);
+        ctx.lineWidth = 14;
+        ctx.strokeRect(8, 8, 496, 496);
 
-        // 顶栏文字 (大图标 + 地格编号)
-        ctx.fillStyle = '#0B1120';
-        ctx.font = 'bold 30px sans-serif';
+        // 顶栏图标 (超大清晰图标)
+        ctx.fillStyle = '#070D1A';
+        ctx.font = 'bold 74px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(tile.icon, 14, 40);
+        ctx.fillText(tile.icon, 24, 100);
 
-        ctx.font = 'bold 24px monospace';
+        // 顶栏地格编号
+        ctx.font = 'bold 54px monospace';
         ctx.textAlign = 'right';
-        ctx.fillText('#' + tile.index.toString().padStart(2, '0'), 242, 40);
+        ctx.fillText('#' + tile.index.toString().padStart(2, '0'), 488, 100);
 
-        // 中部大字地格名称 (清晰锐利)
-        ctx.fillStyle = '#F8FAFC';
-        ctx.font = 'bold 26px "PingFang SC", "Microsoft YaHei", sans-serif';
+        // 中部大字地格名称 (超大特写，高对比度白字)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 58px "PingFang SC", "Microsoft YaHei", sans-serif';
         ctx.textAlign = 'center';
+        ctx.shadowColor = tile.color;
+        ctx.shadowBlur = 12;
         let shortName = tile.name.replace(' (Cyber Start)', '');
-        if (shortName.length > 6) shortName = shortName.slice(0, 6);
-        ctx.fillText(shortName, 128, 132);
+        ctx.fillText(shortName, 256, 275);
+        ctx.shadowBlur = 0;
 
-        // 底部价格或类型简述
-        ctx.font = 'bold 20px monospace';
+        // 底部类型或价格 (大字醒目)
         if (tile.type === 'property') {
           ctx.fillStyle = '#FDE047';
-          ctx.fillText('⚙️ ' + tile.price.toLocaleString(), 128, 206);
+          ctx.font = 'bold 44px monospace';
+          ctx.fillText('⚙️ ' + tile.price.toLocaleString(), 256, 420);
         } else {
           ctx.fillStyle = tile.color;
+          ctx.font = 'bold 40px "Microsoft YaHei", sans-serif';
           const tag = tile.subType.split('•')[0].trim();
-          ctx.fillText(tag.length > 7 ? tag.slice(0, 7) : tag, 128, 206);
+          ctx.fillText(tag, 256, 420);
         }
 
         const tex = new THREE.CanvasTexture(cvs);
@@ -6669,107 +6629,214 @@
       }
 
       // =========================================================================
-      // 3D 浮空全息广告牌 (Billboard Sprites: 第三人称视角前方超大字一目了然)
+      // 3. 图2精髓：中央赛博朋克夜景大都市 (闪烁霓虹、摩天楼、全息能源球与飞艇)
       // =========================================================================
-      function createFloatingBillboardSprite(tile) {
-        const cvs = document.createElement('canvas');
-        cvs.width = 380;
-        cvs.height = 100;
-        const ctx = cvs.getContext('2d');
-
-        // 全息半透明胶囊背景
-        ctx.fillStyle = 'rgba(10, 25, 47, 0.88)';
-        ctx.strokeStyle = tile.color;
-        ctx.lineWidth = 4;
-        
-        // 绘制圆角矩形
-        const r = 16, w = 372, h = 92, x = 4, y = 4;
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.arcTo(x + w, y, x + w, y + r, r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-        ctx.lineTo(x + r, y + h);
-        ctx.arcTo(x, y + h, x, y + h - r, r);
-        ctx.lineTo(x, y + r);
-        ctx.arcTo(x, y, x + r, y, r);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 图标与标题文字
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 36px "Microsoft YaHei", sans-serif';
-        ctx.textAlign = 'center';
-        let title = tile.name.replace(' (Cyber Start)', '');
-        if (tile.type === 'hospital') title = '🏥 赛博医院 • 关3天';
-        else if (tile.type === 'emp_grid') title = '⚡ 电子笼网 • 电击进院';
-        else if (tile.type === 'cage') title = '🔒 机械囚笼 • 困人';
-        else if (tile.type === 'bank') title = '🏦 义体银行 • 分红';
-        else if (tile.type === 'portal') title = '🌀 量子折跃门';
-        else if (tile.type === 'lottery') title = '🎰 霓虹彩票店';
-        else if (tile.type === 'start') title = '🏁 赛博起点 • 发薪区';
-        else if (tile.type === 'reward') title = '🎁 赛博空投';
-        else if (tile.type === 'penalty') title = '⚠️ 反应堆过载';
-
-        ctx.fillText(title, 190, 60);
-
-        const tex = new THREE.CanvasTexture(cvs);
-        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95 });
-        const sprite = new THREE.Sprite(mat);
-        sprite.scale.set(2.6, 0.7, 1.0);
-        sprite.position.set(tile.x, 1.9, tile.z);
-        return sprite;
-      }
-
-      // =========================================================================
-      // 精密齿轮网格生成器
-      // =========================================================================
-      function createGearMesh(radius, teeth, thickness, toothH, colorHex, emissiveHex) {
+      function buildCenterCyberCity(halfW, halfH, mapSize) {
         const grp = new THREE.Group();
-        const mat = new THREE.MeshStandardMaterial({
-          color: colorHex,
-          emissive: emissiveHex,
-          emissiveIntensity: 0.38,
+
+        // 平台底盘高科技基座
+        const padW = halfW * 1.6;
+        const padH = halfH * 1.6;
+        const podGeo = new THREE.BoxGeometry(padW, 0.45, padH);
+        const podMat = new THREE.MeshStandardMaterial({
+          color: 0x070B14,
+          emissive: 0x0284C7,
+          emissiveIntensity: 0.12,
+          metalness: 0.92,
+          roughness: 0.25
+        });
+        const podium = new THREE.Mesh(podGeo, podMat);
+        podium.position.y = -0.25;
+        podium.receiveShadow = true;
+        grp.add(podium);
+
+        // 基座外围电弧霓虹青光导轨
+        const rimGeo = new THREE.BoxGeometry(padW + 0.2, 0.08, padH + 0.2);
+        const rimMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF });
+        const rim = new THREE.Mesh(rimGeo, rimMat);
+        rim.position.y = 0.02;
+        grp.add(rim);
+
+        // 动态生成建筑霓虹夜景窗户贴图
+        const winCvs = document.createElement('canvas');
+        winCvs.width = 128; winCvs.height = 128;
+        const wctx = winCvs.getContext('2d');
+        wctx.fillStyle = '#060A14';
+        wctx.fillRect(0, 0, 128, 128);
+        const winColors = ['#00E5FF', '#38BDF8', '#FDE047', '#EC4899', '#A855F7', '#060A14', '#060A14'];
+        for (let wy = 4; wy < 124; wy += 8) {
+          for (let wx = 4; wx < 124; wx += 8) {
+            wctx.fillStyle = winColors[Math.floor(Math.random() * winColors.length)];
+            wctx.fillRect(wx, wy, 5, 5);
+          }
+        }
+        const winTex = new THREE.CanvasTexture(winCvs);
+        winTex.wrapS = THREE.RepeatWrapping;
+        winTex.wrapT = THREE.RepeatWrapping;
+
+        const bldgMat = new THREE.MeshStandardMaterial({
+          color: 0x0B1220,
+          emissive: 0x1E293B,
+          emissiveIntensity: 0.35,
           metalness: 0.88,
-          roughness: 0.22
+          roughness: 0.2,
+          map: winTex
         });
 
-        const hubGeo = new THREE.CylinderGeometry(radius - toothH * 0.45, radius - toothH * 0.45, thickness, 36);
-        const hub = new THREE.Mesh(hubGeo, mat);
-        hub.castShadow = true;
-        hub.receiveShadow = true;
-        grp.add(hub);
+        const bldgCount = (mapSize === 128 ? 26 : (mapSize === 48 ? 14 : 18));
+        const innerW = halfW * 0.65;
+        const innerH = halfH * 0.65;
+        const beacons = [];
 
-        const toothGeo = new THREE.BoxGeometry(toothH * 0.82, thickness, toothH * 1.05);
-        for (let i = 0; i < teeth; i++) {
-          const ang = (i / teeth) * Math.PI * 2;
-          const tooth = new THREE.Mesh(toothGeo, mat);
-          tooth.position.set(Math.cos(ang) * radius, 0, Math.sin(ang) * radius);
-          tooth.rotation.y = -ang;
-          tooth.castShadow = true;
-          grp.add(tooth);
+        // 摩天大楼集群
+        for (let i = 0; i < bldgCount; i++) {
+          const bw = 1.6 + Math.random() * 1.8;
+          const bd = 1.6 + Math.random() * 1.8;
+          const bh = 3.5 + Math.random() * (mapSize === 128 ? 12.0 : 8.5);
+
+          let bx = (Math.random() - 0.5) * innerW * 1.8;
+          let bz = (Math.random() - 0.5) * innerH * 1.8;
+          if (Math.hypot(bx, bz) < 4.8) {
+            bx += (bx >= 0 ? 3.8 : -3.8);
+            bz += (bz >= 0 ? 3.8 : -3.8);
+          }
+
+          const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bldgMat);
+          bMesh.position.set(bx, bh / 2, bz);
+          bMesh.castShadow = true;
+          bMesh.receiveShadow = true;
+          grp.add(bMesh);
+
+          // 楼顶天线与闪烁霓虹航空警示灯
+          const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8, 8), new THREE.MeshBasicMaterial({ color: 0x64748B }));
+          ant.position.set(bx, bh + 0.9, bz);
+          grp.add(ant);
+
+          const tipColor = (i % 2 === 0 ? 0x00E5FF : 0xEF4444);
+          const tipMat = new THREE.MeshBasicMaterial({ color: tipColor, transparent: true, opacity: 1.0 });
+          const tip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), tipMat);
+          tip.position.set(bx, bh + 1.8, bz);
+          grp.add(tip);
+          beacons.push({ mesh: tip, phase: Math.random() * Math.PI * 2, speed: 4.5 + Math.random() * 2.0 });
+
+          // 楼顶霓虹全息广告牌
+          if (i % 3 === 0) {
+            const signMat = new THREE.MeshBasicMaterial({ color: (i % 2 === 0 ? 0xEC4899 : 0x00E5FF) });
+            const sign = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.9, 0.6, 0.1), signMat);
+            sign.position.set(bx, bh + 0.35, bz + bd * 0.45);
+            grp.add(sign);
+          }
         }
 
-        const spokeGeo = new THREE.BoxGeometry(radius * 1.6, thickness * 0.8, radius * 0.18);
-        const spoke1 = new THREE.Mesh(spokeGeo, mat);
-        const spoke2 = new THREE.Mesh(spokeGeo, mat);
-        spoke2.rotation.y = Math.PI / 2;
-        grp.add(spoke1);
-        grp.add(spoke2);
+        // 中心核心地标 (Central Landmark)
+        const centerHub = new THREE.Group();
+        centerHub.position.set(0, 0, 0);
 
-        const axleGeo = new THREE.CylinderGeometry(radius * 0.25, radius * 0.25, thickness * 1.35, 16);
-        const axleMat = new THREE.MeshStandardMaterial({ color: 0x0F172A, metalness: 0.95, roughness: 0.15 });
-        const axle = new THREE.Mesh(axleGeo, axleMat);
-        grp.add(axle);
+        if (mapSize === 64) {
+          // 64格：霓虹港湾中央全息能源球 + 圆柱基座 (完全对标图2左下)
+          const baseCol = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.8, 1.8, 32), bldgMat);
+          baseCol.position.y = 0.9;
+          centerHub.add(baseCol);
 
-        grp.userData = { radius, teeth };
+          const midCol = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 2.4, 32), bldgMat);
+          midCol.position.y = 3.0;
+          centerHub.add(midCol);
+
+          // 蓝色全息发光球体
+          const orbMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(1.35, 24, 24),
+            new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.85 })
+          );
+          orbMesh.position.y = 5.6;
+          centerHub.add(orbMesh);
+
+          const orbRing = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.06, 8, 32), new THREE.MeshBasicMaterial({ color: 0x38BDF8 }));
+          orbRing.rotation.x = Math.PI / 3;
+          orbRing.position.y = 5.6;
+          centerHub.add(orbRing);
+
+          const orbLight = new THREE.PointLight(0x00E5FF, 3.2, 36);
+          orbLight.position.y = 5.6;
+          centerHub.add(orbLight);
+
+          centerHub.userData = { orbMesh, orbRing, orbLight };
+        } else if (mapSize === 48) {
+          // 48格：天际走廊通讯天线塔 (对标图2右下)
+          const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 8.5, 16), bldgMat);
+          tower.position.y = 4.25;
+          centerHub.add(tower);
+
+          const deck1 = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 0.35, 24), new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true }));
+          deck1.position.y = 5.8;
+          centerHub.add(deck1);
+
+          const deck2 = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 0.3, 24), new THREE.MeshBasicMaterial({ color: 0xEC4899, wireframe: true }));
+          deck2.position.y = 7.5;
+          centerHub.add(deck2);
+
+          const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 4.0, 8), new THREE.MeshBasicMaterial({ color: 0xFDE047 }));
+          spire.position.y = 10.5;
+          centerHub.add(spire);
+
+          const topBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00E5FF }));
+          topBeacon.position.y = 12.6;
+          centerHub.add(topBeacon);
+          beacons.push({ mesh: topBeacon, phase: 0, speed: 6.0 });
+        } else {
+          // 128格：超大都市中央帝国赛博堡垒 (对标图2上方)
+          const baseTower = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 5.5, 4.5, 32), bldgMat);
+          baseTower.position.y = 2.25;
+          centerHub.add(baseTower);
+
+          const midTower = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.8, 6.0, 32), bldgMat);
+          midTower.position.y = 7.5;
+          centerHub.add(midTower);
+
+          const highSpire = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, 7.0, 24), bldgMat);
+          highSpire.position.y = 14.0;
+          centerHub.add(highSpire);
+
+          const needle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.3, 6.0, 8), new THREE.MeshBasicMaterial({ color: 0x00E5FF }));
+          needle.position.y = 20.5;
+          centerHub.add(needle);
+
+          const topBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshBasicMaterial({ color: 0xEC4899 }));
+          topBeacon.position.y = 23.6;
+          centerHub.add(topBeacon);
+          beacons.push({ mesh: topBeacon, phase: 0, speed: 5.0 });
+
+          const citadelLight = new THREE.PointLight(0xD946EF, 4.5, 60);
+          citadelLight.position.y = 18.0;
+          centerHub.add(citadelLight);
+        }
+        grp.add(centerHub);
+
+        // 巡航穿梭飞艇 (Cruising Cyber Airship)
+        const shipGrp = new THREE.Group();
+        const shipBody = new THREE.Mesh(
+          new THREE.ConeGeometry(0.65, 2.6, 8),
+          new THREE.MeshStandardMaterial({ color: 0x0284C7, metalness: 0.9, roughness: 0.2 })
+        );
+        shipBody.rotation.x = Math.PI / 2;
+        shipGrp.add(shipBody);
+
+        const thrusterL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.4, 8), new THREE.MeshBasicMaterial({ color: 0xEC4899 }));
+        thrusterL.rotation.x = Math.PI / 2;
+        thrusterL.position.set(-0.35, 0, -1.3);
+        const thrusterR = thrusterL.clone();
+        thrusterR.position.x = 0.35;
+        shipGrp.add(thrusterL);
+        shipGrp.add(thrusterR);
+
+        shipGrp.position.set(innerW * 0.85, (mapSize === 128 ? 16.0 : 9.5), 0);
+        grp.add(shipGrp);
+
+        grp.userData = { beacons, centerHub, shipGrp, orbitR: innerW * 0.85, shipAngle: 0 };
         return grp;
       }
 
       // =========================================================================
-      // 3D 舞台初始化
+      // 4. 3D 舞台初始化与事件绑定
       // =========================================================================
       function ensureStageInitialized() {
         const stageEl = document.getElementById('tycoon-3d-stage');
@@ -6777,9 +6844,9 @@
 
         if (!renderer) {
           scene = new THREE.Scene();
-          scene.fog = new THREE.FogExp2(0x030712, 0.012);
+          scene.fog = new THREE.FogExp2(0x030712, 0.010);
 
-          camera = new THREE.PerspectiveCamera(50, stageEl.clientWidth / stageEl.clientHeight, 0.1, 400);
+          camera = new THREE.PerspectiveCamera(48, stageEl.clientWidth / stageEl.clientHeight, 0.1, 400);
 
           renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
           renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -6790,49 +6857,43 @@
 
           raycaster = new THREE.Raycaster();
 
-          // 灯光系统：深空环境光 + 赛博主光 + 霓虹紫/青光
-          const hemiLight = new THREE.HemisphereLight(0x38BDF8, 0x090D16, 0.75);
+          // 灯光系统：深邃赛博天幕环境光 + 强烈主聚光 + 霓虹轮廓光
+          const hemiLight = new THREE.HemisphereLight(0x38BDF8, 0x090D16, 0.8);
           scene.add(hemiLight);
 
-          const dirLight = new THREE.DirectionalLight(0xF8FAFC, 1.35);
-          dirLight.position.set(18, 36, 22);
+          const dirLight = new THREE.DirectionalLight(0xFFFFFF, 1.4);
+          dirLight.position.set(22, 42, 26);
           dirLight.castShadow = true;
           scene.add(dirLight);
 
-          const purpleRim = new THREE.PointLight(0xD946EF, 1.8, 70);
-          purpleRim.position.set(-22, 14, -22);
+          const purpleRim = new THREE.PointLight(0xD946EF, 2.0, 80);
+          purpleRim.position.set(-26, 16, -26);
           scene.add(purpleRim);
 
-          const cyanRim = new THREE.PointLight(0x00E5FF, 1.8, 70);
-          cyanRim.position.set(22, 12, 22);
+          const cyanRim = new THREE.PointLight(0x00E5FF, 2.0, 80);
+          cyanRim.position.set(26, 14, 26);
           scene.add(cyanRim);
 
           roadGroup = new THREE.Group();
           boardGroup = new THREE.Group();
-          gearsGroup = new THREE.Group();
-          reactorGroup = new THREE.Group();
-          steamGroup = new THREE.Group();
+          cityGroup = new THREE.Group();
           pawnsGroup = new THREE.Group();
           markersGroup = new THREE.Group();
-          billboardsGroup = new THREE.Group();
 
           scene.add(roadGroup);
           scene.add(boardGroup);
-          scene.add(gearsGroup);
-          scene.add(reactorGroup);
-          scene.add(steamGroup);
+          scene.add(cityGroup);
           scene.add(pawnsGroup);
           scene.add(markersGroup);
-          scene.add(billboardsGroup);
 
           // 悬浮高亮选框
-          const selBoxGeo = new THREE.BoxGeometry(1.85, 0.35, 1.85);
-          const selBoxMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.85 });
+          const selBoxGeo = new THREE.BoxGeometry(2.5, 0.45, 2.5);
+          const selBoxMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.9 });
           selectionBoxMesh = new THREE.Mesh(selBoxGeo, selBoxMat);
           selectionBoxMesh.visible = false;
           scene.add(selectionBoxMesh);
 
-          const hovBoxMat = new THREE.MeshBasicMaterial({ color: 0xFDE047, wireframe: true, transparent: true, opacity: 0.65 });
+          const hovBoxMat = new THREE.MeshBasicMaterial({ color: 0xFDE047, wireframe: true, transparent: true, opacity: 0.7 });
           hoverBoxMesh = new THREE.Mesh(selBoxGeo.clone(), hovBoxMat);
           hoverBoxMesh.visible = false;
           scene.add(hoverBoxMesh);
@@ -6856,260 +6917,126 @@
       }
 
       // =========================================================================
-      // 场景内容构建：圆角大道、双层霓虹导轨、高清地格、浮空广告牌与动力炉
+      // 5. 重构赛博棋盘：大幅面地格、消除浮空标牌、中心全景夜景城市
       // =========================================================================
       function rebuildBoardScene() {
         while (roadGroup.children.length > 0) roadGroup.remove(roadGroup.children[0]);
         while (boardGroup.children.length > 0) boardGroup.remove(boardGroup.children[0]);
-        while (gearsGroup.children.length > 0) gearsGroup.remove(gearsGroup.children[0]);
-        while (reactorGroup.children.length > 0) reactorGroup.remove(reactorGroup.children[0]);
-        while (steamGroup.children.length > 0) steamGroup.remove(steamGroup.children[0]);
+        while (cityGroup.children.length > 0) cityGroup.remove(cityGroup.children[0]);
         while (markersGroup.children.length > 0) markersGroup.remove(markersGroup.children[0]);
-        while (billboardsGroup.children.length > 0) billboardsGroup.remove(billboardsGroup.children[0]);
         while (pawnsGroup.children.length > 0) pawnsGroup.remove(pawnsGroup.children[0]);
 
-        gears = [];
         tileMeshes = [];
-        steamParticles = [];
-        steamNozzles = [];
 
-        const { list, W, roadWidth, tileSize, S } = buildRoundedTycoonTrack(cfg.mapSize);
+        const { list, halfW, halfH, tileW, tileD } = buildBlueprintMapTrack(cfg.mapSize);
         tiles = list;
 
-        // 1. 生成连续双轨霓虹边缘导轨 (外圈紫红霓虹 + 内圈赛博青光导轨)
-        const outerPoints = [];
-        const innerPoints = [];
-        const halfRoad = roadWidth * 0.52;
+        // 根据地图规模设定图2推荐的最佳全景鸟瞰视距
+        if (cfg.mapSize === 48) {
+          targetDist = 44.0;
+        } else if (cfg.mapSize === 64) {
+          targetDist = 52.0;
+        } else {
+          targetDist = 82.0;
+        }
+        targetPitch = 0.65;
+        targetYaw = 0.75;
+        camDist = targetDist;
+        camPitch = targetPitch;
+        camYaw = targetYaw;
 
-        tiles.forEach(t => {
-          outerPoints.push(new THREE.Vector3(t.x + t.nx * halfRoad, 0.18, t.z + t.nz * halfRoad));
-          innerPoints.push(new THREE.Vector3(t.x - t.nx * halfRoad, 0.18, t.z - t.nz * halfRoad));
-        });
-        // 闭合环路
-        outerPoints.push(outerPoints[0].clone());
-        innerPoints.push(innerPoints[0].clone());
+        // 1. 生成中央赛博朋克夜景都市 (彻底替代旧齿轮)
+        cityData = buildCenterCyberCity(halfW, halfH, cfg.mapSize);
+        cityGroup.add(cityData);
 
-        const outerCurve = new THREE.CatmullRomCurve3(outerPoints);
-        const innerCurve = new THREE.CatmullRomCurve3(innerPoints);
+        // 2. 棋盘大道基底与双层霓虹光带 (外圈紫红 + 内圈青光，匹配图2)
+        const outerPoints = [
+          new THREE.Vector3(-halfW - tileW * 0.55, 0.18, halfH + tileD * 0.55),
+          new THREE.Vector3(halfW + tileW * 0.55, 0.18, halfH + tileD * 0.55),
+          new THREE.Vector3(halfW + tileW * 0.55, 0.18, -halfH - tileD * 0.55),
+          new THREE.Vector3(-halfW - tileW * 0.55, 0.18, -halfH - tileD * 0.55)
+        ];
+        const innerPoints = [
+          new THREE.Vector3(-halfW + tileW * 0.55, 0.18, halfH - tileD * 0.55),
+          new THREE.Vector3(halfW - tileW * 0.55, 0.18, halfH - tileD * 0.55),
+          new THREE.Vector3(halfW - tileW * 0.55, 0.18, -halfH + tileD * 0.55),
+          new THREE.Vector3(-halfW + tileW * 0.55, 0.18, -halfH + tileD * 0.55)
+        ];
+
+        const outerCurve = new THREE.CatmullRomCurve3(outerPoints, true);
+        const innerCurve = new THREE.CatmullRomCurve3(innerPoints, true);
 
         const outerRail = new THREE.Mesh(
-          new THREE.TubeGeometry(outerCurve, 128, 0.07, 8, true),
+          new THREE.TubeGeometry(outerCurve, 64, 0.09, 8, true),
           new THREE.MeshStandardMaterial({ color: 0xEC4899, emissive: 0xBE185D, emissiveIntensity: 0.95, metalness: 0.8 })
         );
         const innerRail = new THREE.Mesh(
-          new THREE.TubeGeometry(innerCurve, 128, 0.07, 8, true),
+          new THREE.TubeGeometry(innerCurve, 64, 0.09, 8, true),
           new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.95, metalness: 0.8 })
         );
         roadGroup.add(outerRail);
         roadGroup.add(innerRail);
 
-        // 2. 生成地格网格与 3D 全息浮空街区标牌 (第三人称视角超清易读)
-        const sideMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.85, roughness: 0.35 });
+        // 3. 生成大幅面加厚地格 (宽大清晰，大字高对比，彻底消除浮空杂乱广告牌)
+        const sideMat = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.85, roughness: 0.35 });
 
         tiles.forEach(t => {
-          const tileGeo = new THREE.BoxGeometry(t.size * 0.95, 0.22, t.size * 0.95);
+          const tileGeo = new THREE.BoxGeometry(t.tileW, 0.34, t.tileD);
           const topMat = new THREE.MeshStandardMaterial({
-            map: createHighResTileTexture(t),
+            map: createChunkyTileTexture(t),
             roughness: 0.25,
             metalness: 0.25
           });
           const m = new THREE.Mesh(tileGeo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]);
-          m.position.set(t.x, 0.09, t.z);
-          m.rotation.y = t.yaw; // 沿着大道切线方向旋转
+          m.position.set(t.x, 0.14, t.z);
+          m.rotation.y = t.yaw;
           m.receiveShadow = true;
           m.castShadow = true;
           m.userData = { tileIndex: t.index };
           boardGroup.add(m);
           tileMeshes.push(m);
 
-          // 为特色地格创建浮空全息标牌 (Sprite: 始终朝向摄像机，超大字清晰可见)
-          if (t.type !== 'property' || t.isTech) {
-            const bb = createFloatingBillboardSprite(t);
-            billboardsGroup.add(bb);
-          }
-
-          // 3D 悬浮实体全息模型
+          // 特殊地格精简实体 3D 模型（贴地紧凑，不遮挡大字）
           if (t.type === 'hospital') {
+            const crMat = new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x059669, emissiveIntensity: 0.9 });
             const crGrp = new THREE.Group();
-            const crMat = new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x059669, emissiveIntensity: 0.8, metalness: 0.6 });
-            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.75, 0.2), crMat));
-            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.22, 0.2), crMat));
-            crGrp.position.set(t.x, 0.85, t.z);
+            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), crMat));
+            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 0.25), crMat));
+            crGrp.position.set(t.x, 1.0, t.z);
             crGrp.userData = { isHospital: true };
             markersGroup.add(crGrp);
           } else if (t.type === 'emp_grid') {
-            const empGrp = new THREE.Group();
-            const empMat = new THREE.MeshStandardMaterial({ color: 0x38BDF8, emissive: 0x0284C7, emissiveIntensity: 0.9, metalness: 0.8 });
-            const r1 = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.04, 8, 24), empMat);
-            const r2 = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.035, 8, 24), empMat);
-            r1.rotation.x = Math.PI / 4;
-            r2.rotation.y = Math.PI / 4;
-            empGrp.add(r1); empGrp.add(r2);
-            empGrp.position.set(t.x, 0.65, t.z);
-            empGrp.userData = { isEmp: true };
-            markersGroup.add(empGrp);
-          } else if (t.type === 'cage') {
-            const cageGrp = new THREE.Group();
-            const pilMat = new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xB91C1C, emissiveIntensity: 0.7, metalness: 0.85 });
-            const pilGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
-            const hs = t.size * 0.35;
-            [[-hs, -hs], [hs, -hs], [-hs, hs], [hs, hs]].forEach(([px, pz]) => {
-              const p = new THREE.Mesh(pilGeo, pilMat);
-              p.position.set(px, 0.35, pz);
-              cageGrp.add(p);
-            });
-            const roof = new THREE.Mesh(new THREE.BoxGeometry(hs * 2.1, 0.05, hs * 2.1), pilMat);
-            roof.position.y = 0.7;
-            cageGrp.add(roof);
-            cageGrp.position.set(t.x, 0.1, t.z);
-            markersGroup.add(cageGrp);
+            const empMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.95 });
+            const empRing = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.045, 8, 24), empMat);
+            empRing.rotation.x = Math.PI / 4;
+            empRing.position.set(t.x, 0.7, t.z);
+            empRing.userData = { isEmp: true };
+            markersGroup.add(empRing);
           } else if (t.type === 'bank') {
-            const bGrp = new THREE.Group();
-            const bMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.65, metalness: 0.95 });
-            const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.09, 24), bMat);
+            const bMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.75 });
+            const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 24), bMat);
             coin.rotation.x = Math.PI / 2;
-            bGrp.add(coin);
-            bGrp.position.set(t.x, 0.7, t.z);
-            bGrp.userData = { isSpinning: true, rotSpeed: 1.5 };
-            markersGroup.add(bGrp);
-          } else if (t.type === 'portal') {
-            const portGrp = new THREE.Group();
-            const portMat = new THREE.MeshStandardMaterial({ color: 0xA855F7, emissive: 0x7C3AED, emissiveIntensity: 0.9, metalness: 0.7 });
-            portGrp.add(new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.06, 12, 32), portMat));
-            portGrp.position.set(t.x, 0.7, t.z);
-            portGrp.userData = { isPortal: true };
-            markersGroup.add(portGrp);
-          } else if (t.type === 'lottery') {
-            const lGrp = new THREE.Group();
-            const lMat = new THREE.MeshStandardMaterial({ color: 0xEC4899, emissive: 0xBE185D, emissiveIntensity: 0.75, metalness: 0.8 });
-            lGrp.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), lMat));
-            lGrp.position.set(t.x, 0.7, t.z);
-            lGrp.userData = { isSpinning: true, rotSpeed: 2.0 };
-            markersGroup.add(lGrp);
+            coin.position.set(t.x, 0.8, t.z);
+            coin.userData = { isSpinning: true, rotSpeed: 1.5 };
+            markersGroup.add(coin);
+          } else if (t.type === 'cage') {
+            const cageMat = new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xB91C1C, emissiveIntensity: 0.8 });
+            const cageBox = new THREE.Mesh(new THREE.BoxGeometry(t.tileW * 0.75, 0.8, t.tileD * 0.75), cageMat);
+            cageBox.position.set(t.x, 0.55, t.z);
+            markersGroup.add(cageBox);
           }
         });
 
-        // 3. 盘面中心机械动力炉基座
-        const baseR = Math.min(W * 0.65, 8.8);
-        const deckGeo = new THREE.CylinderGeometry(baseR, baseR + 0.5, 0.35, 40);
-        const deckMat = new THREE.MeshStandardMaterial({
-          color: 0x0F172A,
-          emissive: 0x0284C7,
-          emissiveIntensity: 0.15,
-          metalness: 0.9,
-          roughness: 0.28
-        });
-        const deck = new THREE.Mesh(deckGeo, deckMat);
-        deck.position.y = -0.16;
-        deck.receiveShadow = true;
-        reactorGroup.add(deck);
-
-        const rimTorus = new THREE.Mesh(
-          new THREE.TorusGeometry(baseR * 0.95, 0.08, 12, 64),
-          new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.45, metalness: 0.8 })
-        );
-        rimTorus.rotation.x = Math.PI / 2;
-        rimTorus.position.y = 0.03;
-        reactorGroup.add(rimTorus);
-
-        // 4. 精密啮合齿轮传动组 (4组相切反向旋转齿轮)
-        const R1 = Math.min(3.4, baseR * 0.42);
-        const gearThickness = 0.28;
-        const toothH = 0.32;
-
-        const g1 = createGearMesh(R1, 32, gearThickness, toothH, 0xD97706, 0x78350F);
-        g1.position.set(0, 0.16, 0);
-        gearsGroup.add(g1);
-        gears.push({ mesh: g1, ratio: 1.0 });
-
-        const R2 = R1 * (16 / 32);
-        const g2 = createGearMesh(R2, 16, gearThickness, toothH, 0x0284C7, 0x00E5FF);
-        g2.position.set(R1 + R2, 0.16, 0);
-        gearsGroup.add(g2);
-        gears.push({ mesh: g2, ratio: -2.0 });
-
-        const R3 = R1 * (24 / 32);
-        const g3 = createGearMesh(R3, 24, gearThickness, toothH, 0x7C3AED, 0xA855F7);
-        g3.position.set(-(R1 + R3), 0.16, 0);
-        gearsGroup.add(g3);
-        gears.push({ mesh: g3, ratio: -(32 / 24) });
-
-        const R4 = R1 * (20 / 32);
-        const g4 = createGearMesh(R4, 20, gearThickness, toothH, 0xEA580C, 0xF59E0B);
-        g4.position.set(0, 0.16, -(R1 + R4));
-        gearsGroup.add(g4);
-        gears.push({ mesh: g4, ratio: -(32 / 20) });
-
-        // 中心聚变核心
-        const coreGeo = new THREE.CylinderGeometry(R1 * 0.32, R1 * 0.38, 0.85, 24);
-        const coreMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.95, metalness: 0.6 });
-        const core = new THREE.Mesh(coreGeo, coreMat);
-        core.position.y = 0.68;
-        reactorGroup.add(core);
-
-        const orbCore = new THREE.Mesh(new THREE.SphereGeometry(R1 * 0.22, 16, 16), new THREE.MeshBasicMaterial({ color: 0x38BDF8 }));
-        orbCore.position.y = 1.3;
-        reactorGroup.add(orbCore);
-
-        reactorLight = new THREE.PointLight(0x00E5FF, 2.5, baseR * 2.8);
-        reactorLight.position.set(0, 1.35, 0);
-        reactorGroup.add(reactorLight);
-
-        // 5. 蒸汽排气烟囱与喷气阀门
-        const chimneyMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.92, roughness: 0.22 });
-        const chimneyGeo = new THREE.CylinderGeometry(0.18, 0.26, 0.8, 16);
-        const pipeAngles = [Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4];
-        const pipeDist = baseR * 0.72;
-
-        pipeAngles.forEach(ang => {
-          const px = Math.cos(ang) * pipeDist;
-          const pz = Math.sin(ang) * pipeDist;
-          const chim = new THREE.Mesh(chimneyGeo, chimneyMat);
-          chim.position.set(px, 0.4, pz);
-          chim.rotation.x = Math.sin(ang) * 0.25;
-          chim.rotation.z = -Math.cos(ang) * 0.25;
-          reactorGroup.add(chim);
-
-          steamNozzles.push({
-            x: px + Math.cos(ang) * 0.12,
-            y: 0.85,
-            z: pz + Math.sin(ang) * 0.12,
-            dirX: Math.cos(ang) * 0.5,
-            dirZ: Math.sin(ang) * 0.5
-          });
-        });
-
-        // 6. 蒸汽粒子池
-        const steamGeo = new THREE.SphereGeometry(0.18, 8, 8);
-        for (let i = 0; i < MAX_STEAM_PARTICLES; i++) {
-          const sMat = new THREE.MeshBasicMaterial({ color: 0xE0F2FE, transparent: true, opacity: 0, depthWrite: false });
-          const p = new THREE.Mesh(steamGeo, sMat);
-          p.visible = false;
-          steamGroup.add(p);
-          steamParticles.push({
-            mesh: p,
-            active: false,
-            pos: new THREE.Vector3(),
-            vel: new THREE.Vector3(),
-            life: 0,
-            maxLife: 1.0,
-            scale: 0.2,
-            growth: 1.5,
-            baseOpacity: 0.7
-          });
-        }
-
-        // 7. 初始化玩家角色与模型
+        // 4. 初始化玩家角色与模型
         setupPlayers();
 
-        // 默认选中起点并启动第三人称跟随
+        // 默认选中起点
         selectTile(0);
         updateMapMetaUI();
-        snapCameraToFollowPlayer(true);
       }
 
       // =========================================================================
-      // 玩家角色席位模型与蓝色霓虹信息版状态管理
+      // 6. 玩家席位卡片与 6 大关键数据渲染
       // =========================================================================
       function setupPlayers() {
         players = [];
@@ -7123,12 +7050,12 @@
             avatar: char.avatar,
             isAI: char.isAI,
             cash: cfg.startCash,
-            bankDeposit: 5000,          // 实际银行存款
-            lotteryTicket: (i === 0 ? '88' : null), // 彩票号码
-            propertiesCount: 0,         // 拥有房产数量
-            techEnterprisesCount: 0,    // 拥有科技企业数量
-            hospitalDays: 0,            // 住院隔离关3天倒计时
-            cageDays: 0,                // 机械囚笼困人
+            bankDeposit: 5000,
+            lotteryTicket: (i === 0 ? '88' : null),
+            propertiesCount: 0,
+            techEnterprisesCount: 0,
+            hospitalDays: 0,
+            cageDays: 0,
             pos: 0,
             pawnMesh: null
           };
@@ -7137,28 +7064,25 @@
           const discMat = new THREE.MeshStandardMaterial({
             color: p.hex,
             emissive: p.hex,
-            emissiveIntensity: 0.65,
+            emissiveIntensity: 0.7,
             metalness: 0.85,
             roughness: 0.2
           });
-          const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.36, 0.14, 16), discMat);
-          disc.position.y = 0.07;
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 0.16, 16), discMat);
+          disc.position.y = 0.08;
           disc.castShadow = true;
           pawn.add(disc);
 
           const orb = new THREE.Mesh(
-            new THREE.SphereGeometry(0.18, 16, 16),
+            new THREE.SphereGeometry(0.2, 16, 16),
             new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: p.hex, emissiveIntensity: 0.95 })
           );
-          orb.position.y = 0.28;
+          orb.position.y = 0.32;
           pawn.add(orb);
 
-          const halo = new THREE.Mesh(
-            new THREE.TorusGeometry(0.38, 0.025, 8, 24),
-            new THREE.MeshBasicMaterial({ color: p.hex })
-          );
+          const halo = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.03, 8, 24), new THREE.MeshBasicMaterial({ color: p.hex }));
           halo.rotation.x = Math.PI / 2;
-          halo.position.y = 0.16;
+          halo.position.y = 0.18;
           pawn.add(halo);
 
           pawnsGroup.add(pawn);
@@ -7187,18 +7111,17 @@
             let ox = 0, oz = 0;
             if (list.length > 1) {
               const ang = (k / list.length) * Math.PI * 2;
-              const r = t.size * 0.26;
+              const r = t.tileW * 0.28;
               ox = Math.cos(ang) * r;
               oz = Math.sin(ang) * r;
             }
             if (p.pawnMesh) {
-              p.pawnMesh.position.set(t.x + ox, 0.14, t.z + oz);
+              p.pawnMesh.position.set(t.x + ox, 0.22, t.z + oz);
             }
           });
         });
       }
 
-      // 渲染左侧【蓝色霓虹玩家信息版】，严格包含用户指定的 6 大关键数据项
       function renderPlayerCards() {
         const leftCol = document.getElementById('tycoon-players-col-left');
         const rightCol = document.getElementById('tycoon-players-col-right');
@@ -7211,8 +7134,7 @@
           const isCur = (idx === activePlayerIdx);
           const card = document.createElement('div');
           card.className = `blue-neon-player-card ${isCur ? 'active-turn' : ''}`;
-          
-          // 1. 玩家状态标签
+
           let statusHtml = `<span style="font-size:10px; color:#38BDF8; font-weight:800; background:rgba(14,165,233,0.18); padding:2px 7px; border-radius:4px; border:1px solid rgba(56,189,248,0.4);">🟢 运转正常</span>`;
           if (p.hospitalDays > 0) {
             statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:900; background:rgba(16,185,129,0.25); padding:2px 7px; border-radius:4px; border:1px solid #10B981;">🏥 住院中(关3天，剩${p.hospitalDays}天)</span>`;
@@ -7225,7 +7147,6 @@
           if (tileDisplay.length > 5) tileDisplay = tileDisplay.slice(0, 5) + '..';
 
           card.innerHTML = `
-            <!-- 顶栏：头像、姓名与行动状态 -->
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 229, 255, 0.25); padding-bottom: 5px;">
               <div style="display: flex; align-items: center; gap: 7px;">
                 <span style="font-size: 16px;">${p.avatar}</span>
@@ -7240,7 +7161,7 @@
               ${statusHtml}
             </div>
 
-            <!-- 2. 实际现金 (金色齿轮币) -->
+            <!-- 2. 实际现金 -->
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
               <span style="color: #94A3B8;">实际现金:</span>
               <span style="font-size: 12px; font-weight: 900; color: #FDE047; text-shadow: 0 0 6px rgba(245, 158, 11, 0.6); display: flex; align-items: center; gap: 4px;">
@@ -7277,7 +7198,6 @@
             </div>
           `;
 
-          // 2~4 人全在左侧展示；5~6 人多余卡片可分流至右侧以确保界面舒适
           if (idx < 4 || !rightCol) {
             leftCol.appendChild(card);
           } else {
@@ -7298,98 +7218,82 @@
 
       function updateMapMetaUI() {
         const meta = document.getElementById('tycoon-map-meta');
+        const statusEl = document.getElementById('tycoon-reactor-status');
         if (!meta) return;
-        const sizeName = (cfg.mapSize === 48 ? '小地图 (48格)' : (cfg.mapSize === 128 ? '大地图 (128格)' : '中地图 (64格)'));
-        meta.innerText = `${sizeName} • ${cfg.playerCount}人对局 • 初始 ₡${cfg.startCash.toLocaleString()}`;
+        const names = {
+          48: '空中都市 · 天际走廊 (48格)',
+          64: '霓虹港湾 · 科技之都 (64格)',
+          128: '超大都市 · 未来之城 (128格)'
+        };
+        const title = names[cfg.mapSize] || `${cfg.mapSize}格赛博都市`;
+        meta.innerText = `${title} • ${cfg.playerCount}人对局 • 初始 ₡${cfg.startCash.toLocaleString()}`;
+        if (statusEl) statusEl.innerText = '🏙️ 赛博大都会核心: 全城霓虹点亮 • 运转正常';
       }
 
       // =========================================================================
-      // 第三人称追焦视角摄像机系统 (跟随主角，前方大道与字迹超清)
+      // 7. 摄像机模式与视角控制
       // =========================================================================
-      function snapCameraToFollowPlayer(immediate = false) {
-        if (!camera || players.length === 0) return;
-        const curP = players[activePlayerIdx];
-        const pawnMesh = curP.pawnMesh;
-        const curTile = tiles[curP.pos] || tiles[0];
-        if (!curTile) return;
-
-        const px = pawnMesh ? pawnMesh.position.x : curTile.x;
-        const py = pawnMesh ? pawnMesh.position.y : 0.14;
-        const pz = pawnMesh ? pawnMesh.position.z : curTile.z;
-
-        const tx = curTile.tx || 1;
-        const tz = curTile.tz || 0;
-
-        const followDist = 6.6;
-        const followH = 3.4;
-        const lookAhead = 5.8;
-
-        const tCamX = px - tx * followDist;
-        const tCamY = py + followH;
-        const tCamZ = pz - tz * followDist;
-
-        const tLookX = px + tx * lookAhead;
-        const tLookY = py + 0.85;
-        const tLookZ = pz + tz * lookAhead;
-
-        targetLookAt.set(tLookX, tLookY, tLookZ);
-
-        if (immediate) {
-          camera.position.set(tCamX, tCamY, tCamZ);
-          curLookAt.set(tLookX, tLookY, tLookZ);
+      function updateCameraPosition() {
+        if (!camera) return;
+        if (cameraMode === 'follow' && players[activePlayerIdx] && players[activePlayerIdx].pawnMesh) {
+          const p = players[activePlayerIdx].pawnMesh.position;
+          const t = tiles[players[activePlayerIdx].pos] || tiles[0];
+          const tx = Math.sin(t.yaw), tz = Math.cos(t.yaw);
+          const tCam = new THREE.Vector3(p.x - tx * 9.5, p.y + 5.2, p.z - tz * 9.5);
+          const tLook = new THREE.Vector3(p.x + tx * 6.5, p.y + 0.8, p.z + tz * 6.5);
+          camera.position.lerp(tCam, 0.08);
+          curLookAt.lerp(tLook, 0.08);
           camera.lookAt(curLookAt);
         } else {
-          camera.position.x += (tCamX - camera.position.x) * 0.08;
-          camera.position.y += (tCamY - camera.position.y) * 0.08;
-          camera.position.z += (tCamZ - camera.position.z) * 0.08;
+          camYaw += (targetYaw - camYaw) * 0.08;
+          camPitch += (targetPitch - camPitch) * 0.08;
+          camDist += (targetDist - camDist) * 0.08;
           curLookAt.lerp(targetLookAt, 0.08);
+
+          const cy = Math.cos(camYaw);
+          const sy = Math.sin(camYaw);
+          const cp = Math.cos(camPitch);
+          const sp = Math.sin(camPitch);
+
+          camera.position.set(
+            curLookAt.x + camDist * cp * sy,
+            curLookAt.y + camDist * sp,
+            curLookAt.z + camDist * cp * cy
+          );
           camera.lookAt(curLookAt);
         }
-      }
-
-      function updateCameraFreePosition() {
-        if (!camera) return;
-        const cy = Math.cos(camYaw);
-        const sy = Math.sin(camYaw);
-        const cp = Math.cos(camPitch);
-        const sp = Math.sin(camPitch);
-
-        camera.position.set(
-          curLookAt.x + camDist * cp * sy,
-          curLookAt.y + camDist * sp,
-          curLookAt.z + camDist * cp * cy
-        );
-        camera.lookAt(curLookAt);
       }
 
       function toggleCamera() {
         playSound('click');
         const btn = document.getElementById('btn-tycoon-cam');
-        if (cameraMode === 'follow') {
+        if (cameraMode === 'isometric') {
+          cameraMode = 'follow';
+          if (btn) btn.innerText = '🎥 视角: 第三人称跟随 (追焦主角)';
+          setLog('【视角切换】已切换至第三人称追焦视角，近距离跟随主角巡航！');
+        } else if (cameraMode === 'follow') {
           cameraMode = 'orbit';
-          targetYaw = 0;
-          targetPitch = 0.88;
-          targetDist = (cfg.mapSize === 128 ? 56.0 : (cfg.mapSize === 48 ? 28.0 : 36.0));
+          targetYaw = 0; targetPitch = 0.82;
           targetLookAt.set(0, 0, 0);
           if (btn) btn.innerText = '📐 视角: 3D自由轨道 (可拖拽旋转)';
           setLog('【视角切换】已切换至 3D 自由轨道模式，可按住鼠标左键全景拖拽与滚轮缩放！');
         } else if (cameraMode === 'orbit') {
           cameraMode = 'top';
-          targetYaw = 0;
-          targetPitch = 1.565;
-          targetDist = (cfg.mapSize === 128 ? 68.0 : (cfg.mapSize === 48 ? 32.0 : 44.0));
+          targetYaw = 0; targetPitch = 1.565;
           targetLookAt.set(0, 0, 0);
           if (btn) btn.innerText = '🗺️ 视角: 正交俯视 (俯瞰大局)';
           setLog('【视角切换】已切换至正交俯视模式，全景监控整座赛博大都会！');
         } else {
-          cameraMode = 'follow';
-          if (btn) btn.innerText = '🎥 视角: 第三人称跟随 (追焦主角)';
-          setLog('【视角切换】已恢复第三人称主角跟随视角，前方大道文字与地标清晰可见！');
+          cameraMode = 'isometric';
+          targetYaw = 0.75; targetPitch = 0.65;
+          targetLookAt.set(0, 0, 0);
+          if (btn) btn.innerText = '🏙️ 视角: 赛博全景大都会 (图2推荐)';
+          setLog('【视角切换】已恢复图2赛博全景大都会视角，中央霓虹夜景与大棋盘一览无余！');
         }
       }
 
       // =========================================================================
-      // 全息地格终端与点击拾取
+      // 8. 全息地格终端与点击拾取
       // =========================================================================
       function selectTile(index) {
         if (!tiles || tiles.length === 0) return;
@@ -7397,7 +7301,7 @@
         const t = tiles[selectedTileIdx];
 
         if (selectionBoxMesh) {
-          selectionBoxMesh.position.set(t.x, 0.12, t.z);
+          selectionBoxMesh.position.set(t.x, 0.18, t.z);
           selectionBoxMesh.rotation.y = t.yaw;
           selectionBoxMesh.material.color.set(t.color);
           selectionBoxMesh.visible = true;
@@ -7443,7 +7347,7 @@
         cameraMode = 'orbit';
         targetLookAt.set(t.x, 0.5, t.z);
         targetDist = 18.0;
-        targetPitch = 0.72;
+        targetPitch = 0.65;
         const btn = document.getElementById('btn-tycoon-cam');
         if (btn) btn.innerText = '📐 视角: 3D聚焦锁定';
       }
@@ -7453,70 +7357,13 @@
         if (el) el.innerText = text;
       }
 
-      // =========================================================================
-      // 蒸汽喷发粒子系统
-      // =========================================================================
-      function spawnSteamPuff(nozzle, isBurst = false) {
-        const p = steamParticles.find(item => !item.active);
-        if (!p) return;
-        p.active = true;
-        p.pos.set(
-          nozzle.x + (Math.random() - 0.5) * 0.15,
-          nozzle.y,
-          nozzle.z + (Math.random() - 0.5) * 0.15
-        );
-        const speed = isBurst ? (2.8 + Math.random() * 2.2) : (0.9 + Math.random() * 0.7);
-        p.vel.set(
-          nozzle.dirX * speed + (Math.random() - 0.5) * 0.5,
-          1.8 + Math.random() * (isBurst ? 2.5 : 1.2),
-          nozzle.dirZ * speed + (Math.random() - 0.5) * 0.5
-        );
-        p.life = 0;
-        p.maxLife = isBurst ? (1.2 + Math.random() * 0.7) : (0.75 + Math.random() * 0.4);
-        p.scale = isBurst ? 0.35 : 0.2;
-        p.growth = isBurst ? 2.6 : 1.4;
-        p.baseOpacity = isBurst ? 0.85 : 0.45;
-        p.mesh.position.copy(p.pos);
-        p.mesh.scale.setScalar(p.scale);
-        p.mesh.material.opacity = p.baseOpacity;
-        p.mesh.visible = true;
-      }
-
-      function triggerSteamBurst(manual = false) {
-        playSound('steam');
-        steamBurstTimer = 1.2;
-        reactorTargetRpm = 180;
-        const statEl = document.getElementById('tycoon-reactor-status');
-        if (statEl) statEl.innerText = '机械动力炉: 高压泄压强劲喷气 • 180 RPM';
-
-        steamNozzles.forEach(nz => {
-          for (let i = 0; i < 7; i++) {
-            spawnSteamPuff(nz, true);
-          }
-        });
-
-        if (reactorLight) {
-          reactorLight.intensity = 4.8;
-          reactorLight.color.setHex(manual ? 0xF59E0B : 0x00E5FF);
-        }
-
-        setTimeout(() => {
-          reactorTargetRpm = 120;
-          if (statEl) statEl.innerText = '机械动力炉: 稳定运转 • 120 RPM';
-          if (reactorLight) {
-            reactorLight.intensity = 2.5;
-            reactorLight.color.setHex(0x00E5FF);
-          }
-        }, 1200);
-      }
-
       function triggerSteamBurstManual() {
-        triggerSteamBurst(true);
-        setLog('【蒸汽泄压】手动开启安全泄压阀，高压过热蒸汽咆哮喷出！动力炉负荷释放。');
+        playSound('steam');
+        setLog('【全城脉冲】启动中央赛博大都会高能泄压，整座城市霓虹光晕强力过载脉冲！');
       }
 
       // =========================================================================
-      // 霓虹电子 LED 屏幕掷骰机制与第三人称平滑跳步
+      // 9. 霓虹电子 LED 屏幕掷骰机制与行棋
       // =========================================================================
       function updateLedDiceDisplay(num) {
         const valEl = document.getElementById('cyber-dice-val');
@@ -7538,7 +7385,7 @@
         if (isMoving || isRollingDice || players.length === 0) return;
         const curPlayer = players[activePlayerIdx];
 
-        // 1. 检查住院隔离中机制 (住院关3天)
+        // 1. 检查住院隔离中机制 (关3天)
         if (curPlayer.hospitalDays > 0) {
           playSound('click');
           curPlayer.hospitalDays--;
@@ -7562,12 +7409,12 @@
           return;
         }
 
-        // 3. 霓虹电子 LED 屏幕掷骰动画
+        // 3. 电子 LED 点阵屏掷骰动画
         isRollingDice = true;
         playSound('dice');
         const badgeEl = document.getElementById('cyber-dice-badge');
         if (badgeEl) {
-          badgeEl.innerText = '⚡ LED点阵高速演算...';
+          badgeEl.innerText = '⚡ 点阵演算中...';
           badgeEl.style.background = 'rgba(236, 72, 153, 0.3)';
           badgeEl.style.borderColor = '#EC4899';
           badgeEl.style.color = '#F472B6';
@@ -7598,7 +7445,7 @@
 
       function startPawnHopMovement(curPlayer, roll) {
         isMoving = true;
-        setLog(`🎲【电子点阵判定】${curPlayer.name} 投掷出 ${roll} 点！推进动力启动，前方大道展开...`);
+        setLog(`🎲【电子点阵判定】${curPlayer.name} 投掷出 ${roll} 点！主角开始行进 ${roll} 格...`);
 
         let stepCount = 0;
         const interval = setInterval(() => {
@@ -7634,39 +7481,33 @@
         const S = Math.floor(tiles.length / 4);
 
         if (t.type === 'emp_grid') {
-          // 电子笼网：高压触电，直接送进医院关3天！
           playSound('bump');
           setLog(`⚡【电子笼网】滋滋滋！遭遇高压脉冲触电！${p.name} 机体电路烧毁，被直接送入【赛博医院】隔离住院3天！`);
-          p.pos = S; // 送至医院
-          p.hospitalDays = 3; // 关3天
+          p.pos = S;
+          p.hospitalDays = 3;
           updatePawnsPlacement();
           renderPlayerCards();
           selectTile(S);
         } else if (t.type === 'hospital') {
-          // 赛博朋克医院
           playSound('resonance');
           setLog(`🏥【赛博医院】${p.name} 抵达生化医疗中心。检修机体正常，预留属性改装工位就绪！`);
         } else if (t.type === 'cage') {
-          // 机械囚笼：困人
           playSound('bump');
           p.cageDays = 1;
           renderPlayerCards();
           setLog(`🔒【机械囚笼】咔嚓！智能锁死！${p.name} 被困入机械囚笼，暂停行动 1 回合！`);
         } else if (t.type === 'bank') {
-          // 中央银行：分红存入银行存款
           playSound('resonance');
           p.bankDeposit += 1200;
           renderPlayerCards();
           setLog(`🏦【中央银行】${p.name} 停驻于金库，机体能源分红 +1,200 存入银行存款！`);
         } else if (t.type === 'lottery') {
-          // 彩票店：抽奖 + 获得彩票号码
           playSound('firework');
           p.cash += 800;
           p.lotteryTicket = Math.floor(Math.random() * 90 + 10).toString();
           renderPlayerCards();
           setLog(`🎰【彩票店】${p.name} 抽得霓虹奖金 +800 齿轮币，并购得幸运彩票 #${p.lotteryTicket}！`);
         } else if (t.type === 'portal') {
-          // 量子传送门：对角瞬移
           playSound('resonance');
           const targetPortal = (p.pos + 2 * S) % tiles.length;
           p.pos = targetPortal;
@@ -7688,12 +7529,11 @@
           renderPlayerCards();
           setLog(`⚠️【能源过载】微型反应堆过热反冲！${p.name} 扣除紧急排热冷却费 -1,000 齿轮币！`);
         } else if (t.type === 'property') {
-          // 工坊与科技企业购置
           if (p.cash >= t.price) {
             p.cash -= t.price;
             if (t.isTech) {
               p.techEnterprisesCount++;
-              setLog(`🏢【科技企业】${p.name} 斥资 ${t.price.toLocaleString()} 齿轮币全资控股【${t.name}】！科技企业数增加！`);
+              setLog(`🏢【科技企业】${p.name} 斥资 ${t.price.toLocaleString()} 齿轮币控股【${t.name}】！科技企业数增加！`);
             } else {
               p.propertiesCount++;
               setLog(`🏙️【工坊地产】${p.name} 购置了街区工坊【${t.name}】（房产数: ${p.propertiesCount} 处）。`);
@@ -7712,7 +7552,7 @@
       }
 
       // =========================================================================
-      // 鼠标与交互事件
+      // 10. 鼠标交互
       // =========================================================================
       function bindPointerEvents(domEl) {
         domEl.addEventListener('pointerdown', (e) => {
@@ -7735,20 +7575,16 @@
             lastPtrY = e.clientY;
 
             if (movedDist > 6) {
-              if (cameraMode === 'follow' && movedDist > 14) {
-                // 用户拖拽旋转时平滑转为轨道模式
+              if (cameraMode === 'isometric' || cameraMode === 'follow') {
                 cameraMode = 'orbit';
                 const btn = document.getElementById('btn-tycoon-cam');
                 if (btn) btn.innerText = '📐 视角: 3D自由轨道 (可拖拽旋转)';
               }
-              if (cameraMode === 'orbit') {
-                targetYaw -= dx * 0.0055;
-                targetPitch = Math.max(0.32, Math.min(1.48, targetPitch + dy * 0.0050));
-              }
+              targetYaw -= dx * 0.0055;
+              targetPitch = Math.max(0.25, Math.min(1.48, targetPitch + dy * 0.0050));
             }
           }
 
-          // 悬停地格检测
           if (!isDragging && renderer && camera && raycaster) {
             const rect = renderer.domElement.getBoundingClientRect();
             const ndc = new THREE.Vector2(
@@ -7761,7 +7597,7 @@
               const hIdx = hits[0].object.userData.tileIndex;
               const ht = tiles[hIdx];
               if (ht && hoverBoxMesh) {
-                hoverBoxMesh.position.set(ht.x, 0.12, ht.z);
+                hoverBoxMesh.position.set(ht.x, 0.18, ht.z);
                 hoverBoxMesh.rotation.y = ht.yaw;
                 hoverBoxMesh.visible = true;
                 domEl.style.cursor = 'pointer';
@@ -7796,13 +7632,13 @@
 
         domEl.addEventListener('wheel', (e) => {
           e.preventDefault();
-          const zoomDelta = e.deltaY * 0.035;
-          targetDist = Math.max(12.0, Math.min(cfg.mapSize === 128 ? 85.0 : 55.0, targetDist + zoomDelta));
+          const zoomDelta = e.deltaY * 0.045;
+          targetDist = Math.max(16.0, Math.min(cfg.mapSize === 128 ? 110.0 : 75.0, targetDist + zoomDelta));
         }, { passive: false });
       }
 
       // =========================================================================
-      // 动画渲染主循环
+      // 11. 动画主循环 (闪烁城市灯火、旋转全息能源球、巡航飞艇)
       // =========================================================================
       let lastTime = performance.now();
       function startRenderLoop() {
@@ -7816,74 +7652,51 @@
           const viewEl = document.getElementById('view-game-tycoon');
           if (!viewEl || viewEl.classList.contains('hidden')) return;
 
-          // 1. 摄像机更新 (默认第三人称追焦主角；支持自由轨道与俯视)
-          if (cameraMode === 'follow') {
-            snapCameraToFollowPlayer(false);
-          } else {
-            camYaw += (targetYaw - camYaw) * 0.08;
-            camPitch += (targetPitch - camPitch) * 0.08;
-            camDist += (targetDist - camDist) * 0.08;
-            curLookAt.lerp(targetLookAt, 0.08);
-            updateCameraFreePosition();
+          // 1. 摄像机更新
+          updateCameraPosition();
+
+          // 2. 赛博城市霓虹灯闪烁与空中飞艇巡航 (图2灵魂视效)
+          if (cityData && cityData.userData) {
+            const { beacons, centerHub, shipGrp, orbitR } = cityData.userData;
+
+            // 楼顶航空警示灯按频率闪烁
+            if (beacons) {
+              beacons.forEach(b => {
+                const val = Math.sin(now * 0.001 * b.speed + b.phase);
+                b.mesh.material.opacity = (val > 0.1) ? 1.0 : 0.18;
+              });
+            }
+
+            // 中心全息能源球旋转
+            if (centerHub && centerHub.userData && centerHub.userData.orbMesh) {
+              centerHub.userData.orbMesh.rotation.y += dt * 0.8;
+              centerHub.userData.orbRing.rotation.z += dt * 1.4;
+            }
+
+            // 巡航飞艇绕城飞行
+            if (shipGrp) {
+              cityData.userData.shipAngle = (cityData.userData.shipAngle || 0) + dt * 0.35;
+              const sAng = cityData.userData.shipAngle;
+              shipGrp.position.x = Math.cos(sAng) * orbitR;
+              shipGrp.position.z = Math.sin(sAng) * orbitR;
+              shipGrp.rotation.y = -sAng + Math.PI / 2;
+            }
           }
 
-          // 2. 齿轮系统真实反向啮合旋转
-          reactorRpm += (reactorTargetRpm - reactorRpm) * 0.05;
-          const masterDelta = (reactorRpm / 60) * Math.PI * 2 * dt;
-          gears.forEach(g => {
-            if (g.mesh) {
-              g.mesh.rotation.y += masterDelta * g.ratio;
-            }
-          });
-
-          // 3. 特殊标记悬浮动画
+          // 3. 特殊地标自转
           const sec = now * 0.001;
           markersGroup.children.forEach(grp => {
             if (grp.userData.isHospital) {
-              grp.position.y = 0.85 + Math.sin(sec * 3.5) * 0.12;
+              grp.position.y = 1.0 + Math.sin(sec * 3.0) * 0.12;
               grp.rotation.y += dt * 0.8;
             } else if (grp.userData.isEmp) {
-              grp.children[0].rotation.z += dt * 2.2;
-              grp.children[1].rotation.x += dt * 2.8;
-            } else if (grp.userData.isPortal) {
-              grp.rotation.y += dt * 1.8;
-              grp.rotation.z = Math.sin(sec * 2) * 0.2;
+              grp.rotation.z += dt * 2.2;
             } else if (grp.userData.isSpinning) {
               grp.rotation.y += dt * (grp.userData.rotSpeed || 1.5);
-              grp.position.y = 0.7 + Math.sin(sec * 2.5) * 0.08;
             }
           });
 
-          // 4. 蒸汽粒子更新
-          steamTimer += dt;
-          if (steamTimer > 3.6) {
-            steamTimer = 0;
-            triggerSteamBurst(false);
-          } else {
-            if (Math.random() < 0.35 && steamNozzles.length > 0) {
-              const nz = steamNozzles[Math.floor(Math.random() * steamNozzles.length)];
-              spawnSteamPuff(nz, false);
-            }
-          }
-
-          steamParticles.forEach(p => {
-            if (!p.active) return;
-            p.life += dt;
-            if (p.life >= p.maxLife) {
-              p.active = false;
-              p.mesh.visible = false;
-              return;
-            }
-            p.pos.addScaledVector(p.vel, dt);
-            p.vel.y += 0.5 * dt;
-            p.scale += p.growth * dt;
-            const progress = p.life / p.maxLife;
-            p.mesh.position.copy(p.pos);
-            p.mesh.scale.setScalar(p.scale);
-            p.mesh.material.opacity = p.baseOpacity * (1 - progress);
-          });
-
-          // 5. 棋子悬浮律动
+          // 4. 棋子悬浮律动
           players.forEach(p => {
             if (p.pawnMesh) {
               p.pawnMesh.children[0].rotation.y += dt * 0.8;
@@ -7938,10 +7751,28 @@
 
         ensureStageInitialized();
         rebuildBoardScene();
-        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格赛博大都会！已开启第三人称追焦视角，前方文字与地标清晰可见。`);
+        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格赛博大都会！已开启图2赛博全景大都会视角，中央霓虹夜景与大棋盘一览无余。`);
       }
 
       return {
+        start: (opts = {}) => {
+          if (opts && opts.mapSize) cfg.mapSize = opts.mapSize;
+          if (opts && opts.playerCount) cfg.playerCount = opts.playerCount;
+          if (opts && opts.startCash) cfg.startCash = opts.startCash;
+          document.getElementById('view-menu').classList.add('hidden');
+          const aero = document.getElementById('view-game-aero'); if (aero) aero.classList.add('hidden');
+          const gomoku = document.getElementById('view-game-gomoku'); if (gomoku) gomoku.classList.add('hidden');
+          document.getElementById('view-game-tycoon').classList.remove('hidden');
+          ensureStageInitialized();
+          rebuildBoardScene();
+        },
+        getState: () => ({
+          mapSize: cfg.mapSize,
+          players,
+          tiles,
+          activePlayerIdx,
+          cameraMode
+        }),
         launchFromWizard,
         exitToMenu,
         toggleCamera,
