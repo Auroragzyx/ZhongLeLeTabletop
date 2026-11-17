@@ -242,8 +242,8 @@
       z-index: 1;
     }
 
-    /* ========== 日夜飞行棋 & 星轨五子棋：共享梦幻星月湖畔界面的舞台与半透明悬浮 HUD ========== */
-    #view-game-aero, #view-game-gomoku {
+    /* ========== 日夜飞行棋 & 星轨五子棋 & 机械大亨：共享舞台与半透明悬浮 HUD ========== */
+    #view-game-aero, #view-game-gomoku, #view-game-tycoon {
       position: fixed;
       inset: 0;
       z-index: 15;
@@ -251,11 +251,11 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      background-color: #162447;
+      background-color: #0B1120;
     }
 
-    /* 背景图5图层（支持白昼/黑夜/星轨占星台滤镜过渡） */
-    #aero-scenic-bg, #gomoku-scenic-bg {
+    /* 背景图层（支持白昼/黑夜/星轨/赛博朋克深空切换） */
+    #aero-scenic-bg, #gomoku-scenic-bg, #tycoon-scenic-bg {
       position: absolute;
       inset: 0;
       background-image: url('assets/bg_aero_lake.jpg');
@@ -275,21 +275,41 @@
       background-position: center center;
       filter: brightness(0.94) contrast(1.06) saturate(1.06);
     }
+    #tycoon-scenic-bg.cyber-atmosphere {
+      background-image: none;
+      background: radial-gradient(circle at 50% 38%, #111827 0%, #030712 55%, #010204 100%);
+      filter: contrast(1.15) brightness(1.02);
+    }
 
-    /* 湖畔柔和暗角遮罩，让中心3D棋盘和两侧HUD对比更立体 */
-    #aero-scenic-vignette, #gomoku-scenic-vignette {
+    /* 赛博朋克全息透视地网 */
+    #tycoon-grid-bg {
       position: absolute;
       inset: 0;
       z-index: 1;
       pointer-events: none;
-      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.08) 25%, rgba(15, 23, 42, 0.56) 100%);
+      background-image: 
+        linear-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.08) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.65;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
     }
 
-    /* 飘浮萤火虫/星尘光斑装饰层 */
-    #aero-ambient-fireflies, #gomoku-ambient-fireflies {
+    /* 柔和暗角遮罩，让中心3D棋盘和两侧HUD对比更立体 */
+    #aero-scenic-vignette, #gomoku-scenic-vignette, #tycoon-scenic-vignette {
       position: absolute;
       inset: 0;
       z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.06) 20%, rgba(15, 23, 42, 0.65) 100%);
+    }
+
+    /* 飘浮萤火虫/星尘/赛博微光火花粒子层 */
+    #aero-ambient-fireflies, #gomoku-ambient-fireflies, #tycoon-ambient-sparks {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
       pointer-events: none;
       overflow: hidden;
     }
@@ -300,15 +320,22 @@
       box-shadow: 0 0 10px #FDE047;
       animation: fireflyFloat 4.5s ease-in-out infinite;
     }
+    .cyber-spark-dot {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, #38BDF8 0%, rgba(14, 165, 233, 0.45) 50%, transparent 100%);
+      box-shadow: 0 0 10px #00E5FF;
+      animation: fireflyFloat 3.8s ease-in-out infinite;
+    }
 
     /* 全屏 3D WebGL 舞台画布 */
-    #aero-3d-stage, #gomoku-3d-stage {
+    #aero-3d-stage, #gomoku-3d-stage, #tycoon-3d-stage {
       position: absolute;
       inset: 0;
       z-index: 5;
       cursor: grab;
     }
-    #aero-3d-stage:active, #gomoku-3d-stage:active {
+    #aero-3d-stage:active, #gomoku-3d-stage:active, #tycoon-3d-stage:active {
       cursor: grabbing;
     }
 
@@ -854,6 +881,128 @@
     </footer>
   </div>
 
+  <!-- ======================== 视图 4：机械大亨 3D 赛博朋克棋盘对局界面 ======================== -->
+  <div id="view-game-tycoon" class="hidden">
+    <div id="tycoon-scenic-bg" class="cyber-atmosphere"></div>
+    <div id="tycoon-grid-bg"></div>
+    <div id="tycoon-scenic-vignette"></div>
+    <div id="tycoon-ambient-sparks"></div>
+
+    <!-- 全屏 3D 机械大都会舞台 -->
+    <div id="tycoon-3d-stage"></div>
+
+    <!-- 顶栏悬浮玻璃导航 -->
+    <header style="position: relative; z-index: 20; padding: 14px 22px 0 22px; pointer-events: none;">
+      <div class="scenic-hud-card" style="padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; pointer-events: auto; border-color: rgba(14, 165, 233, 0.45);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button onclick="TycoonApp.exitToMenu()" class="scenic-hud-btn" style="border-color: rgba(14, 165, 233, 0.45); color: #E0F2FE;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>返回大厅</span>
+          </button>
+          <span style="font-size: 13px; font-weight: 900; color: #38BDF8; background: rgba(14, 165, 233, 0.22); padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.5);">
+            《机械大亨》3D 赛博齿轮大都会
+          </span>
+        </div>
+
+        <!-- 动力炉与地图状态指示 -->
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.78); padding: 5px 16px; border-radius: 999px; border: 1px solid rgba(14, 165, 233, 0.45);">
+          <span style="font-size: 18px;" class="animate-pulse">⚙️</span>
+          <div>
+            <div id="tycoon-reactor-status" style="font-size: 12px; font-weight: 900; color: #38BDF8;">机械动力炉: 稳定运转 • 120 RPM</div>
+            <div id="tycoon-map-meta" style="font-size: 10px; color: #94A3B8;">中地图 (64格) • 4人对局 • 初始 ₡15,000</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="TycoonApp.triggerSteamBurstManual()" id="btn-tycoon-steam" class="scenic-hud-btn" style="border-color: rgba(245, 158, 11, 0.65); color: #FDE047;" title="手动泄压喷出高压蒸汽">
+            💨 手动泄压喷气
+          </button>
+          <button onclick="TycoonApp.toggleCamera()" id="btn-tycoon-cam" class="scenic-hud-btn" title="切换 3D 自由视角与正交全景俯视">
+            📐 视角: 3D轨道 (可拖拽旋转)
+          </button>
+          <button onclick="openModal('modal-settings')" class="scenic-hud-btn" title="调节画面亮度与主音量">
+            ⚙️ 设置
+          </button>
+          <span id="lbl-tycoon-turn" style="padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #0284C7; color: #FFFFFF; box-shadow: 0 2px 14px rgba(14, 165, 233, 0.6);">
+            1P 蓝调黑客 (你)
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 两侧浮空 HUD 与地格全息终端 -->
+    <div style="position: relative; z-index: 20; flex: 1; display: flex; justify-content: space-between; align-items: stretch; padding: 12px 22px; pointer-events: none;">
+      
+      <!-- 左侧：玩家 1P ~ 3P 席位栏 -->
+      <div id="tycoon-players-col-left" style="width: 230px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; justify-content: flex-start;">
+        <!-- 动态由 TycoonApp.renderPlayerCards() 渲染 -->
+      </div>
+
+      <!-- 右侧：玩家 4P ~ 6P 席位栏 + 全息地格终端 + 机械操作台 -->
+      <div style="width: 275px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; justify-content: space-between;">
+        
+        <!-- 右侧玩家席位（4P ~ 6P） -->
+        <div id="tycoon-players-col-right" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- 动态渲染 -->
+        </div>
+
+        <!-- 全息地格终端 (Tile Inspector) -->
+        <div class="scenic-hud-card" style="padding: 13px; border: 1.5px solid rgba(14, 165, 233, 0.55); display: flex; flex-direction: column; gap: 9px; background: rgba(15, 23, 42, 0.82);">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(14, 165, 233, 0.35); padding-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">📡</span>
+              <span style="font-size: 12px; font-weight: 900; color: #38BDF8;">赛博地格全息终端</span>
+            </div>
+            <span id="inspector-tile-index" style="font-family: monospace; font-size: 11px; color: #94A3B8; font-weight: 800;">#00 / 64</span>
+          </div>
+
+          <div id="inspector-content" style="display: flex; flex-direction: column; gap: 7px;">
+            <div style="display: flex; align-items: center; gap: 9px;">
+              <div id="inspector-tile-icon" style="width: 38px; height: 38px; border-radius: 9px; background: rgba(14, 165, 233, 0.22); border: 1.5px solid #38BDF8; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">🏁</div>
+              <div style="min-width: 0;">
+                <div id="inspector-tile-name" style="font-size: 13px; font-weight: 900; color: #F8FAFC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">赛博起点 (Cyber Start)</div>
+                <div id="inspector-tile-type" style="font-size: 10px; color: #38BDF8; font-weight: 800;">核心地标 • 周期发薪区</div>
+              </div>
+            </div>
+            <div id="inspector-tile-desc" style="font-size: 11px; color: #CBD5E1; line-height: 1.55; background: rgba(15, 23, 42, 0.65); padding: 7px 9px; border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.25);">
+              环路起始发薪区。每次经过或停驻即可领取启动津贴 ₡2,000 齿轮币，机体能源充满！
+            </div>
+            <div id="inspector-tile-props" style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; color: #FDE047; background: rgba(245, 158, 11, 0.14); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.35);">
+              <span>基础租金: ₡--</span>
+              <span>购置价格: ₡--</span>
+            </div>
+          </div>
+
+          <!-- 模拟行棋测试控制 -->
+          <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 5px; border-top: 1px dashed rgba(14, 165, 233, 0.35);">
+            <div style="display: flex; gap: 6px;">
+              <button onclick="TycoonApp.testRollAndMove()" id="btn-tycoon-roll" class="primary-gold-btn" style="flex: 1; padding: 7px 10px; font-size: 11px; justify-content: center;">
+                🎲 掷骰推演 (SPACE)
+              </button>
+              <button onclick="TycoonApp.focusSelectedTile()" class="scenic-hud-btn" style="padding: 7px 9px; font-size: 10px; border-color: rgba(56, 189, 248, 0.5); color: #38BDF8;" title="摄像机镜头对焦当前地格">
+                🔍 对焦
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部半透明战报条 -->
+    <footer style="position: relative; z-index: 20; padding: 0 22px 14px 22px; pointer-events: none;">
+      <div class="scenic-hud-card" style="padding: 9px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; pointer-events: auto; border-color: rgba(14, 165, 233, 0.45);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #00E5FF;" class="animate-pulse"></span>
+          <span id="tycoon-event-log" style="font-weight: 800; color: #F8FAFC;">【齿轮大都会就绪】单机鼠标左键可点击任意地格查看全息说明；拖拽旋转 3D 视角，滚轮缩放！</span>
+        </div>
+        <div style="font-size: 11px; font-family: monospace; color: #94A3B8;">Cyberpunk Gear Tycoon 3D • 动态齿轮联动 & 蒸汽粒子系统</div>
+      </div>
+    </footer>
+  </div>
+
   <!-- ======================== 模态弹窗系统 ======================== -->
 
   <!-- 1. 开房向导 -->
@@ -947,10 +1096,10 @@
             <input type="radio" name="wizard-game-mode" value="tycoon" onchange="onWizardModeChange()" style="display: none;">
             <div data-mode-card="tycoon" class="menu-card-btn" style="padding: 14px;">
               <div style="display: flex; align-items: center; gap: 14px;">
-                <div class="menu-icon-box" style="font-size: 22px;">⚙️</div>
+                <div class="menu-icon-box" style="font-size: 22px; background: rgba(14, 165, 233, 0.16); border-color: rgba(14, 165, 233, 0.4); color: #0284C7;">⚙️</div>
                 <div>
-                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">机械大亨 (Gear Tycoon) <span style="font-size: 11px; color: #A8A29E; margin-left: 6px;">(即将研发)</span></div>
-                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">蒸汽发条圈地大富翁玩法，下一阶段重头戏接入。</div>
+                  <div class="night-text-main" style="font-size: 14px; font-weight: 900; color: #292524;">机械大亨 (Gear Tycoon) <span style="background: #0284C7; color: #FFFFFF; font-size: 10px; padding: 2px 8px; border-radius: 999px; margin-left: 6px;">实机可玩</span></div>
+                  <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 2px;">3D 赛博朋克机械棋盘 + 齿轮啮合转动 + 高压蒸汽喷射 + 48/64/128 格大中小地图！</div>
                 </div>
               </div>
             </div>
@@ -1110,13 +1259,79 @@
             </div>
           </div>
 
-          <!-- 机械大亨筹备预告面板 -->
-          <div id="custom-panel-tycoon" class="hidden" style="background: #F8F5EE; padding: 18px; border-radius: 14px; border: 1.5px dashed rgba(245, 158, 11, 0.55); text-align: center;">
-            <div style="font-size: 32px; margin-bottom: 8px;">⚙️</div>
-            <div class="night-text-main" style="font-size: 15px; font-weight: 900; color: #92400E;">《机械大亨 (Gear Tycoon)》即将开炉！</div>
-            <div class="night-subtext" style="font-size: 12px; color: #78716C; margin-top: 6px; line-height: 1.6;">
-              蒸汽朋克环形多分支大富翁地图、齿轮工坊 1~3 级升级、发条命运卡正在规划开发中。<br>
-              请先回到第 2 步选择已实装的 <strong>《日夜飞行棋 3D》</strong> 或 <strong>《星轨五子棋 3D》</strong> 开战！
+          <!-- 机械大亨专属自定义配置面板 -->
+          <div id="custom-panel-tycoon" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- 1. 棋盘地图规模选择（48格 / 64格 / 128格） -->
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(14, 165, 233, 0.4);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="night-text-main" style="font-size: 13px; font-weight: 900; color: #0369A1;">🗺️ 赛博机械地图规模</span>
+                <span class="night-subtext" style="font-size: 11px; color: #78716C;">大中小三种赛博朋克大富翁环路</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <label style="cursor: pointer;">
+                  <input type="radio" name="tycoon-map-size" value="48" style="display: none;" onchange="onTycoonMapSizeChange()">
+                  <div class="tycoon-map-card" data-map-card="48" style="padding: 10px; border-radius: 10px; border: 1.5px solid #E2E8F0; background: #FFFFFF; text-align: center; transition: all 0.15s ease;">
+                    <div style="font-size: 13px; font-weight: 900; color: #0284C7;">小地图 · 48格</div>
+                    <div style="font-size: 10px; color: #64748B; margin-top: 2px;">极速遭遇 · 高密事件</div>
+                  </div>
+                </label>
+                <label style="cursor: pointer;">
+                  <input type="radio" name="tycoon-map-size" value="64" checked style="display: none;" onchange="onTycoonMapSizeChange()">
+                  <div class="tycoon-map-card" data-map-card="64" style="padding: 10px; border-radius: 10px; border: 1.5px solid #0284C7; background: #E0F2FE; text-align: center; transition: all 0.15s ease;">
+                    <div style="font-size: 13px; font-weight: 900; color: #0284C7;">中地图 · 64格</div>
+                    <div style="font-size: 10px; color: #0369A1; margin-top: 2px;">标准竞技 (推荐)</div>
+                  </div>
+                </label>
+                <label style="cursor: pointer;">
+                  <input type="radio" name="tycoon-map-size" value="128" style="display: none;" onchange="onTycoonMapSizeChange()">
+                  <div class="tycoon-map-card" data-map-card="128" style="padding: 10px; border-radius: 10px; border: 1.5px solid #E2E8F0; background: #FFFFFF; text-align: center; transition: all 0.15s ease;">
+                    <div style="font-size: 13px; font-weight: 900; color: #0284C7;">大地图 · 128格</div>
+                    <div style="font-size: 10px; color: #64748B; margin-top: 2px;">宏伟回廊 · 多街区深运</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. 游戏人数（2~6人）与初始资金 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(14, 165, 233, 0.4); display: flex; flex-direction: column; gap: 6px;">
+                <div class="night-text-main" style="font-size: 12px; font-weight: 900; color: #0369A1;">👥 参赛玩家席位</div>
+                <select id="sel-tycoon-player-count" style="background: #F0F9FF; border: 1px solid #0284C7; border-radius: 6px; padding: 5px 8px; font-size: 12px; font-weight: 900; color: #0369A1; outline: none;">
+                  <option value="2">2 人经典对决 (1P vs 2P)</option>
+                  <option value="3">3 人三足鼎立</option>
+                  <option value="4" selected>4 人标准群雄 (推荐)</option>
+                  <option value="5">5 人热血大乱斗</option>
+                  <option value="6">6 人满编大都会争霸</option>
+                </select>
+                <div class="night-subtext" style="font-size: 10px; color: #64748B;">支持 2~6 位赛博阵营主角登场</div>
+              </div>
+
+              <div class="night-card-bg" style="background: #F8F5EE; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(14, 165, 233, 0.4); display: flex; flex-direction: column; gap: 6px;">
+                <div class="night-text-main" style="font-size: 12px; font-weight: 900; color: #0369A1;">🪙 初始齿轮启动金</div>
+                <select id="sel-tycoon-start-cash" style="background: #F0F9FF; border: 1px solid #0284C7; border-radius: 6px; padding: 5px 8px; font-size: 12px; font-weight: 900; color: #0369A1; outline: none;">
+                  <option value="10000">₡ 10,000 (极速白热化)</option>
+                  <option value="15000" selected>₡ 15,000 (标准资金推荐)</option>
+                  <option value="25000">₡ 25,000 (宽裕大财阀)</option>
+                  <option value="50000">₡ 50,000 (超量巨头模式)</option>
+                </select>
+                <div class="night-subtext" style="font-size: 10px; color: #64748B;">每位玩家初始拥有的齿轮现金</div>
+              </div>
+            </div>
+
+            <!-- 3. 特色地格机制全景一览（已实装在 3D 棋盘上） -->
+            <div class="night-card-bg" style="background: #F8F5EE; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(14, 165, 233, 0.35); display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 11px; font-weight: 900; color: #0284C7; display: flex; align-items: center; gap: 6px;">
+                <span>✨ 3D 棋盘特色地格已装配（支持全息点击查看说明）：</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 10px; color: #334155;">
+                <div style="background: #FFFFFF; padding: 4px 6px; border-radius: 6px; border: 1px solid #E2E8F0;">🏥 <b>赛博医院</b>：住院关3天 / 升级属性</div>
+                <div style="background: #FFFFFF; padding: 4px 6px; border-radius: 6px; border: 1px solid #E2E8F0;">🔒 <b>机械囚笼</b>：困人瘫痪限制</div>
+                <div style="background: #FFFFFF; padding: 4px 6px; border-radius: 6px; border: 1px solid #E2E8F0;">⚡ <b>电子笼网</b>：高压电击直接进医院</div>
+                <div style="background: #FFFFFF; padding: 4px 6px; border-radius: 6px; border: 1px solid #E2E8F0;">🏦 <b>中央银行</b>：分红存款借贷</div>
+                <div style="background: #FFFFFF; padding: 4px 6px; border-radius: 6px; border: 1px solid #E2E8F0;">🎰 <b>彩票店</b>：高倍率摇奖翻盘</div>
+                <div style="background: #FFFFFF; padding: 4px 6px; border-radius: 6px; border: 1px solid #E2E8F0;">🌀 <b>传送门</b>：对角量子瞬移折跃</div>
+              </div>
+              <div style="font-size: 10px; color: #64748B;">还有 🎁 赛博空投奖励、⚠️ 能源过载惩罚、🛠️ 机械黑市道具与各大街区可购置升级的 🏙️ 工坊！</div>
             </div>
           </div>
         </div>
@@ -1481,6 +1696,38 @@
           gain.gain.setValueAtTime(0.25 * v, now);
           gain.gain.exponentialRampToValueAtTime(0.005, now + 0.55);
           osc.start(now); osc.stop(now + 0.55);
+        } else if (type === 'steam') {
+          // 高压蒸汽阀门泄压强气流嘶鸣声（白噪声缓冲发生器）
+          const dur = 0.55;
+          const bufferSize = Math.floor(ctx.sampleRate * dur);
+          const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          const whiteNoise = ctx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1200, now);
+          filter.frequency.exponentialRampToValueAtTime(550, now + dur);
+          filter.Q.setValueAtTime(1.8, now);
+          const sGain = ctx.createGain();
+          sGain.gain.setValueAtTime(0.28 * v, now);
+          sGain.gain.exponentialRampToValueAtTime(0.005, now + dur);
+          whiteNoise.connect(filter);
+          filter.connect(sGain);
+          sGain.connect(ctx.destination);
+          whiteNoise.start(now);
+          whiteNoise.stop(now + dur);
+        } else if (type === 'gear') {
+          // 精密赛博机械齿轮卡嗒声
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(920, now);
+          osc.frequency.exponentialRampToValueAtTime(260, now + 0.05);
+          gain.gain.setValueAtTime(0.18 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.055);
+          osc.start(now); osc.stop(now + 0.06);
         }
       } catch (e) {}
     }
@@ -1604,6 +1851,16 @@
       return modeRadio ? modeRadio.value : 'aero';
     }
 
+    function onTycoonMapSizeChange() {
+      playSound('click');
+      const val = document.querySelector('input[name="tycoon-map-size"]:checked')?.value || '64';
+      document.querySelectorAll('[data-map-card]').forEach(c => {
+        const isCur = c.getAttribute('data-map-card') === val;
+        c.style.borderColor = isCur ? '#0284C7' : '#E2E8F0';
+        c.style.background = isCur ? '#E0F2FE' : '#FFFFFF';
+      });
+    }
+
     function wizardNext() {
       playSound('click');
       if (currentStep < 3) {
@@ -1612,20 +1869,10 @@
         return;
       }
       const mode = getSelectedWizardMode();
-      if (mode === 'tycoon') {
-        const tycoonPanel = document.getElementById('custom-panel-tycoon');
-        if (tycoonPanel) {
-          tycoonPanel.style.borderColor = '#EF4444';
-          tycoonPanel.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.25)';
-          setTimeout(() => {
-            tycoonPanel.style.borderColor = 'rgba(245, 158, 11, 0.55)';
-            tycoonPanel.style.boxShadow = '';
-          }, 900);
-        }
-        return;
-      }
       closeModal('modal-wizard');
-      if (mode === 'gomoku') {
+      if (mode === 'tycoon') {
+        if (window.TycoonApp) TycoonApp.launchFromWizard();
+      } else if (mode === 'gomoku') {
         if (window.GomokuApp) GomokuApp.launchFromWizard();
       } else {
         const roundInput = document.getElementById('sel-round-cycle');
@@ -1649,6 +1896,9 @@
         } else if (mode === 'gomoku') {
           card.style.background = '#F5F3FF';
           card.style.borderColor = '#8B5CF6';
+        } else if (mode === 'tycoon') {
+          card.style.background = '#F0F9FF';
+          card.style.borderColor = '#0284C7';
         } else {
           card.style.background = '#FFFBEB';
           card.style.borderColor = '#F59E0B';
@@ -1661,9 +1911,7 @@
       if (currentStep === 3) {
         const btnNext = document.getElementById('btn-wizard-next');
         if (btnNext) {
-          btnNext.innerHTML = mode === 'tycoon'
-            ? '<span>⏳ 该模式研发中，请返回更换</span>'
-            : '<span>创建房间并开战！</span>';
+          btnNext.innerHTML = '<span>创建房间并开战！</span>';
         }
       }
     }
@@ -4323,13 +4571,20 @@
     });
 
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !document.getElementById('view-game-aero').classList.contains('hidden')) {
-        e.preventDefault();
-        if (isOpeningRollPhase) {
-          handleOpeningRollAction();
-        } else if (!isVotePaused && !matchEnded && isHumanActiveTurn(players[activePlayerIdx])) {
-          if (waitingForPlayerChoice) autoPickMove();
-          else playerRollDice();
+      if (e.code === 'Space') {
+        const aero = document.getElementById('view-game-aero');
+        const tycoon = document.getElementById('view-game-tycoon');
+        if (aero && !aero.classList.contains('hidden')) {
+          e.preventDefault();
+          if (isOpeningRollPhase) {
+            handleOpeningRollAction();
+          } else if (!isVotePaused && !matchEnded && isHumanActiveTurn(players[activePlayerIdx])) {
+            if (waitingForPlayerChoice) autoPickMove();
+            else playerRollDice();
+          }
+        } else if (tycoon && !tycoon.classList.contains('hidden')) {
+          e.preventDefault();
+          if (window.TycoonApp) TycoonApp.testRollAndMove();
         }
       }
     });
@@ -5851,6 +6106,1441 @@
         })
       };
     })();
+
+    // =========================================================================
+    // 7. 《机械大亨 (Gear Tycoon)》3D 赛博齿轮大都会棋盘引擎
+    // =========================================================================
+    window.TycoonApp = (() => {
+      // 核心配置与状态
+      const cfg = {
+        mapSize: 64,      // 48 (小地图), 64 (中地图), 128 (大地图)
+        playerCount: 4,   // 2 ~ 6 人
+        startCash: 15000  // 初始资金
+      };
+
+      const CHARACTERS = [
+        { id: 0, name: '蓝调黑客 (你)', color: '#00E5FF', hex: 0x00E5FF, avatar: '⚡', desc: '网络神经折跃特工', isAI: false },
+        { id: 1, name: '霓虹义警 (AI)', color: '#F97316', hex: 0xF97316, avatar: '🔫', desc: '夜之城重装巡警', isAI: true },
+        { id: 2, name: '智械先知 (AI)', color: '#A855F7', hex: 0xA855F7, avatar: '🔮', desc: '量子超脑先知', isAI: true },
+        { id: 3, name: '极客狂徒 (AI)', color: '#10B981', hex: 0x10B981, avatar: '🧪', desc: '化学生化改装师', isAI: true },
+        { id: 4, name: '矩阵财阀 (AI)', color: '#F59E0B', hex: 0xF59E0B, avatar: '💎', desc: '轨道金融联合体代理', isAI: true },
+        { id: 5, name: '暗影幽灵 (AI)', color: '#F43F5E', hex: 0xF43F5E, avatar: '🥷', desc: '纳米隐匿突袭刺客', isAI: true }
+      ];
+
+      let players = [];
+      let activePlayerIdx = 0;
+      let tiles = [];
+      let tileMeshes = [];
+      let selectedTileIdx = 0;
+      let isMoving = false;
+      let isTopView = false;
+      let animFrameId = null;
+
+      // Three.js 核心对象
+      let scene, camera, renderer, raycaster;
+      let boardGroup, gearsGroup, reactorGroup, steamGroup, pawnsGroup, markersGroup;
+      let selectionBoxMesh, hoverBoxMesh;
+      let reactorLight;
+
+      // 齿轮联动系统
+      let gears = [];
+      let reactorRpm = 120;
+      let reactorTargetRpm = 120;
+
+      // 蒸汽粒子系统
+      let steamTimer = 0;
+      let steamBurstTimer = 0;
+      let steamNozzles = [];
+      let steamParticles = [];
+      const MAX_STEAM_PARTICLES = 140;
+
+      // 摄像机轨道控制
+      let camYaw = 0.0;
+      let camPitch = 0.92;
+      let camDist = 36.0;
+      let targetYaw = 0.0;
+      let targetPitch = 0.92;
+      let targetDist = 36.0;
+      let lookTarget = new THREE.Vector3(0, 0, 0);
+      let curLookAt = new THREE.Vector3(0, 0, 0);
+
+      let isDragging = false;
+      let ptrDownX = 0, ptrDownY = 0;
+      let lastPtrX = 0, lastPtrY = 0;
+      let movedDist = 0;
+
+      // =========================================================================
+      // 地图与地格生成算法 (48格 / 64格 / 128格 完美对称大都会环路)
+      // =========================================================================
+      function buildTycoonTiles(N) {
+        const S = Math.floor(N / 4);
+        let W = 14.4;
+        let d = (2 * W) / S;
+        let tileSize = 1.6;
+        if (N === 48) {
+          W = 11.5;
+          d = (2 * W) / S;
+          tileSize = 1.72;
+        } else if (N === 128) {
+          W = 24.0;
+          d = (2 * W) / S;
+          tileSize = 1.32;
+        }
+
+        const list = [];
+        const propertyNames = [
+          '钛合金锻造坊', '芯片晶圆工厂', '高能光子矩阵', '碳化硅电弧炉',
+          '反重力中继塔', '神经接入节点', '聚变反应总仓', '仿生义肢工坊',
+          '重离子回旋加速站', '赛博霓虹商厦', '量子存储枢纽', '超导磁悬浮港',
+          '合成生物培植舱', '深空射电天线阵', '全息光影剧场', '高频算力中心',
+          '暗能量萃取井', '纳米装甲车间', '微光电池产线', '虚空雷达基站'
+        ];
+
+        let propIdx = 0;
+
+        for (let i = 0; i < N; i++) {
+          // 计算 3D 坐标 (顺时针闭合环路)
+          let x = 0, z = 0;
+          if (i <= S) {
+            // 顶边：从 (-W, -W) 到 (W, -W)
+            x = -W + i * d;
+            z = -W;
+          } else if (i <= 2 * S) {
+            // 右边：从 (W, -W) 到 (W, W)
+            x = W;
+            z = -W + (i - S) * d;
+          } else if (i <= 3 * S) {
+            // 底边：从 (W, W) 到 (-W, W)
+            x = W - (i - 2 * S) * d;
+            z = W;
+          } else {
+            // 左边：从 (-W, W) 到 (-W, -W)
+            x = -W;
+            z = W - (i - 3 * S) * d;
+          }
+
+          let type = 'property';
+          let name = '';
+          let subType = '';
+          let icon = '🏙️';
+          let color = '#64748B';
+          let desc = '';
+          let price = 1000 + (i % 8) * 350;
+          let rent = Math.floor(price * 0.22);
+
+          // 四大核心角标
+          if (i === 0) {
+            type = 'start';
+            name = '赛博起点 (Cyber Start)';
+            subType = '核心地标 • 周期发薪区';
+            icon = '🏁';
+            color = '#00E5FF';
+            desc = '环路起始发薪区。每次经过或停驻即可领取启动津贴 ₡2,000 齿轮币，机体能源充满！';
+            price = 0; rent = 0;
+          } else if (i === S) {
+            type = 'hospital';
+            name = '赛博朋克重症医院';
+            subType = '核心地标 • 住院隔离(关3天) & 属性改装';
+            icon = '🏥';
+            color = '#10B981';
+            desc = '夜之城顶尖生化医疗中心。停驻此处将触发：①住院机制：因机体过载或触电被收治时，强制住院隔离3天（3回合无法行动，可掷出双骰提前出院）；②义体属性改造：可消耗齿轮币升级动力与算力属性（即将开放改装）！';
+            price = 0; rent = 0;
+          } else if (i === 2 * S) {
+            type = 'bank';
+            name = '义体中央银行';
+            subType = '核心地标 • 储备金库 & 能源分红';
+            icon = '🏦';
+            color = '#F59E0B';
+            desc = '赛博大都会核心储备金库。每次停驻可结算并领取机体能源存款分红 ₡1,200 齿轮币！';
+            price = 0; rent = 0;
+          } else if (i === 3 * S) {
+            type = 'cage';
+            name = '机械囚笼';
+            subType = '核心地标 • 智能困人禁锢';
+            icon = '🔒';
+            color = '#EF4444';
+            desc = '高能电磁合金拘禁力场。停驻或被判定关押时，动力机体将被智能锁死，禁锢暂停行动 1 回合！';
+            price = 0; rent = 0;
+          } else {
+            // 每条边散布：道具、电子笼网、奖励、传送门、彩票店、惩罚
+            const k = i % S;
+            const k_item = Math.max(1, Math.round(S * 0.16));
+            const k_emp  = Math.round(S * 0.32);
+            const k_rew  = Math.round(S * 0.48);
+            const k_port = Math.round(S * 0.64);
+            const k_lot  = Math.round(S * 0.80);
+            const k_pen  = Math.min(S - 1, Math.round(S * 0.90));
+
+            if (k === k_item) {
+              type = 'item';
+              name = '机械黑市道具店';
+              subType = '隐秘集市 • 特种机件补给';
+              icon = '🛠️';
+              color = '#F59E0B';
+              desc = '地下黑市义体工坊。可购置遥控骰子、反重力跃迁推进器、机体避雷绝缘层等高科技战术道具！';
+              price = 0; rent = 0;
+            } else if (k === k_emp) {
+              type = 'emp_grid';
+              name = '电子笼网';
+              subType = '高危陷阱 • 强电击送进医院';
+              icon = '⚡';
+              color = '#38BDF8';
+              desc = '非法架设的高压EMP电子笼网！踩中立刻遭遇高压脉冲强力电击，机体电路严重烧毁，直接强制移送进【赛博医院】隔离住院3天！';
+              price = 0; rent = 0;
+            } else if (k === k_rew) {
+              type = 'reward';
+              name = '天基赛博空投';
+              subType = '随机事件 • 巨额能源补给';
+              icon = '🎁';
+              color = '#34D399';
+              desc = '巨型空投运输机截获的科技盲盒。立刻获得 ₡1,500 齿轮资金与机体过载冷却液！';
+              price = 0; rent = 0;
+            } else if (k === k_port) {
+              type = 'portal';
+              name = '量子折跃传送门';
+              subType = '空间奇点 • 对角瞬移折跃';
+              icon = '🌀';
+              color = '#A855F7';
+              desc = '超空间微型虫洞发射井。踩中即可打破空间曲率，瞬间量子折跃传送至对角的折跃门，抢占关键赛区！';
+              price = 0; rent = 0;
+            } else if (k === k_lot) {
+              type = 'lottery';
+              name = '霓虹博彩彩票店';
+              subType = '街区娱乐 • 随机大奖翻盘';
+              icon = '🎰';
+              color = '#EC4899';
+              desc = '全息霓虹老虎机与刮刮乐投注站。停驻可免费旋转一次大转盘，随机赢取 ₡800~₡3,000 巨额暴击奖金！';
+              price = 0; rent = 0;
+            } else if (k === k_pen) {
+              type = 'penalty';
+              name = '反应堆过载惩罚';
+              subType = '高危隐患 • 紧急排热罚金';
+              icon = '⚠️';
+              color = '#F87171';
+              desc = '机体微型核聚变炉过热警报！为防止熔融，必须缴纳 ₡1,000 应急排热冷却处理费！';
+              price = 0; rent = 0;
+            } else {
+              type = 'property';
+              name = propertyNames[propIdx % propertyNames.length];
+              propIdx++;
+              subType = '赛博地产 • 可购置与建设升级';
+              icon = '🏙️';
+              color = '#64748B';
+              desc = `赛博大都会高新工坊街区。无主时可以基础价格购置；进驻已购置工坊需支付过路租金 ₡${rent}，多次停驻可升级为高阶科技工业园！`;
+            }
+          }
+
+          list.push({
+            index: i,
+            x,
+            y: 0,
+            z,
+            size: tileSize,
+            type,
+            name,
+            subType,
+            icon,
+            color,
+            desc,
+            price,
+            rent,
+            owner: null,
+            level: 0
+          });
+        }
+
+        return { list, W, d, tileSize, S };
+      }
+
+      // =========================================================================
+      // 动态 Canvas 贴图生成器（高清晰度 3D 赛博地格表面）
+      // =========================================================================
+      function createTileTexture(tile) {
+        const cvs = document.createElement('canvas');
+        cvs.width = 128;
+        cvs.height = 128;
+        const ctx = cvs.getContext('2d');
+
+        // 背景深色金属底板
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(0, 0, 128, 128);
+
+        // 顶栏高亮色块与边框
+        ctx.fillStyle = tile.color;
+        ctx.fillRect(0, 0, 128, 30);
+
+        // 边角霓虹装饰线
+        ctx.strokeStyle = tile.color;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, 124, 124);
+
+        // 顶栏文字 (图标 + 地格编号)
+        ctx.fillStyle = '#0F172A';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(tile.icon, 8, 22);
+
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText('#' + tile.index.toString().padStart(2, '0'), 120, 22);
+
+        // 中部地格名称
+        ctx.fillStyle = '#F8FAFC';
+        ctx.font = 'bold 14px "PingFang SC", "Microsoft YaHei", sans-serif';
+        ctx.textAlign = 'center';
+        let shortName = tile.name.replace(' (Cyber Start)', '');
+        if (shortName.length > 6) shortName = shortName.slice(0, 5) + '..';
+        ctx.fillText(shortName, 64, 68);
+
+        // 底部价格或类型简述
+        ctx.font = 'bold 11px monospace';
+        if (tile.type === 'property') {
+          ctx.fillStyle = '#FDE047';
+          ctx.fillText('₡ ' + tile.price, 64, 102);
+        } else {
+          ctx.fillStyle = tile.color;
+          ctx.fillText(tile.subType.split('•')[0].trim(), 64, 102);
+        }
+
+        const tex = new THREE.CanvasTexture(cvs);
+        tex.anisotropy = 4;
+        return tex;
+      }
+
+      // =========================================================================
+      // 精密齿轮网格生成器（可真实啮合的实体齿轮）
+      // =========================================================================
+      function createGearMesh(radius, teeth, thickness, toothH, colorHex, emissiveHex) {
+        const grp = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: colorHex,
+          emissive: emissiveHex,
+          emissiveIntensity: 0.38,
+          metalness: 0.88,
+          roughness: 0.22
+        });
+
+        // 轮毂圆盘
+        const hubGeo = new THREE.CylinderGeometry(radius - toothH * 0.45, radius - toothH * 0.45, thickness, 36);
+        const hub = new THREE.Mesh(hubGeo, mat);
+        hub.castShadow = true;
+        hub.receiveShadow = true;
+        grp.add(hub);
+
+        // 辐射凸齿
+        const toothGeo = new THREE.BoxGeometry(toothH * 0.82, thickness, toothH * 1.05);
+        for (let i = 0; i < teeth; i++) {
+          const ang = (i / teeth) * Math.PI * 2;
+          const tooth = new THREE.Mesh(toothGeo, mat);
+          tooth.position.set(Math.cos(ang) * radius, 0, Math.sin(ang) * radius);
+          tooth.rotation.y = -ang;
+          tooth.castShadow = true;
+          grp.add(tooth);
+        }
+
+        // 机械镂空辐条
+        const spokeGeo = new THREE.BoxGeometry(radius * 1.6, thickness * 0.8, radius * 0.18);
+        const spoke1 = new THREE.Mesh(spokeGeo, mat);
+        const spoke2 = new THREE.Mesh(spokeGeo, mat);
+        spoke2.rotation.y = Math.PI / 2;
+        grp.add(spoke1);
+        grp.add(spoke2);
+
+        // 轴心高亮盖帽
+        const axleGeo = new THREE.CylinderGeometry(radius * 0.25, radius * 0.25, thickness * 1.35, 16);
+        const axleMat = new THREE.MeshStandardMaterial({ color: 0x0F172A, metalness: 0.95, roughness: 0.15 });
+        const axle = new THREE.Mesh(axleGeo, axleMat);
+        grp.add(axle);
+
+        grp.userData = { radius, teeth };
+        return grp;
+      }
+
+      // =========================================================================
+      // 3D 舞台初始化与场景装配
+      // =========================================================================
+      function ensureStageInitialized() {
+        const stageEl = document.getElementById('tycoon-3d-stage');
+        if (!stageEl) return;
+
+        if (!renderer) {
+          scene = new THREE.Scene();
+          scene.fog = new THREE.FogExp2(0x030712, 0.016);
+
+          camera = new THREE.PerspectiveCamera(45, stageEl.clientWidth / stageEl.clientHeight, 0.1, 400);
+          updateCameraPosition();
+
+          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(stageEl.clientWidth, stageEl.clientHeight);
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          stageEl.appendChild(renderer.domElement);
+
+          raycaster = new THREE.Raycaster();
+
+          // 灯光系统：赛博深蓝主光 + 青/紫边缘光
+          const hemiLight = new THREE.HemisphereLight(0x38BDF8, 0x0F172A, 0.65);
+          scene.add(hemiLight);
+
+          const dirLight = new THREE.DirectionalLight(0xF8FAFC, 1.25);
+          dirLight.position.set(16, 32, 20);
+          dirLight.castShadow = true;
+          dirLight.shadow.mapSize.width = 1024;
+          dirLight.shadow.mapSize.height = 1024;
+          scene.add(dirLight);
+
+          const purpleRim = new THREE.PointLight(0xA855F7, 1.4, 60);
+          purpleRim.position.set(-20, 12, -20);
+          scene.add(purpleRim);
+
+          const cyanRim = new THREE.PointLight(0x00E5FF, 1.4, 60);
+          cyanRim.position.set(20, 10, 20);
+          scene.add(cyanRim);
+
+          boardGroup = new THREE.Group();
+          gearsGroup = new THREE.Group();
+          reactorGroup = new THREE.Group();
+          steamGroup = new THREE.Group();
+          pawnsGroup = new THREE.Group();
+          markersGroup = new THREE.Group();
+
+          scene.add(boardGroup);
+          scene.add(gearsGroup);
+          scene.add(reactorGroup);
+          scene.add(steamGroup);
+          scene.add(pawnsGroup);
+          scene.add(markersGroup);
+
+          // 悬浮高亮选框
+          const selBoxGeo = new THREE.BoxGeometry(1.7, 0.35, 1.7);
+          const selBoxMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.85 });
+          selectionBoxMesh = new THREE.Mesh(selBoxGeo, selBoxMat);
+          selectionBoxMesh.visible = false;
+          scene.add(selectionBoxMesh);
+
+          // 鼠标悬停高亮框
+          const hovBoxMat = new THREE.MeshBasicMaterial({ color: 0xFDE047, wireframe: true, transparent: true, opacity: 0.65 });
+          hoverBoxMesh = new THREE.Mesh(selBoxGeo.clone(), hovBoxMat);
+          hoverBoxMesh.visible = false;
+          scene.add(hoverBoxMesh);
+
+          bindPointerEvents(renderer.domElement);
+          window.addEventListener('resize', onWindowResize);
+          startRenderLoop();
+        }
+
+        buildCyberSparks();
+      }
+
+      function updateCameraPosition() {
+        if (!camera) return;
+        const cy = Math.cos(camYaw);
+        const sy = Math.sin(camYaw);
+        const cp = Math.cos(camPitch);
+        const sp = Math.sin(camPitch);
+
+        camera.position.set(
+          curLookAt.x + camDist * cp * sy,
+          curLookAt.y + camDist * sp,
+          curLookAt.z + camDist * cp * cy
+        );
+        camera.lookAt(curLookAt);
+      }
+
+      function onWindowResize() {
+        const stageEl = document.getElementById('tycoon-3d-stage');
+        if (!stageEl || !camera || !renderer) return;
+        const w = stageEl.clientWidth || window.innerWidth;
+        const h = stageEl.clientHeight || window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
+
+      // =========================================================================
+      // 场景内容构建：地格、齿轮组、动力炉与蒸汽喷嘴
+      // =========================================================================
+      function rebuildBoardScene() {
+        // 清理旧网格
+        while (boardGroup.children.length > 0) boardGroup.remove(boardGroup.children[0]);
+        while (gearsGroup.children.length > 0) gearsGroup.remove(gearsGroup.children[0]);
+        while (reactorGroup.children.length > 0) reactorGroup.remove(reactorGroup.children[0]);
+        while (steamGroup.children.length > 0) steamGroup.remove(steamGroup.children[0]);
+        while (markersGroup.children.length > 0) markersGroup.remove(markersGroup.children[0]);
+        while (pawnsGroup.children.length > 0) pawnsGroup.remove(pawnsGroup.children[0]);
+
+        gears = [];
+        tileMeshes = [];
+        steamParticles = [];
+        steamNozzles = [];
+
+        const { list, W, tileSize, S } = buildTycoonTiles(cfg.mapSize);
+        tiles = list;
+
+        // 根据地图规模动态调整摄像机距离
+        if (cfg.mapSize === 48) {
+          targetDist = 28.0;
+        } else if (cfg.mapSize === 64) {
+          targetDist = 35.0;
+        } else {
+          targetDist = 56.0;
+        }
+        camDist = targetDist;
+
+        // 1. 生成地格模型
+        const sideMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.88, roughness: 0.32 });
+        tiles.forEach(t => {
+          const tileGeo = new THREE.BoxGeometry(t.size, 0.22, t.size);
+          const topMat = new THREE.MeshStandardMaterial({
+            map: createTileTexture(t),
+            roughness: 0.28,
+            metalness: 0.3
+          });
+          const m = new THREE.Mesh(tileGeo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]);
+          m.position.set(t.x, -0.11, t.z);
+          m.receiveShadow = true;
+          m.castShadow = true;
+          m.userData = { tileIndex: t.index };
+          boardGroup.add(m);
+          tileMeshes.push(m);
+
+          // 2. 特殊地格 3D 悬浮全息标记
+          if (t.type === 'hospital') {
+            // 赛博医院：3D 悬浮绿十字
+            const crGrp = new THREE.Group();
+            const crMat = new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x059669, emissiveIntensity: 0.75, metalness: 0.6 });
+            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.72, 0.18), crMat));
+            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.60, 0.22, 0.18), crMat));
+            crGrp.position.set(t.x, 0.7, t.z);
+            crGrp.userData = { isHospital: true };
+            markersGroup.add(crGrp);
+          } else if (t.type === 'emp_grid') {
+            // 电子笼网：双重旋转高压电弧环
+            const empGrp = new THREE.Group();
+            const empMat = new THREE.MeshStandardMaterial({ color: 0x38BDF8, emissive: 0x0284C7, emissiveIntensity: 0.85, metalness: 0.8 });
+            const r1 = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 8, 24), empMat);
+            const r2 = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.03, 8, 24), empMat);
+            r1.rotation.x = Math.PI / 4;
+            r2.rotation.y = Math.PI / 4;
+            empGrp.add(r1); empGrp.add(r2);
+            empGrp.position.set(t.x, 0.55, t.z);
+            empGrp.userData = { isEmp: true };
+            markersGroup.add(empGrp);
+          } else if (t.type === 'cage') {
+            // 机械囚笼：4 根激光立柱与封顶框架
+            const cageGrp = new THREE.Group();
+            const pilMat = new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xB91C1C, emissiveIntensity: 0.65, metalness: 0.85 });
+            const pilGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.65, 8);
+            const hs = t.size * 0.35;
+            [[-hs, -hs], [hs, -hs], [-hs, hs], [hs, hs]].forEach(([px, pz]) => {
+              const p = new THREE.Mesh(pilGeo, pilMat);
+              p.position.set(px, 0.32, pz);
+              cageGrp.add(p);
+            });
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(hs * 2.1, 0.04, hs * 2.1), pilMat);
+            roof.position.y = 0.65;
+            cageGrp.add(roof);
+            cageGrp.position.set(t.x, 0, t.z);
+            markersGroup.add(cageGrp);
+          } else if (t.type === 'bank') {
+            // 中央银行：旋转黄金金币
+            const bGrp = new THREE.Group();
+            const bMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.55, metalness: 0.95 });
+            const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.08, 24), bMat);
+            coin.rotation.x = Math.PI / 2;
+            bGrp.add(coin);
+            bGrp.position.set(t.x, 0.6, t.z);
+            bGrp.userData = { isSpinning: true, rotSpeed: 1.5 };
+            markersGroup.add(bGrp);
+          } else if (t.type === 'portal') {
+            // 传送门：量子折跃紫光环
+            const portGrp = new THREE.Group();
+            const portMat = new THREE.MeshStandardMaterial({ color: 0xA855F7, emissive: 0x7C3AED, emissiveIntensity: 0.85, metalness: 0.7 });
+            portGrp.add(new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.055, 12, 32), portMat));
+            portGrp.position.set(t.x, 0.6, t.z);
+            portGrp.userData = { isPortal: true };
+            markersGroup.add(portGrp);
+          } else if (t.type === 'lottery') {
+            // 彩票店：霓虹八面彩晶
+            const lGrp = new THREE.Group();
+            const lMat = new THREE.MeshStandardMaterial({ color: 0xEC4899, emissive: 0xBE185D, emissiveIntensity: 0.7, metalness: 0.8 });
+            lGrp.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), lMat));
+            lGrp.position.set(t.x, 0.6, t.z);
+            lGrp.userData = { isSpinning: true, rotSpeed: 2.0 };
+            markersGroup.add(lGrp);
+          } else if (t.type === 'start') {
+            // 起点：赛博青光门楼
+            const gGrp = new THREE.Group();
+            const gMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.8, metalness: 0.85 });
+            const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 0.1), gMat);
+            p1.position.set(-t.size * 0.38, 0.42, 0);
+            const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 0.1), gMat);
+            p2.position.set(t.size * 0.38, 0.42, 0);
+            const topBar = new THREE.Mesh(new THREE.BoxGeometry(t.size * 0.86, 0.1, 0.1), gMat);
+            topBar.position.set(0, 0.85, 0);
+            gGrp.add(p1); gGrp.add(p2); gGrp.add(topBar);
+            gGrp.position.set(t.x, 0, t.z);
+            markersGroup.add(gGrp);
+          } else if (t.type === 'item') {
+            const iGrp = new THREE.Group();
+            const iMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.6, metalness: 0.85 });
+            const tor = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.06, 8, 16), iMat);
+            tor.rotation.x = Math.PI / 3;
+            iGrp.add(tor);
+            iGrp.position.set(t.x, 0.6, t.z);
+            iGrp.userData = { isSpinning: true, rotSpeed: 1.6 };
+            markersGroup.add(iGrp);
+          } else if (t.type === 'reward') {
+            const rGrp = new THREE.Group();
+            const rMat = new THREE.MeshStandardMaterial({ color: 0x34D399, emissive: 0x059669, emissiveIntensity: 0.65, metalness: 0.7 });
+            rGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.35), rMat));
+            rGrp.position.set(t.x, 0.6, t.z);
+            rGrp.userData = { isSpinning: true, rotSpeed: 1.2 };
+            markersGroup.add(rGrp);
+          } else if (t.type === 'penalty') {
+            const pGrp = new THREE.Group();
+            const pMat = new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xB91C1C, emissiveIntensity: 0.7, metalness: 0.8 });
+            pGrp.add(new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 4), pMat));
+            pGrp.position.set(t.x, 0.6, t.z);
+            pGrp.userData = { isSpinning: true, rotSpeed: 1.0 };
+            markersGroup.add(pGrp);
+          }
+        });
+
+        // 3. 盘面中心机械动力炉基座
+        const baseR = Math.min(W * 0.72, 8.8);
+        const deckGeo = new THREE.CylinderGeometry(baseR, baseR + 0.5, 0.35, 40);
+        const deckMat = new THREE.MeshStandardMaterial({
+          color: 0x0F172A,
+          emissive: 0x0284C7,
+          emissiveIntensity: 0.14,
+          metalness: 0.9,
+          roughness: 0.3
+        });
+        const deck = new THREE.Mesh(deckGeo, deckMat);
+        deck.position.y = -0.16;
+        deck.receiveShadow = true;
+        reactorGroup.add(deck);
+
+        // 动力炉外圈黄色警示光环
+        const rimTorus = new THREE.Mesh(
+          new THREE.TorusGeometry(baseR * 0.95, 0.08, 12, 64),
+          new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.45, metalness: 0.8 })
+        );
+        rimTorus.rotation.x = Math.PI / 2;
+        rimTorus.position.y = 0.03;
+        reactorGroup.add(rimTorus);
+
+        // 4. 精密啮合齿轮传动组 (中心主齿轮 + 3个从动啮合齿轮，半径与齿数精确成正比，角速度反向啮合)
+        const R1 = Math.min(3.4, baseR * 0.42);
+        const gearThickness = 0.28;
+        const toothH = 0.32;
+
+        // 中心主齿轮 (鎏金黄铜, 32齿)
+        const g1 = createGearMesh(R1, 32, gearThickness, toothH, 0xD97706, 0x78350F);
+        g1.position.set(0, 0.16, 0);
+        gearsGroup.add(g1);
+        gears.push({ mesh: g1, baseSpeed: 0.45, ratio: 1.0 });
+
+        // 右从动齿轮 (赛博青钢, 16齿, 角速度 -2.0)
+        const R2 = R1 * (16 / 32);
+        const g2 = createGearMesh(R2, 16, gearThickness, toothH, 0x0284C7, 0x00E5FF);
+        g2.position.set(R1 + R2, 0.16, 0);
+        gearsGroup.add(g2);
+        gears.push({ mesh: g2, baseSpeed: 0.45, ratio: -2.0 });
+
+        // 左从动齿轮 (深紫钛金, 24齿, 角速度 -1.333)
+        const R3 = R1 * (24 / 32);
+        const g3 = createGearMesh(R3, 24, gearThickness, toothH, 0x7C3AED, 0xA855F7);
+        g3.position.set(-(R1 + R3), 0.16, 0);
+        gearsGroup.add(g3);
+        gears.push({ mesh: g3, baseSpeed: 0.45, ratio: -(32 / 24) });
+
+        // 上从动齿轮 (工业亮橙, 20齿, 角速度 -1.6)
+        const R4 = R1 * (20 / 32);
+        const g4 = createGearMesh(R4, 20, gearThickness, toothH, 0xEA580C, 0xF59E0B);
+        g4.position.set(0, 0.16, -(R1 + R4));
+        gearsGroup.add(g4);
+        gears.push({ mesh: g4, baseSpeed: 0.45, ratio: -(32 / 20) });
+
+        // 中心聚变反应核心
+        const coreGeo = new THREE.CylinderGeometry(R1 * 0.32, R1 * 0.38, 0.85, 24);
+        const coreMat = new THREE.MeshStandardMaterial({
+          color: 0x00E5FF,
+          emissive: 0x0284C7,
+          emissiveIntensity: 0.95,
+          metalness: 0.6,
+          roughness: 0.2
+        });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        core.position.y = 0.68;
+        reactorGroup.add(core);
+
+        const orbCore = new THREE.Mesh(
+          new THREE.SphereGeometry(R1 * 0.22, 16, 16),
+          new THREE.MeshBasicMaterial({ color: 0x38BDF8 })
+        );
+        orbCore.position.y = 1.3;
+        reactorGroup.add(orbCore);
+
+        reactorLight = new THREE.PointLight(0x00E5FF, 2.4, baseR * 2.8);
+        reactorLight.position.set(0, 1.35, 0);
+        reactorGroup.add(reactorLight);
+
+        // 5. 蒸汽排气烟囱与喷气阀门
+        const chimneyMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.92, roughness: 0.22 });
+        const chimneyGeo = new THREE.CylinderGeometry(0.18, 0.26, 0.8, 16);
+        const pipeAngles = [Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4];
+        const pipeDist = baseR * 0.72;
+
+        pipeAngles.forEach(ang => {
+          const px = Math.cos(ang) * pipeDist;
+          const pz = Math.sin(ang) * pipeDist;
+          const chim = new THREE.Mesh(chimneyGeo, chimneyMat);
+          chim.position.set(px, 0.4, pz);
+          chim.rotation.x = Math.sin(ang) * 0.25;
+          chim.rotation.z = -Math.cos(ang) * 0.25;
+          chim.castShadow = true;
+          reactorGroup.add(chim);
+
+          steamNozzles.push({
+            x: px + Math.cos(ang) * 0.12,
+            y: 0.85,
+            z: pz + Math.sin(ang) * 0.12,
+            dirX: Math.cos(ang) * 0.5,
+            dirZ: Math.sin(ang) * 0.5
+          });
+        });
+
+        // 6. 预构建蒸汽粒子池
+        const steamGeo = new THREE.SphereGeometry(0.18, 8, 8);
+        for (let i = 0; i < MAX_STEAM_PARTICLES; i++) {
+          const sMat = new THREE.MeshBasicMaterial({
+            color: 0xE0F2FE,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false
+          });
+          const p = new THREE.Mesh(steamGeo, sMat);
+          p.visible = false;
+          steamGroup.add(p);
+          steamParticles.push({
+            mesh: p,
+            active: false,
+            pos: new THREE.Vector3(),
+            vel: new THREE.Vector3(),
+            life: 0,
+            maxLife: 1.0,
+            scale: 0.2,
+            growth: 1.5,
+            baseOpacity: 0.7
+          });
+        }
+
+        // 7. 初始化玩家角色席位与棋子模型
+        setupPlayers();
+
+        // 8. 默认选中起点
+        selectTile(0);
+        updateMapMetaUI();
+      }
+
+      // =========================================================================
+      // 玩家角色席位模型与状态管理
+      // =========================================================================
+      function setupPlayers() {
+        players = [];
+        for (let i = 0; i < cfg.playerCount; i++) {
+          const char = CHARACTERS[i];
+          const p = {
+            id: i,
+            name: char.name,
+            color: char.color,
+            hex: char.hex,
+            avatar: char.avatar,
+            isAI: char.isAI,
+            cash: cfg.startCash,
+            netWorth: cfg.startCash,
+            pos: 0,
+            hospitalDays: 0,
+            cageDays: 0,
+            pawnMesh: null
+          };
+
+          // 3D 浮空机能棋子模型 (悬浮反重力圆盘 + 能量核心)
+          const pawn = new THREE.Group();
+          const discMat = new THREE.MeshStandardMaterial({
+            color: p.hex,
+            emissive: p.hex,
+            emissiveIntensity: 0.6,
+            metalness: 0.85,
+            roughness: 0.2
+          });
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.36, 0.14, 16), discMat);
+          disc.position.y = 0.07;
+          disc.castShadow = true;
+          pawn.add(disc);
+
+          const orb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.18, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: p.hex, emissiveIntensity: 0.9 })
+          );
+          orb.position.y = 0.28;
+          pawn.add(orb);
+
+          const halo = new THREE.Mesh(
+            new THREE.TorusGeometry(0.38, 0.025, 8, 24),
+            new THREE.MeshBasicMaterial({ color: p.hex })
+          );
+          halo.rotation.x = Math.PI / 2;
+          halo.position.y = 0.16;
+          pawn.add(halo);
+
+          pawnsGroup.add(pawn);
+          p.pawnMesh = pawn;
+          players.push(p);
+        }
+
+        activePlayerIdx = 0;
+        updatePawnsPlacement();
+        renderPlayerCards();
+        updateTurnBadge();
+      }
+
+      function updatePawnsPlacement() {
+        // 多玩家在同一地格时错开站位
+        const tileBuckets = {};
+        players.forEach(p => {
+          if (!tileBuckets[p.pos]) tileBuckets[p.pos] = [];
+          tileBuckets[p.pos].push(p);
+        });
+
+        Object.keys(tileBuckets).forEach(posStr => {
+          const list = tileBuckets[posStr];
+          const t = tiles[parseInt(posStr)];
+          if (!t) return;
+          list.forEach((p, k) => {
+            let ox = 0, oz = 0;
+            if (list.length > 1) {
+              const ang = (k / list.length) * Math.PI * 2;
+              const r = t.size * 0.26;
+              ox = Math.cos(ang) * r;
+              oz = Math.sin(ang) * r;
+            }
+            if (p.pawnMesh) {
+              p.pawnMesh.position.set(t.x + ox, 0.12, t.z + oz);
+            }
+          });
+        });
+      }
+
+      function renderPlayerCards() {
+        const leftCol = document.getElementById('tycoon-players-col-left');
+        const rightCol = document.getElementById('tycoon-players-col-right');
+        if (!leftCol || !rightCol) return;
+
+        leftCol.innerHTML = '';
+        rightCol.innerHTML = '';
+
+        players.forEach((p, idx) => {
+          const isCur = (idx === activePlayerIdx);
+          const card = document.createElement('div');
+          card.className = 'scenic-hud-card';
+          card.style.padding = '8px 12px';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.gap = '4px';
+          card.style.borderColor = isCur ? p.color : 'rgba(56, 189, 248, 0.28)';
+          card.style.boxShadow = isCur ? `0 0 16px ${p.color}55` : 'none';
+          card.style.background = isCur ? 'rgba(15, 23, 42, 0.92)' : 'rgba(15, 23, 42, 0.78)';
+          card.style.transition = 'all 0.2s ease';
+
+          let statusTag = `<span style="font-size:10px; color:#38BDF8; font-weight:800; background:rgba(14,165,233,0.15); padding:2px 6px; border-radius:4px;">🟢 运转正常</span>`;
+          if (p.hospitalDays > 0) {
+            statusTag = `<span style="font-size:10px; color:#34D399; font-weight:900; background:rgba(16,185,129,0.25); padding:2px 6px; border-radius:4px; border:1px solid #10B981;">🏥 住院中(关${p.hospitalDays}天)</span>`;
+          } else if (p.cageDays > 0) {
+            statusTag = `<span style="font-size:10px; color:#F87171; font-weight:900; background:rgba(239,68,68,0.25); padding:2px 6px; border-radius:4px; border:1px solid #EF4444;">🔒 囚笼困人中</span>`;
+          }
+
+          const curTile = tiles[p.pos] || { name: '起点' };
+          let tileDisplay = curTile.name.replace(' (Cyber Start)', '');
+          if (tileDisplay.length > 5) tileDisplay = tileDisplay.slice(0, 5) + '..';
+
+          card.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 7px;">
+                <span style="font-size: 15px;">${p.avatar}</span>
+                <span style="font-size: 12px; font-weight: 900; color: ${p.color};">${p.name}</span>
+              </div>
+              ${isCur ? `<span style="font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 999px; background: ${p.color}; color: #0F172A;">行动中</span>` : ''}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 2px;">
+              <span style="color: #94A3B8;">现金: <b style="color: #FDE047; font-family: monospace;">₡ ${p.cash.toLocaleString()}</b></span>
+              <span style="color: #94A3B8; font-size: 10px;">#${p.pos.toString().padStart(2, '0')} ${tileDisplay}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+              ${statusTag}
+              <span style="font-size: 10px; color: #64748B;">总资: ₡${p.netWorth.toLocaleString()}</span>
+            </div>
+          `;
+
+          if (idx < 3) {
+            leftCol.appendChild(card);
+          } else {
+            rightCol.appendChild(card);
+          }
+        });
+      }
+
+      function updateTurnBadge() {
+        const badge = document.getElementById('lbl-tycoon-turn');
+        if (!badge || players.length === 0) return;
+        const cur = players[activePlayerIdx];
+        badge.innerText = `${cur.name} 回合`;
+        badge.style.background = cur.color;
+        badge.style.color = '#0F172A';
+        badge.style.boxShadow = `0 2px 14px ${cur.color}77`;
+      }
+
+      function updateMapMetaUI() {
+        const meta = document.getElementById('tycoon-map-meta');
+        if (!meta) return;
+        const sizeName = (cfg.mapSize === 48 ? '小地图 (48格)' : (cfg.mapSize === 128 ? '大地图 (128格)' : '中地图 (64格)'));
+        meta.innerText = `${sizeName} • ${cfg.playerCount}人对局 • 初始 ₡${cfg.startCash.toLocaleString()}`;
+      }
+
+      // =========================================================================
+      // 全息地格终端 (Tile Inspector) 与地格交互
+      // =========================================================================
+      function selectTile(index) {
+        if (!tiles || tiles.length === 0) return;
+        selectedTileIdx = ((index % tiles.length) + tiles.length) % tiles.length;
+        const t = tiles[selectedTileIdx];
+
+        // 移动高亮边框
+        if (selectionBoxMesh) {
+          selectionBoxMesh.position.set(t.x, 0.05, t.z);
+          selectionBoxMesh.scale.set(t.size / 1.6, 1, t.size / 1.6);
+          selectionBoxMesh.material.color.set(t.color);
+          selectionBoxMesh.visible = true;
+        }
+
+        // 更新终端卡片
+        const idxEl = document.getElementById('inspector-tile-index');
+        const iconEl = document.getElementById('inspector-tile-icon');
+        const nameEl = document.getElementById('inspector-tile-name');
+        const typeEl = document.getElementById('inspector-tile-type');
+        const descEl = document.getElementById('inspector-tile-desc');
+        const propsEl = document.getElementById('inspector-tile-props');
+
+        if (idxEl) idxEl.innerText = `#${t.index.toString().padStart(2, '0')} / ${tiles.length}`;
+        if (iconEl) {
+          iconEl.innerText = t.icon;
+          iconEl.style.borderColor = t.color;
+          iconEl.style.background = `${t.color}22`;
+        }
+        if (nameEl) nameEl.innerText = t.name;
+        if (typeEl) {
+          typeEl.innerText = t.subType;
+          typeEl.style.color = t.color;
+        }
+        if (descEl) descEl.innerText = t.desc;
+        if (propsEl) {
+          if (t.type === 'property') {
+            propsEl.innerHTML = `<span>基础租金: ₡${t.rent.toLocaleString()}</span><span>购置价格: ₡${t.price.toLocaleString()}</span>`;
+            propsEl.style.color = '#FDE047';
+            propsEl.style.borderColor = 'rgba(245, 158, 11, 0.35)';
+          } else {
+            propsEl.innerHTML = `<span>地标属性: 专属机制地格</span><span>状态: 全城运转中</span>`;
+            propsEl.style.color = t.color;
+            propsEl.style.borderColor = `${t.color}55`;
+          }
+        }
+      }
+
+      function focusSelectedTile() {
+        if (!tiles || tiles.length === 0) return;
+        playSound('click');
+        const t = tiles[selectedTileIdx];
+        if (!t) return;
+        lookTarget.set(t.x, 0, t.z);
+        targetDist = Math.max(16.0, cfg.mapSize === 128 ? 26.0 : 20.0);
+        targetPitch = 0.75;
+      }
+
+      function setLog(text) {
+        const el = document.getElementById('tycoon-event-log');
+        if (el) el.innerText = text;
+      }
+
+      // =========================================================================
+      // 蒸汽喷发粒子系统与手动/自动触发
+      // =========================================================================
+      function spawnSteamPuff(nozzle, isBurst = false) {
+        const p = steamParticles.find(item => !item.active);
+        if (!p) return;
+        p.active = true;
+        p.pos.set(
+          nozzle.x + (Math.random() - 0.5) * 0.15,
+          nozzle.y,
+          nozzle.z + (Math.random() - 0.5) * 0.15
+        );
+        const speed = isBurst ? (2.8 + Math.random() * 2.2) : (0.9 + Math.random() * 0.7);
+        p.vel.set(
+          nozzle.dirX * speed + (Math.random() - 0.5) * 0.5,
+          1.8 + Math.random() * (isBurst ? 2.5 : 1.2),
+          nozzle.dirZ * speed + (Math.random() - 0.5) * 0.5
+        );
+        p.life = 0;
+        p.maxLife = isBurst ? (1.2 + Math.random() * 0.7) : (0.75 + Math.random() * 0.4);
+        p.scale = isBurst ? 0.35 : 0.2;
+        p.growth = isBurst ? 2.6 : 1.4;
+        p.baseOpacity = isBurst ? 0.85 : 0.45;
+        p.mesh.position.copy(p.pos);
+        p.mesh.scale.setScalar(p.scale);
+        p.mesh.material.opacity = p.baseOpacity;
+        p.mesh.visible = true;
+      }
+
+      function triggerSteamBurst(manual = false) {
+        playSound('steam');
+        steamBurstTimer = 1.2;
+        reactorTargetRpm = 180;
+        const statEl = document.getElementById('tycoon-reactor-status');
+        if (statEl) statEl.innerText = '机械动力炉: 高压泄压强劲喷气 • 180 RPM';
+
+        steamNozzles.forEach(nz => {
+          for (let i = 0; i < 7; i++) {
+            spawnSteamPuff(nz, true);
+          }
+        });
+
+        if (reactorLight) {
+          reactorLight.intensity = 4.8;
+          reactorLight.color.setHex(manual ? 0xF59E0B : 0x00E5FF);
+        }
+
+        setTimeout(() => {
+          reactorTargetRpm = 120;
+          if (statEl) statEl.innerText = '机械动力炉: 稳定运转 • 120 RPM';
+          if (reactorLight) {
+            reactorLight.intensity = 2.4;
+            reactorLight.color.setHex(0x00E5FF);
+          }
+        }, 1200);
+      }
+
+      function triggerSteamBurstManual() {
+        triggerSteamBurst(true);
+        setLog('【蒸汽泄压】手动开启安全泄压阀，高压过热蒸汽咆哮喷出！动力炉负荷释放。');
+      }
+
+      // =========================================================================
+      // 大富翁行棋推演机制（测试走步、触发地格专属机制与医院关3天/电网电入）
+      // =========================================================================
+      function testRollAndMove() {
+        if (isMoving || players.length === 0) return;
+        const curPlayer = players[activePlayerIdx];
+
+        // 1. 检查住院隔离中机制 (住院关3天)
+        if (curPlayer.hospitalDays > 0) {
+          playSound('click');
+          curPlayer.hospitalDays--;
+          renderPlayerCards();
+          if (curPlayer.hospitalDays === 0) {
+            setLog(`🏥【赛博医院】${curPlayer.name} 今日机能检修完成，正式出院！下回合恢复自由行动。`);
+          } else {
+            setLog(`🏥【赛博医院】${curPlayer.name} 处于住院隔离状态中（关3天），剩余 ${curPlayer.hospitalDays} 天，跳过本回合！`);
+          }
+          advanceTurn();
+          return;
+        }
+
+        // 2. 检查机械囚笼禁锢机制 (困人)
+        if (curPlayer.cageDays > 0) {
+          playSound('click');
+          curPlayer.cageDays--;
+          renderPlayerCards();
+          setLog(`🔒【机械囚笼】${curPlayer.name} 智能机件锁死中，跳过本回合！`);
+          advanceTurn();
+          return;
+        }
+
+        // 3. 正常掷骰行动
+        isMoving = true;
+        playSound('dice');
+        const roll = Math.floor(Math.random() * 6) + 1;
+        setLog(`🎲【投掷演算】${curPlayer.name} 掷出了 ${roll} 点！推进动力启动...`);
+
+        let stepCount = 0;
+        const startPos = curPlayer.pos;
+        const interval = setInterval(() => {
+          stepCount++;
+          curPlayer.pos = (curPlayer.pos + 1) % tiles.length;
+          playSound('hop');
+
+          // 经过起点领取薪水
+          if (curPlayer.pos === 0) {
+            curPlayer.cash += 2000;
+            curPlayer.netWorth += 2000;
+            playSound('resonance');
+            setLog(`🏁【赛博起点】${curPlayer.name} 经过环路起点，领取启动津贴 ₡2,000 齿轮币！`);
+          }
+
+          updatePawnsPlacement();
+          renderPlayerCards();
+          selectTile(curPlayer.pos);
+
+          if (stepCount >= roll) {
+            clearInterval(interval);
+            setTimeout(() => {
+              onPlayerLanded(curPlayer, curPlayer.pos);
+              isMoving = false;
+              advanceTurn();
+            }, 350);
+          }
+        }, 180);
+      }
+
+      function onPlayerLanded(p, tileIdx) {
+        const t = tiles[tileIdx];
+        if (!t) return;
+        const S = Math.floor(tiles.length / 4);
+
+        if (t.type === 'emp_grid') {
+          // 电子笼网：直接把玩家电进医院关3天！
+          playSound('bump');
+          setLog(`⚡【电子笼网】滋滋滋！高压脉冲触电！${p.name} 机体短路烧毁，被立刻送入【赛博医院】隔离住院3天！`);
+          p.pos = S; // 送至医院地标
+          p.hospitalDays = 3; // 关3天
+          updatePawnsPlacement();
+          renderPlayerCards();
+          selectTile(S);
+        } else if (t.type === 'hospital') {
+          // 赛博朋克医院：住院关3天 / 属性升级
+          playSound('resonance');
+          setLog(`🏥【赛博医院】${p.name} 停驻于生化医疗中心。检修机体正常，预留属性升级工位就绪！`);
+        } else if (t.type === 'cage') {
+          // 机械囚笼：困人暂停1回合
+          playSound('bump');
+          p.cageDays = 1;
+          renderPlayerCards();
+          setLog(`🔒【机械囚笼】咔嚓！智能锁死！${p.name} 被困入机械囚笼，暂停行动 1 回合！`);
+        } else if (t.type === 'bank') {
+          // 中央银行：分红
+          playSound('resonance');
+          p.cash += 1200;
+          p.netWorth += 1200;
+          renderPlayerCards();
+          setLog(`🏦【中央银行】${p.name} 停驻于金库，结算机体能源分红 +₡1,200！`);
+        } else if (t.type === 'lottery') {
+          // 彩票店：抽奖
+          playSound('firework');
+          p.cash += 800;
+          p.netWorth += 800;
+          renderPlayerCards();
+          setLog(`🎰【彩票店】${p.name} 摇奖中得霓虹齿轮奖 +₡800！`);
+        } else if (t.type === 'portal') {
+          // 量子传送门：对角瞬移
+          playSound('resonance');
+          const targetPortal = (p.pos + 2 * S) % tiles.length;
+          p.pos = targetPortal;
+          updatePawnsPlacement();
+          renderPlayerCards();
+          selectTile(p.pos);
+          setLog(`🌀【量子折跃】空间撕裂！${p.name} 瞬间量子折跃传送至对角传送门 #${targetPortal.toString().padStart(2, '0')}！`);
+        } else if (t.type === 'item') {
+          playSound('resonance');
+          setLog(`🛠️【机械黑市】${p.name} 获得【战术过载芯片】，机体灵敏与抗压属性获得加成！`);
+        } else if (t.type === 'reward') {
+          playSound('resonance');
+          p.cash += 1500;
+          p.netWorth += 1500;
+          renderPlayerCards();
+          setLog(`🎁【赛博空投】${p.name} 截获天基空投物资箱，补给金 +₡1,500！`);
+        } else if (t.type === 'penalty') {
+          playSound('bump');
+          p.cash = Math.max(0, p.cash - 1000);
+          p.netWorth = Math.max(0, p.netWorth - 1000);
+          renderPlayerCards();
+          setLog(`⚠️【能源过载】微型反应堆过热反冲！${p.name} 扣除紧急排热冷却费 -₡1,000！`);
+        } else if (t.type === 'property') {
+          setLog(`🏙️【工坊街区】${p.name} 抵达【${t.name}】（购置价 ₡${t.price.toLocaleString()}）。`);
+        }
+      }
+
+      function advanceTurn() {
+        activePlayerIdx = (activePlayerIdx + 1) % players.length;
+        renderPlayerCards();
+        updateTurnBadge();
+      }
+
+      // =========================================================================
+      // 鼠标与交互事件（3D拖拽旋转、缩放、点击地格拾取）
+      // =========================================================================
+      function bindPointerEvents(domEl) {
+        domEl.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          isDragging = true;
+          ptrDownX = e.clientX; ptrDownY = e.clientY;
+          lastPtrX = e.clientX; lastPtrY = e.clientY;
+          movedDist = 0;
+        });
+
+        window.addEventListener('pointermove', (e) => {
+          const viewEl = document.getElementById('view-game-tycoon');
+          if (!viewEl || viewEl.classList.contains('hidden')) return;
+
+          if (isDragging) {
+            const dx = e.clientX - lastPtrX;
+            const dy = e.clientY - lastPtrY;
+            movedDist += Math.hypot(dx, dy);
+            lastPtrX = e.clientX;
+            lastPtrY = e.clientY;
+
+            if (movedDist > 5 && !isTopView) {
+              targetYaw -= dx * 0.0055;
+              targetPitch = Math.max(0.35, Math.min(1.48, targetPitch + dy * 0.0050));
+            }
+          }
+
+          // 悬停地格检测
+          if (!isDragging && renderer && camera && raycaster) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            const ndc = new THREE.Vector2(
+              ((e.clientX - rect.left) / rect.width) * 2 - 1,
+              -((e.clientY - rect.top) / rect.height) * 2 + 1
+            );
+            raycaster.setFromCamera(ndc, camera);
+            const hits = raycaster.intersectObjects(tileMeshes);
+            if (hits.length > 0 && hits[0].object.userData.tileIndex !== undefined) {
+              const hIdx = hits[0].object.userData.tileIndex;
+              const ht = tiles[hIdx];
+              if (ht && hoverBoxMesh) {
+                hoverBoxMesh.position.set(ht.x, 0.05, ht.z);
+                hoverBoxMesh.scale.set(ht.size / 1.6, 1, ht.size / 1.6);
+                hoverBoxMesh.visible = true;
+                domEl.style.cursor = 'pointer';
+              }
+            } else {
+              if (hoverBoxMesh) hoverBoxMesh.visible = false;
+              domEl.style.cursor = isDragging ? 'grabbing' : 'grab';
+            }
+          }
+        });
+
+        window.addEventListener('pointerup', (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          const viewEl = document.getElementById('view-game-tycoon');
+          if (!viewEl || viewEl.classList.contains('hidden')) return;
+
+          // 点击拾取地格
+          if (movedDist < 6 && renderer && camera && raycaster) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            const ndc = new THREE.Vector2(
+              ((e.clientX - rect.left) / rect.width) * 2 - 1,
+              -((e.clientY - rect.top) / rect.height) * 2 + 1
+            );
+            raycaster.setFromCamera(ndc, camera);
+            const hits = raycaster.intersectObjects(tileMeshes);
+            if (hits.length > 0 && hits[0].object.userData.tileIndex !== undefined) {
+              playSound('click');
+              selectTile(hits[0].object.userData.tileIndex);
+            }
+          }
+        });
+
+        domEl.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const zoomDelta = e.deltaY * 0.035;
+          targetDist = Math.max(12.0, Math.min(cfg.mapSize === 128 ? 85.0 : 55.0, targetDist + zoomDelta));
+        }, { passive: false });
+      }
+
+      // =========================================================================
+      // 动画渲染主循环
+      // =========================================================================
+      let lastTime = performance.now();
+      function startRenderLoop() {
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+
+        function tick(now) {
+          animFrameId = requestAnimationFrame(tick);
+          const dt = Math.min((now - lastTime) / 1000, 0.1);
+          lastTime = now;
+
+          const viewEl = document.getElementById('view-game-tycoon');
+          if (!viewEl || viewEl.classList.contains('hidden')) return;
+
+          // 1. 摄像机平滑插值
+          camYaw += (targetYaw - camYaw) * 0.08;
+          camPitch += (targetPitch - camPitch) * 0.08;
+          camDist += (targetDist - camDist) * 0.08;
+          curLookAt.lerp(lookTarget, 0.06);
+          updateCameraPosition();
+
+          // 2. 齿轮系统真实反向啮合旋转
+          reactorRpm += (reactorTargetRpm - reactorRpm) * 0.05;
+          const masterDelta = (reactorRpm / 60) * Math.PI * 2 * dt;
+          gears.forEach(g => {
+            if (g.mesh) {
+              g.mesh.rotation.y += masterDelta * g.ratio;
+            }
+          });
+
+          // 3. 特殊标记悬浮动画
+          const sec = now * 0.001;
+          markersGroup.children.forEach(grp => {
+            if (grp.userData.isHospital) {
+              grp.position.y = 0.7 + Math.sin(sec * 3.5) * 0.12;
+              grp.rotation.y += dt * 0.8;
+            } else if (grp.userData.isEmp) {
+              grp.children[0].rotation.z += dt * 2.2;
+              grp.children[1].rotation.x += dt * 2.8;
+            } else if (grp.userData.isPortal) {
+              grp.rotation.y += dt * 1.8;
+              grp.rotation.z = Math.sin(sec * 2) * 0.2;
+            } else if (grp.userData.isSpinning) {
+              grp.rotation.y += dt * (grp.userData.rotSpeed || 1.5);
+              grp.position.y = 0.6 + Math.sin(sec * 2.5) * 0.08;
+            }
+          });
+
+          // 4. 蒸汽粒子更新与定期自动爆发
+          steamTimer += dt;
+          if (steamTimer > 3.6) {
+            steamTimer = 0;
+            triggerSteamBurst(false);
+          } else {
+            // 平时微气流蒸腾
+            if (Math.random() < 0.35 && steamNozzles.length > 0) {
+              const nz = steamNozzles[Math.floor(Math.random() * steamNozzles.length)];
+              spawnSteamPuff(nz, false);
+            }
+          }
+
+          steamParticles.forEach(p => {
+            if (!p.active) return;
+            p.life += dt;
+            if (p.life >= p.maxLife) {
+              p.active = false;
+              p.mesh.visible = false;
+              return;
+            }
+            p.pos.addScaledVector(p.vel, dt);
+            p.vel.y += 0.5 * dt;
+            p.scale += p.growth * dt;
+            const progress = p.life / p.maxLife;
+            p.mesh.position.copy(p.pos);
+            p.mesh.scale.setScalar(p.scale);
+            p.mesh.material.opacity = p.baseOpacity * (1 - progress);
+          });
+
+          // 5. 棋子悬浮律动
+          players.forEach((p, idx) => {
+            if (p.pawnMesh) {
+              p.pawnMesh.children[0].rotation.y += dt * 0.8;
+              p.pawnMesh.children[2].rotation.z += dt * 1.2;
+            }
+          });
+
+          renderer.render(scene, camera);
+        }
+
+        tick(performance.now());
+      }
+
+      // =========================================================================
+      // 飘浮赛博火花环境粒子 (2D DOM)
+      // =========================================================================
+      function buildCyberSparks() {
+        const box = document.getElementById('tycoon-ambient-sparks');
+        if (!box) return;
+        box.innerHTML = '';
+        for (let i = 0; i < 30; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'cyber-spark-dot';
+          const size = 3 + Math.random() * 4;
+          dot.style.width = size + 'px';
+          dot.style.height = size + 'px';
+          dot.style.left = (Math.random() * 100) + '%';
+          dot.style.top = (Math.random() * 100) + '%';
+          dot.style.animationDuration = (3.0 + Math.random() * 4.0) + 's';
+          dot.style.animationDelay = (Math.random() * 3) + 's';
+          box.appendChild(dot);
+        }
+      }
+
+      // =========================================================================
+      // 视角切换与退出
+      // =========================================================================
+      function toggleCamera() {
+        playSound('click');
+        isTopView = !isTopView;
+        if (isTopView) {
+          targetYaw = 0;
+          targetPitch = 1.565;
+          targetDist = (cfg.mapSize === 128 ? 68.0 : (cfg.mapSize === 48 ? 32.0 : 44.0));
+        } else {
+          targetYaw = 0;
+          targetPitch = 0.92;
+          targetDist = (cfg.mapSize === 128 ? 56.0 : (cfg.mapSize === 48 ? 28.0 : 35.0));
+        }
+        lookTarget.set(0, 0, 0);
+        const btn = document.getElementById('btn-tycoon-cam');
+        if (btn) btn.innerText = isTopView ? '📐 视角: 正交俯视 (俯瞰大局)' : '📐 视角: 3D轨道 (可拖拽旋转)';
+      }
+
+      function exitToMenu() {
+        playSound('click');
+        document.getElementById('view-game-tycoon').classList.add('hidden');
+        document.getElementById('view-menu').classList.remove('hidden');
+      }
+
+      // =========================================================================
+      // 从建房向导第3步读取配置并直接启动
+      // =========================================================================
+      function launchFromWizard() {
+        const mapSizeRadio = document.querySelector('input[name="tycoon-map-size"]:checked');
+        if (mapSizeRadio) cfg.mapSize = parseInt(mapSizeRadio.value) || 64;
+
+        const pCountSelect = document.getElementById('sel-tycoon-player-count');
+        if (pCountSelect) cfg.playerCount = parseInt(pCountSelect.value) || 4;
+
+        const cashSelect = document.getElementById('sel-tycoon-start-cash');
+        if (cashSelect) cfg.startCash = parseInt(cashSelect.value) || 15000;
+
+        document.getElementById('view-menu').classList.add('hidden');
+        document.getElementById('view-game-aero').classList.add('hidden');
+        document.getElementById('view-game-gomoku').classList.add('hidden');
+        document.getElementById('view-game-tycoon').classList.remove('hidden');
+
+        ensureStageInitialized();
+        rebuildBoardScene();
+        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格赛博大都会！${cfg.playerCount} 位选手就绪，单机鼠标左键可查看任意地格说明。`);
+      }
+
+      return {
+        launchFromWizard,
+        exitToMenu,
+        toggleCamera,
+        focusSelectedTile,
+        triggerSteamBurstManual,
+        testRollAndMove,
+        selectTile,
+        _debugState: () => ({
+          cfg,
+          players,
+          tilesCount: tiles.length,
+          selectedTileIdx,
+          activePlayerIdx,
+          isMoving
+        })
+      };
+    })();
+
   </script>
 </body>
 </html>
