@@ -570,6 +570,41 @@
       border-color: rgba(148, 163, 184, 0.4) !important;
       color: #FFFFFF !important;
     }
+    /* 赛博朋克大亨专用高科全息模态窗 */
+    .cyber-modal-card {
+      background: linear-gradient(145deg, #070D1A 0%, #0B192E 100%) !important;
+      border: 1.8px solid #00E5FF !important;
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 0 50px rgba(0, 229, 255, 0.4), inset 0 0 20px rgba(0, 229, 255, 0.1) !important;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      width: 100%;
+      color: #E0F2FE !important;
+    }
+
+    .cyber-mod-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1.5px solid rgba(0, 229, 255, 0.35);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .cyber-mod-card:hover {
+      border-color: #00E5FF;
+      background: rgba(14, 165, 233, 0.15);
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
+      transform: translateY(-2px);
+    }
+    .cyber-mod-card.installed {
+      border-color: #10B981;
+      background: rgba(16, 185, 129, 0.12);
+    }
   </style>
 </head>
 <body id="app-body" class="theme-default">
@@ -1753,6 +1788,144 @@
     </div>
   </div>
 
+  <!-- 9. 机械大亨：街区地块收购与升级协商面板 -->
+  <div id="modal-tycoon-property" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 480px; gap: 14px;">
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(0, 229, 255, 0.4); padding-bottom: 8px;">
+        <span id="tycoon-prop-modal-badge" style="padding: 3px 10px; border-radius: 999px; background: rgba(0, 229, 255, 0.2); color: #00E5FF; font-size: 11px; font-weight: 900; border: 1px solid #00E5FF;">🏢 街区资产商业终端</span>
+        <span id="tycoon-prop-tile-id" style="font-family: monospace; font-size: 12px; color: #94A3B8; font-weight: 800;">#00 / 64</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; background: rgba(15, 23, 42, 0.65); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(0, 229, 255, 0.3);">
+        <div id="tycoon-prop-icon" style="width: 52px; height: 52px; border-radius: 12px; background: rgba(0, 229, 255, 0.15); border: 1.5px solid #00E5FF; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;">🏙️</div>
+        <div style="flex: 1; min-width: 0;">
+          <h2 id="tycoon-prop-name" style="font-size: 17px; font-weight: 900; color: #FFFFFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">芯片晶圆厂</h2>
+          <div id="tycoon-prop-type" style="font-size: 11px; color: #38BDF8; font-weight: 800; margin-top: 2px;">战略科技企业 • 产业控股</div>
+        </div>
+      </div>
+
+      <p id="tycoon-prop-desc" style="font-size: 12px; color: #CBD5E1; line-height: 1.6; margin: 0; background: rgba(6, 11, 20, 0.6); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.2);">
+        商业说明加载中...
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="background: rgba(245, 158, 11, 0.12); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.35);">
+          <div style="font-size: 10px; color: #FCD34D;">投资费用:</div>
+          <div id="tycoon-prop-price" style="font-size: 14px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,200 齿轮币</div>
+        </div>
+        <div style="background: rgba(14, 165, 233, 0.12); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(14, 165, 233, 0.35);">
+          <div style="font-size: 10px; color: #7DD3FC;">预计过路租金:</div>
+          <div id="tycoon-prop-rent" style="font-size: 14px; font-weight: 900; color: #38BDF8; font-family: monospace;">⚙️ 300 齿轮币</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 229, 255, 0.25);">
+        <span style="color: #94A3B8;">你的可用现金储备:</span>
+        <b id="tycoon-prop-player-cash" style="color: #FDE047; font-family: monospace; font-size: 12px;">⚙️ 15,000 齿轮币</b>
+      </div>
+
+      <div style="display: flex; width: 100%; gap: 10px; padding-top: 4px;">
+        <button id="btn-tycoon-prop-confirm" type="button" onclick="TycoonApp.confirmPropertyAction()" class="primary-gold-btn" style="flex: 1.2; justify-content: center; background: linear-gradient(135deg, #0284C7 0%, #00E5FF 100%); border-color: #38BDF8; color: #090D16; font-size: 13px; font-weight: 900;">
+          ⚡ 立即投资购置
+        </button>
+        <button id="btn-tycoon-prop-cancel" type="button" onclick="TycoonApp.cancelPropertyAction()" class="glass-btn" style="flex: 0.8; justify-content: center; border-color: rgba(148, 163, 184, 0.4); color: #94A3B8;">
+          暂缓投资
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. 机械大亨：赛博医院义体机能改装工位 -->
+  <div id="modal-tycoon-hospital" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 580px; gap: 14px;">
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(16, 185, 129, 0.45); padding-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">🏥</span>
+          <span style="font-size: 14px; font-weight: 900; color: #34D399; letter-spacing: 0.5px;">赛博生化医疗中心 · 义体机能改装工位</span>
+        </div>
+        <span style="font-size: 11px; font-weight: 800; color: #94A3B8;">顶级生化义体改造</span>
+      </div>
+
+      <div style="font-size: 12px; color: #CBD5E1; line-height: 1.5; background: rgba(15, 23, 42, 0.65); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+        欢迎抵达大都会生化医疗中心！除常规机能检修外，可消耗金色齿轮币装配尖端义体，强化骰子机动与战术抗性：
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px 12px; border-radius: 8px; background: rgba(6, 11, 20, 0.8); border: 1px solid rgba(16, 185, 129, 0.35);">
+        <span style="color: #94A3B8;">你的当前可用现金:</span>
+        <b id="tycoon-hosp-cash" style="color: #FDE047; font-family: monospace; font-size: 13px;">⚙️ 15,000 齿轮币</b>
+      </div>
+
+      <!-- 4 大义体改装选项网格 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <!-- 模块 1: 机动力推进器 -->
+        <div id="card-mod-thruster" class="cyber-mod-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 900; color: #38BDF8;">⚡ 机动力脉冲引擎</div>
+            <span id="badge-mod-thruster" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.2); color: #38BDF8; border: 1px solid #38BDF8;">未安装</span>
+          </div>
+          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
+            掷骰行进时保底至少 <b>3 点</b>（投出 1/2 点自动补偿为 3 点），起飞与巡航效率大增！
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(56, 189, 248, 0.25);">
+            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,500</span>
+            <button id="btn-mod-thruster" onclick="TycoonApp.buyCyberMod('thruster')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #38BDF8; color: #E0F2FE;">装配引擎</button>
+          </div>
+        </div>
+
+        <!-- 模块 2: 高压绝缘护盾 -->
+        <div id="card-mod-shield" class="cyber-mod-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 900; color: #00E5FF;">🛡️ 脉冲绝缘护盾</div>
+            <span id="badge-mod-shield" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(0, 229, 255, 0.2); color: #00E5FF; border: 1px solid #00E5FF;">0 层</span>
+          </div>
+          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
+            抵御 1 次【电子笼网】高压脉冲触电，踩中时自动抵消并消耗 1 层护盾，<b>免于住院3天</b>！
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(0, 229, 255, 0.25);">
+            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 2,000</span>
+            <button id="btn-mod-shield" onclick="TycoonApp.buyCyberMod('shield')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #00E5FF; color: #E0F2FE;">充能护盾</button>
+          </div>
+        </div>
+
+        <!-- 模块 3: 量子算力核心 -->
+        <div id="card-mod-core" class="cyber-mod-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 900; color: #C084FC;">💻 量子算力核心</div>
+            <span id="badge-mod-core" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(192, 132, 252, 0.2); color: #C084FC; border: 1px solid #C084FC;">未安装</span>
+          </div>
+          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
+            停驻中央银行分红提升 <b>50%</b>（分红 ⚙️1,800），且控股科技企业地产租金额外提升 <b>30%</b>！
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(192, 132, 252, 0.25);">
+            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 2,500</span>
+            <button id="btn-mod-core" onclick="TycoonApp.buyCyberMod('core')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #C084FC; color: #E0F2FE;">装配算力核</button>
+          </div>
+        </div>
+
+        <!-- 模块 4: 纳米液冷散热单元 -->
+        <div id="card-mod-cooler" class="cyber-mod-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 900; color: #34D399;">🔧 纳米液冷散热单元</div>
+            <span id="badge-mod-cooler" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(52, 211, 153, 0.2); color: #34D399; border: 1px solid #34D399;">未安装</span>
+          </div>
+          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
+            动力炉超强循环散热，<b>彻底免疫【反应堆过载】</b>的 ⚙️1,000 应急排热冷却处理罚金！
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(52, 211, 153, 0.25);">
+            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,200</span>
+            <button id="btn-mod-cooler" onclick="TycoonApp.buyCyberMod('cooler')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #34D399; color: #E0F2FE;">装配散热组</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; width: 100%; justify-content: flex-end; padding-top: 4px;">
+        <button type="button" onclick="TycoonApp.closeHospitalModal()" class="primary-gold-btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #059669 0%, #10B981 100%); border-color: #34D399; color: #090D16; font-size: 13px; font-weight: 900;">
+          ✓ 完成改装离开医院 (推进回合)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ======================== 核心游戏引擎脚本 ======================== -->
   <script>
     // =========================================================================
@@ -1902,6 +2075,53 @@
           gain.gain.setValueAtTime(0.18 * v, now);
           gain.gain.exponentialRampToValueAtTime(0.005, now + 0.055);
           osc.start(now); osc.stop(now + 0.06);
+        } else if (type === 'cash') {
+          // 赛博金币/收银机清脆跃升音效 (3声快速上升纯音琶音)
+          [0, 0.06, 0.12].forEach((dt, idx) => {
+            const cOsc = ctx.createOscillator();
+            const cGain = ctx.createGain();
+            cOsc.connect(cGain); cGain.connect(ctx.destination);
+            cOsc.type = 'triangle';
+            const f = [987.77, 1318.51, 1760.0][idx];
+            cOsc.frequency.setValueAtTime(f, now + dt);
+            cGain.gain.setValueAtTime(0.22 * v, now + dt);
+            cGain.gain.exponentialRampToValueAtTime(0.003, now + dt + 0.14);
+            cOsc.start(now + dt); cOsc.stop(now + dt + 0.15);
+          });
+        } else if (type === 'upgrade') {
+          // 赛博产业/机能扩建升级充能音效
+          [0, 0.08, 0.16, 0.24].forEach((dt, idx) => {
+            const uOsc = ctx.createOscillator();
+            const uGain = ctx.createGain();
+            uOsc.connect(uGain); uGain.connect(ctx.destination);
+            uOsc.type = 'sine';
+            const f = [440, 659.25, 880, 1318.51][idx];
+            uOsc.frequency.setValueAtTime(f, now + dt);
+            uGain.gain.setValueAtTime(0.2 * v, now + dt);
+            uGain.gain.exponentialRampToValueAtTime(0.004, now + dt + 0.18);
+            uOsc.start(now + dt); uOsc.stop(now + dt + 0.2);
+          });
+        } else if (type === 'shield') {
+          // 脉冲防电磁护盾吸收偏转蜂鸣
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1400, now);
+          osc.frequency.exponentialRampToValueAtTime(320, now + 0.22);
+          gain.gain.setValueAtTime(0.26 * v, now);
+          gain.gain.exponentialRampToValueAtTime(0.004, now + 0.24);
+          osc.start(now); osc.stop(now + 0.25);
+        } else if (type === 'bankrupt') {
+          // 破产告急低沉下沉音
+          [0, 0.14, 0.28].forEach((dt, idx) => {
+            const bOsc = ctx.createOscillator();
+            const bGain = ctx.createGain();
+            bOsc.connect(bGain); bGain.connect(ctx.destination);
+            bOsc.type = 'sawtooth';
+            const f = [330, 246.94, 164.81][idx];
+            bOsc.frequency.setValueAtTime(f, now + dt);
+            bGain.gain.setValueAtTime(0.24 * v, now + dt);
+            bGain.gain.exponentialRampToValueAtTime(0.004, now + dt + 0.22);
+            bOsc.start(now + dt); bOsc.stop(now + dt + 0.24);
+          });
         }
       } catch (e) {}
     }
@@ -1942,6 +2162,8 @@
       closeModal('modal-victory');
       if (lastVictoryMode === 'gomoku' && window.GomokuApp) {
         GomokuApp.exitToMenu();
+      } else if (lastVictoryMode === 'tycoon' && window.TycoonApp) {
+        TycoonApp.exitToMenu();
       } else {
         returnToMainMenu();
       }
@@ -1951,6 +2173,8 @@
       closeModal('modal-victory');
       if (lastVictoryMode === 'gomoku' && window.GomokuApp) {
         GomokuApp.restart();
+      } else if (lastVictoryMode === 'tycoon' && window.TycoonApp) {
+        TycoonApp.restart();
       } else {
         launchFlightChessGame();
       }
@@ -6571,6 +6795,23 @@
       // =========================================================================
       // 2. 超清 512×512 动态地格贴图（大字体、醒目图标、高对比，彻底解决看不清）
       // =========================================================================
+      function calculateRent(tile) {
+        if (!tile || tile.type !== 'property' || !tile.owner) return 0;
+        const mult = (tile.level === 1 ? 1.0 : (tile.level === 2 ? 2.2 : 4.0));
+        let rent = Math.floor(tile.rent * mult);
+        if (tile.isTech && tile.owner.cyberMods && tile.owner.cyberMods.core) {
+          rent = Math.floor(rent * 1.3);
+        }
+        return rent;
+      }
+
+      function calculateUpgradeCost(tile) {
+        if (!tile || tile.type !== 'property' || tile.level >= 3) return 0;
+        if (tile.level === 1) return Math.floor(tile.price * 0.65);
+        if (tile.level === 2) return Math.floor(tile.price * 1.1);
+        return tile.price;
+      }
+
       function createChunkyTileTexture(tile) {
         const cvs = document.createElement('canvas');
         cvs.width = 512;
@@ -6581,12 +6822,15 @@
         ctx.fillStyle = '#070D1A';
         ctx.fillRect(0, 0, 512, 512);
 
+        // 如果该地块已被玩家占领，则使用玩家专属颜色作为边框与顶栏
+        const headerColor = tile.owner ? tile.owner.color : tile.color;
+
         // 顶栏鲜亮色带 (高度 140px，占据近 1/3)
-        ctx.fillStyle = tile.color;
+        ctx.fillStyle = headerColor;
         ctx.fillRect(0, 0, 512, 140);
 
         // 高光边框与内发光环
-        ctx.strokeStyle = tile.color;
+        ctx.strokeStyle = headerColor;
         ctx.lineWidth = 14;
         ctx.strokeRect(8, 8, 496, 496);
 
@@ -6596,26 +6840,45 @@
         ctx.textAlign = 'left';
         ctx.fillText(tile.icon, 24, 100);
 
-        // 顶栏地格编号
-        ctx.font = 'bold 54px monospace';
+        // 顶栏地格编号与等级
+        ctx.font = 'bold 48px monospace';
         ctx.textAlign = 'right';
-        ctx.fillText('#' + tile.index.toString().padStart(2, '0'), 488, 100);
+        if (tile.owner && tile.level > 0) {
+          ctx.fillText(`Lv.${tile.level} #${tile.index.toString().padStart(2, '0')}`, 488, 100);
+        } else {
+          ctx.fillText('#' + tile.index.toString().padStart(2, '0'), 488, 100);
+        }
 
         // 中部大字地格名称 (超大特写，高对比度白字)
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 58px "PingFang SC", "Microsoft YaHei", sans-serif';
+        ctx.font = 'bold 54px "PingFang SC", "Microsoft YaHei", sans-serif';
         ctx.textAlign = 'center';
-        ctx.shadowColor = tile.color;
+        ctx.shadowColor = headerColor;
         ctx.shadowBlur = 12;
         let shortName = tile.name.replace(' (Cyber Start)', '');
-        ctx.fillText(shortName, 256, 275);
+        ctx.fillText(shortName, 256, 255);
         ctx.shadowBlur = 0;
 
-        // 底部类型或价格 (大字醒目)
+        // 中下部归属标签 (如果已被购买)
+        if (tile.owner) {
+          ctx.fillStyle = '#E0F2FE';
+          ctx.font = 'bold 36px "Microsoft YaHei", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`[${tile.owner.name.split(' ')[0]}] 拥有`, 256, 330);
+        }
+
+        // 底部类型、价格或租金 (大字醒目)
         if (tile.type === 'property') {
-          ctx.fillStyle = '#FDE047';
-          ctx.font = 'bold 44px monospace';
-          ctx.fillText('⚙️ ' + tile.price.toLocaleString(), 256, 420);
+          if (tile.owner) {
+            const currentRent = calculateRent(tile);
+            ctx.fillStyle = '#FDE047';
+            ctx.font = 'bold 42px monospace';
+            ctx.fillText('过路租: ⚙️ ' + currentRent.toLocaleString(), 256, 430);
+          } else {
+            ctx.fillStyle = '#FDE047';
+            ctx.font = 'bold 44px monospace';
+            ctx.fillText('⚙️ ' + tile.price.toLocaleString(), 256, 420);
+          }
         } else {
           ctx.fillStyle = tile.color;
           ctx.font = 'bold 40px "Microsoft YaHei", sans-serif';
@@ -6626,6 +6889,104 @@
         const tex = new THREE.CanvasTexture(cvs);
         tex.anisotropy = 8;
         return tex;
+      }
+
+      function refreshTileTexture(tile) {
+        if (!tile || !tileMeshes[tile.index]) return;
+        const m = tileMeshes[tile.index];
+        if (m.material && m.material[2]) {
+          if (m.material[2].map) m.material[2].map.dispose();
+          m.material[2].map = createChunkyTileTexture(tile);
+          m.material[2].needsUpdate = true;
+        }
+      }
+
+      function updateTileBuildingMesh(tile) {
+        if (tile.buildingMesh) {
+          markersGroup.remove(tile.buildingMesh);
+          tile.buildingMesh = null;
+        }
+        if (!tile.owner || tile.level <= 0) return;
+
+        const bGrp = new THREE.Group();
+        const ownerHex = tile.owner.hex;
+        const ownerMat = new THREE.MeshStandardMaterial({
+          color: ownerHex,
+          emissive: ownerHex,
+          emissiveIntensity: 0.85,
+          metalness: 0.85,
+          roughness: 0.2
+        });
+        const darkChassisMat = new THREE.MeshStandardMaterial({
+          color: 0x0F172A,
+          metalness: 0.9,
+          roughness: 0.3
+        });
+
+        if (tile.level === 1) {
+          // Level 1: 小型服务器机柜 + 拥有者发光装饰
+          const chassis = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.65, 0.45), darkChassisMat);
+          chassis.position.y = 0.48;
+          bGrp.add(chassis);
+
+          const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.57, 0.12, 0.47), ownerMat);
+          stripe.position.y = 0.48;
+          bGrp.add(stripe);
+
+          const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.025, 8, 20), ownerMat);
+          haloRing.rotation.x = Math.PI / 2;
+          haloRing.position.y = 0.85;
+          bGrp.add(haloRing);
+        } else if (tile.level === 2) {
+          // Level 2: 数据中心双塔 + 天空天桥
+          const tower1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.35), darkChassisMat);
+          tower1.position.set(-0.3, 0.7, 0);
+          const tower2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.35), darkChassisMat);
+          tower2.position.set(0.3, 0.7, 0);
+          bGrp.add(tower1);
+          bGrp.add(tower2);
+
+          const skybridge = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.16, 0.25), ownerMat);
+          skybridge.position.set(0, 0.9, 0);
+          bGrp.add(skybridge);
+
+          const beacon1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), ownerMat);
+          beacon1.position.set(-0.3, 1.3, 0);
+          const beacon2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), ownerMat);
+          beacon2.position.set(0.3, 1.3, 0);
+          bGrp.add(beacon1);
+          bGrp.add(beacon2);
+        } else if (tile.level >= 3) {
+          // Level 3: 宏伟赛博摩天大厦 + 冲天垂直全息激光柱
+          const base = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.5, 0.75), darkChassisMat);
+          base.position.y = 0.4;
+          bGrp.add(base);
+
+          const tower = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), darkChassisMat);
+          tower.position.y = 1.1;
+          bGrp.add(tower);
+
+          const penthouse = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.4, 0.38), ownerMat);
+          penthouse.position.y = 1.8;
+          bGrp.add(penthouse);
+
+          // 垂直全息发光光束
+          const beamGeo = new THREE.CylinderGeometry(0.08, 0.16, 3.2, 12, 1, true);
+          const beamMat = new THREE.MeshBasicMaterial({
+            color: ownerHex,
+            transparent: true,
+            opacity: 0.65,
+            side: THREE.DoubleSide
+          });
+          const beam = new THREE.Mesh(beamGeo, beamMat);
+          beam.position.y = 3.5;
+          bGrp.add(beam);
+        }
+
+        bGrp.position.set(tile.x, 0, tile.z);
+        bGrp.rotation.y = tile.yaw;
+        markersGroup.add(bGrp);
+        tile.buildingMesh = bGrp;
       }
 
       // =========================================================================
@@ -7295,7 +7656,16 @@
             hospitalDays: 0,
             cageDays: 0,
             pos: 0,
-            pawnMesh: null
+            pawnMesh: null,
+            isBankrupt: false,
+            cyberMods: {
+              thruster: false, // 机动力推进器 (min dice 3)
+              shield: 0,       // 绝缘脉冲护盾层数 (抵御电子笼网)
+              core: false,     // 量子算力核心 (银行分红+50%, 科技企业租金+30%)
+              cooler: false    // 纳米液冷散热 (免疫过载罚金)
+            },
+            totalRentCollected: 0,
+            totalRentPaid: 0
           };
 
           const pawn = new THREE.Group();
@@ -7337,8 +7707,10 @@
       function updatePawnsPlacement() {
         const tileBuckets = {};
         players.forEach(p => {
-          if (!tileBuckets[p.pos]) tileBuckets[p.pos] = [];
-          tileBuckets[p.pos].push(p);
+          if (!p.isBankrupt) {
+            if (!tileBuckets[p.pos]) tileBuckets[p.pos] = [];
+            tileBuckets[p.pos].push(p);
+          }
         });
 
         Object.keys(tileBuckets).forEach(posStr => {
@@ -7355,6 +7727,7 @@
             }
             if (p.pawnMesh) {
               p.pawnMesh.position.set(t.x + ox, 0.22, t.z + oz);
+              p.pawnMesh.visible = !p.isBankrupt;
             }
           });
         });
@@ -7372,9 +7745,15 @@
           const isCur = (idx === activePlayerIdx);
           const card = document.createElement('div');
           card.className = `blue-neon-player-card ${isCur ? 'active-turn' : ''}`;
+          if (p.isBankrupt) {
+            card.style.opacity = '0.55';
+            card.style.borderColor = '#EF4444';
+          }
 
           let statusHtml = `<span style="font-size:10px; color:#38BDF8; font-weight:800; background:rgba(14,165,233,0.18); padding:2px 7px; border-radius:4px; border:1px solid rgba(56,189,248,0.4);">🟢 运转正常</span>`;
-          if (p.hospitalDays > 0) {
+          if (p.isBankrupt) {
+            statusHtml = `<span style="font-size:10px; color:#EF4444; font-weight:900; background:rgba(239,68,68,0.25); padding:2px 7px; border-radius:4px; border:1px solid #EF4444;">💀 破产清算</span>`;
+          } else if (p.hospitalDays > 0) {
             statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:900; background:rgba(16,185,129,0.25); padding:2px 7px; border-radius:4px; border:1px solid #10B981;">🏥 住院中(关3天，剩${p.hospitalDays}天)</span>`;
           } else if (p.cageDays > 0) {
             statusHtml = `<span style="font-size:10px; color:#F87171; font-weight:900; background:rgba(239,68,68,0.25); padding:2px 7px; border-radius:4px; border:1px solid #EF4444;">🔒 囚笼困人中(剩${p.cageDays}回合)</span>`;
@@ -7383,6 +7762,26 @@
           const curTile = tiles[p.pos] || { name: '起点' };
           let tileDisplay = curTile.name.replace(' (Cyber Start)', '');
           if (tileDisplay.length > 5) tileDisplay = tileDisplay.slice(0, 5) + '..';
+
+          // 计算资产净值
+          let propVal = 0;
+          tiles.forEach(t => {
+            if (t.owner && t.owner.id === p.id) {
+              propVal += t.price;
+              if (t.level > 1) propVal += calculateUpgradeCost(t);
+            }
+          });
+          const netWorth = p.isBankrupt ? 0 : (p.cash + p.bankDeposit + propVal);
+
+          // 义体模块图标标签行
+          let modsBadges = '';
+          if (p.cyberMods) {
+            if (p.cyberMods.thruster) modsBadges += `<span style="font-size:9px; background:rgba(56,189,248,0.2); color:#38BDF8; border:1px solid #38BDF8; padding:1px 4px; border-radius:3px;">⚡推进</span> `;
+            if (p.cyberMods.shield > 0) modsBadges += `<span style="font-size:9px; background:rgba(0,229,255,0.2); color:#00E5FF; border:1px solid #00E5FF; padding:1px 4px; border-radius:3px;">🛡️护盾(x${p.cyberMods.shield})</span> `;
+            if (p.cyberMods.core) modsBadges += `<span style="font-size:9px; background:rgba(192,132,252,0.2); color:#C084FC; border:1px solid #C084FC; padding:1px 4px; border-radius:3px;">💻算力</span> `;
+            if (p.cyberMods.cooler) modsBadges += `<span style="font-size:9px; background:rgba(52,211,153,0.2); color:#34D399; border:1px solid #34D399; padding:1px 4px; border-radius:3px;">🔧散热</span> `;
+          }
+          if (!modsBadges) modsBadges = `<span style="font-size:9px; color:#64748B;">暂无改装</span>`;
 
           card.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 229, 255, 0.25); padding-bottom: 5px;">
@@ -7393,10 +7792,15 @@
               ${isCur ? '<span class="neon-turn-badge">当前行动</span>' : `<span style="font-size: 10px; color: #94A3B8;">#${p.pos.toString().padStart(2, '0')} ${tileDisplay}</span>`}
             </div>
 
-            <!-- 1. 玩家状态 -->
+            <!-- 1. 玩家状态 & 净资产 -->
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
               <span style="color: #94A3B8;">机体状态:</span>
               ${statusHtml}
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+              <span style="color: #94A3B8;">净总资产:</span>
+              <span style="font-size: 11px; font-weight: 900; color: #34D399; font-family: monospace;">⚙️ ${netWorth.toLocaleString()}</span>
             </div>
 
             <!-- 2. 实际现金 -->
@@ -7415,12 +7819,10 @@
               </span>
             </div>
 
-            <!-- 4. 已购买彩票号码 -->
+            <!-- 4. 义体改造与彩票 -->
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-              <span style="color: #94A3B8;">🎰 彩票号码:</span>
-              <span style="font-size: 11px; font-weight: 900; color: ${p.lotteryTicket ? '#EC4899' : '#64748B'};">
-                ${p.lotteryTicket ? `#${p.lotteryTicket} (已投注)` : '暂未购买'}
-              </span>
+              <span style="color: #94A3B8;">🔧 义体属性:</span>
+              <div style="display: flex; align-items: center; gap: 3px;">${modsBadges}</div>
             </div>
 
             <!-- 5 & 6. 拥有房产数量 & 科技企业数量 -->
@@ -7448,8 +7850,13 @@
         const badge = document.getElementById('lbl-tycoon-turn');
         if (!badge || players.length === 0) return;
         const cur = players[activePlayerIdx];
-        badge.innerText = `${cur.name} 回合`;
-        badge.style.background = '#00E5FF';
+        if (cur.isBankrupt) {
+          badge.innerText = `${cur.name} (已破产)`;
+          badge.style.background = '#EF4444';
+        } else {
+          badge.innerText = `${cur.name} 回合`;
+          badge.style.background = cur.isAI ? '#F59E0B' : '#00E5FF';
+        }
         badge.style.color = '#090D16';
         badge.style.boxShadow = `0 2px 14px rgba(0, 229, 255, 0.65)`;
       }
@@ -7541,7 +7948,7 @@
         if (selectionBoxMesh) {
           selectionBoxMesh.position.set(t.x, 0.18, t.z);
           selectionBoxMesh.rotation.y = t.yaw;
-          selectionBoxMesh.material.color.set(t.color);
+          selectionBoxMesh.material.color.set(t.owner ? t.owner.color : t.color);
           selectionBoxMesh.visible = true;
         }
 
@@ -7555,18 +7962,20 @@
         if (idxEl) idxEl.innerText = `#${t.index.toString().padStart(2, '0')} / ${tiles.length}`;
         if (iconEl) {
           iconEl.innerText = t.icon;
-          iconEl.style.borderColor = t.color;
-          iconEl.style.background = `${t.color}22`;
+          iconEl.style.borderColor = t.owner ? t.owner.color : t.color;
+          iconEl.style.background = `${t.owner ? t.owner.color : t.color}22`;
         }
         if (nameEl) nameEl.innerText = t.name;
         if (typeEl) {
           typeEl.innerText = t.subType;
-          typeEl.style.color = t.color;
+          typeEl.style.color = t.owner ? t.owner.color : t.color;
         }
         if (descEl) descEl.innerText = t.desc;
         if (propsEl) {
           if (t.type === 'property') {
-            propsEl.innerHTML = `<span>基础租金: ${t.rent.toLocaleString()} 齿轮币</span><span>购置价格: ${t.price.toLocaleString()} 齿轮币</span>`;
+            const currentRent = calculateRent(t);
+            const ownerText = t.owner ? `${t.owner.name.split(' ')[0]} (Lv.${t.level})` : '无主 (可购置)';
+            propsEl.innerHTML = `<span>归属: ${ownerText}</span><span>租金: ⚙️ ${currentRent.toLocaleString()}</span><span>价格: ⚙️ ${t.price.toLocaleString()}</span>`;
             propsEl.style.color = '#FDE047';
             propsEl.style.borderColor = 'rgba(245, 158, 11, 0.35)';
           } else {
@@ -7619,9 +8028,299 @@
         }
       }
 
+      let pendingPropertyAction = null; // { tile, mode: 'buy' | 'upgrade', cost, nextLv, nextRent, player }
+
+      function showPropertyModal({ tile, mode = 'buy', cost = 0, nextLv = 1, nextRent = 0 }) {
+        const curPlayer = players[activePlayerIdx];
+        pendingPropertyAction = { tile, mode, cost, nextLv, nextRent, player: curPlayer };
+
+        const modal = document.getElementById('modal-tycoon-property');
+        if (!modal) return;
+
+        const badgeEl = document.getElementById('tycoon-prop-modal-badge');
+        const idEl = document.getElementById('tycoon-prop-tile-id');
+        const iconEl = document.getElementById('tycoon-prop-icon');
+        const nameEl = document.getElementById('tycoon-prop-name');
+        const typeEl = document.getElementById('tycoon-prop-type');
+        const descEl = document.getElementById('tycoon-prop-desc');
+        const priceEl = document.getElementById('tycoon-prop-price');
+        const rentEl = document.getElementById('tycoon-prop-rent');
+        const cashEl = document.getElementById('tycoon-prop-player-cash');
+        const confirmBtn = document.getElementById('btn-tycoon-prop-confirm');
+
+        if (idEl) idEl.innerText = `#${tile.index.toString().padStart(2, '0')} / ${tiles.length}`;
+        if (iconEl) iconEl.innerText = tile.icon;
+        if (nameEl) nameEl.innerText = tile.name;
+        if (typeEl) typeEl.innerText = tile.subType;
+        if (cashEl) cashEl.innerHTML = `${getGoldenGearSvg(14)} ${curPlayer.cash.toLocaleString()} 齿轮币`;
+
+        if (mode === 'buy') {
+          if (badgeEl) badgeEl.innerText = '🏢 街区资产商业购置终端';
+          if (descEl) descEl.innerText = `该地块目前处于无主挂牌状态。购置后将建立你的 Lv.1 基地，今后其他路过玩家需向你支付过路租金！`;
+          if (priceEl) priceEl.innerHTML = `⚙️ ${tile.price.toLocaleString()} 齿轮币`;
+          if (rentEl) rentEl.innerHTML = `⚙️ ${tile.rent.toLocaleString()} 齿轮币 / 进驻`;
+          if (confirmBtn) {
+            confirmBtn.innerText = `⚡ 立即投资购置 (⚙️${tile.price.toLocaleString()})`;
+            confirmBtn.disabled = curPlayer.cash < tile.price;
+            confirmBtn.style.opacity = curPlayer.cash < tile.price ? '0.5' : '1.0';
+          }
+        } else {
+          // upgrade
+          if (badgeEl) badgeEl.innerText = '🏗️ 街区资产扩建升级终端';
+          const lvNames = { 2: '数据中心双塔', 3: '宏伟赛博摩天大厦' };
+          if (descEl) descEl.innerText = `此产业已由你持有（当前 Lv.${tile.level}）。扩建升级至 Lv.${nextLv}【${lvNames[nextLv] || ''}】，过路租金将提升至 ⚙️${nextRent.toLocaleString()}！`;
+          if (priceEl) priceEl.innerHTML = `⚙️ ${cost.toLocaleString()} 齿轮币 (扩建费)`;
+          if (rentEl) rentEl.innerHTML = `⚙️ ${nextRent.toLocaleString()} 齿轮币 (提升后)`;
+          if (confirmBtn) {
+            confirmBtn.innerText = `⚡ 扩建升级至 Lv.${nextLv} (⚙️${cost.toLocaleString()})`;
+            confirmBtn.disabled = curPlayer.cash < cost;
+            confirmBtn.style.opacity = curPlayer.cash < cost ? '0.5' : '1.0';
+          }
+        }
+
+        modal.classList.remove('hidden');
+        playSound('open');
+      }
+
+      function confirmPropertyAction() {
+        if (!pendingPropertyAction) return;
+        const { tile, mode, cost, nextLv, player } = pendingPropertyAction;
+        const modal = document.getElementById('modal-tycoon-property');
+        if (modal) modal.classList.add('hidden');
+
+        if (mode === 'buy') {
+          if (player.cash >= tile.price) {
+            player.cash -= tile.price;
+            tile.owner = player;
+            tile.level = 1;
+            if (tile.isTech) player.techEnterprisesCount++;
+            else player.propertiesCount++;
+            updateTileBuildingMesh(tile);
+            refreshTileTexture(tile);
+            playSound('cash');
+            setLog(`🏢【商业并购】你成功斥资 ⚙️${tile.price.toLocaleString()} 购置了【${tile.name}】！初级基地拔地而起。`);
+          }
+        } else if (mode === 'upgrade') {
+          if (player.cash >= cost && tile.level < 3) {
+            player.cash -= cost;
+            tile.level = nextLv;
+            updateTileBuildingMesh(tile);
+            refreshTileTexture(tile);
+            playSound('upgrade');
+            setLog(`🏗️【产业升级】你投入 ⚙️${cost.toLocaleString()} 将【${tile.name}】扩建升级至 Lv.${tile.level}！`);
+          }
+        }
+
+        pendingPropertyAction = null;
+        renderPlayerCards();
+        selectTile(tile.index);
+        finishLandingAndAdvance();
+      }
+
+      function cancelPropertyAction() {
+        const modal = document.getElementById('modal-tycoon-property');
+        if (modal) modal.classList.add('hidden');
+        if (pendingPropertyAction) {
+          const { tile, mode } = pendingPropertyAction;
+          if (mode === 'buy') {
+            setLog(`🏙️【街区巡航】你决定暂缓购置【${tile.name}】。`);
+          } else {
+            setLog(`🏙️【街区巡航】你决定保持【${tile.name}】当前规模现状。`);
+          }
+          pendingPropertyAction = null;
+        }
+        finishLandingAndAdvance();
+      }
+
+      function showHospitalModal(player) {
+        const modal = document.getElementById('modal-tycoon-hospital');
+        if (!modal) return;
+        updateHospitalUI();
+        modal.classList.remove('hidden');
+        playSound('open');
+      }
+
+      function updateHospitalUI() {
+        const p = players[activePlayerIdx];
+        if (!p) return;
+        const cashEl = document.getElementById('tycoon-hosp-cash');
+        if (cashEl) cashEl.innerHTML = `${getGoldenGearSvg(14)} ${p.cash.toLocaleString()} 齿轮币`;
+
+        // 1. Thruster
+        const bTh = document.getElementById('badge-mod-thruster');
+        const btnTh = document.getElementById('btn-mod-thruster');
+        const cTh = document.getElementById('card-mod-thruster');
+        if (p.cyberMods.thruster) {
+          if (bTh) { bTh.innerText = '✓ 已装配'; bTh.style.color = '#10B981'; bTh.style.borderColor = '#10B981'; }
+          if (btnTh) { btnTh.disabled = true; btnTh.innerText = '已安装'; btnTh.style.opacity = '0.5'; }
+          if (cTh) cTh.classList.add('installed');
+        } else {
+          if (bTh) { bTh.innerText = '未安装'; bTh.style.color = '#38BDF8'; bTh.style.borderColor = '#38BDF8'; }
+          if (btnTh) { btnTh.disabled = p.cash < 1500; btnTh.innerText = '装配引擎'; btnTh.style.opacity = p.cash < 1500 ? '0.5' : '1.0'; }
+          if (cTh) cTh.classList.remove('installed');
+        }
+
+        // 2. Shield
+        const bSh = document.getElementById('badge-mod-shield');
+        const btnSh = document.getElementById('btn-mod-shield');
+        const cSh = document.getElementById('card-mod-shield');
+        if (p.cyberMods.shield > 0) {
+          if (bSh) { bSh.innerText = `剩余 ${p.cyberMods.shield} 层`; bSh.style.color = '#10B981'; bSh.style.borderColor = '#10B981'; }
+          if (cSh) cSh.classList.add('installed');
+        } else {
+          if (bSh) { bSh.innerText = '0 层'; bSh.style.color = '#00E5FF'; bSh.style.borderColor = '#00E5FF'; }
+          if (cSh) cSh.classList.remove('installed');
+        }
+        if (btnSh) { btnSh.disabled = p.cash < 2000; btnSh.style.opacity = p.cash < 2000 ? '0.5' : '1.0'; }
+
+        // 3. Core
+        const bCo = document.getElementById('badge-mod-core');
+        const btnCo = document.getElementById('btn-mod-core');
+        const cCo = document.getElementById('card-mod-core');
+        if (p.cyberMods.core) {
+          if (bCo) { bCo.innerText = '✓ 已装配'; bCo.style.color = '#10B981'; bCo.style.borderColor = '#10B981'; }
+          if (btnCo) { btnCo.disabled = true; btnCo.innerText = '已安装'; btnCo.style.opacity = '0.5'; }
+          if (cCo) cCo.classList.add('installed');
+        } else {
+          if (bCo) { bCo.innerText = '未安装'; bCo.style.color = '#C084FC'; bCo.style.borderColor = '#C084FC'; }
+          if (btnCo) { btnCo.disabled = p.cash < 2500; btnCo.innerText = '装配算力核'; btnCo.style.opacity = p.cash < 2500 ? '0.5' : '1.0'; }
+          if (cCo) cCo.classList.remove('installed');
+        }
+
+        // 4. Cooler
+        const bCl = document.getElementById('badge-mod-cooler');
+        const btnCl = document.getElementById('btn-mod-cooler');
+        const cCl = document.getElementById('card-mod-cooler');
+        if (p.cyberMods.cooler) {
+          if (bCl) { bCl.innerText = '✓ 已装配'; bCl.style.color = '#10B981'; bCl.style.borderColor = '#10B981'; }
+          if (btnCl) { btnCl.disabled = true; btnCl.innerText = '已安装'; btnCl.style.opacity = '0.5'; }
+          if (cCl) cCl.classList.add('installed');
+        } else {
+          if (bCl) { bCl.innerText = '未安装'; bCl.style.color = '#34D399'; bCl.style.borderColor = '#34D399'; }
+          if (btnCl) { btnCl.disabled = p.cash < 1200; btnCl.innerText = '装配散热组'; btnCl.style.opacity = p.cash < 1200 ? '0.5' : '1.0'; }
+          if (cCl) cCl.classList.remove('installed');
+        }
+      }
+
+      function buyCyberMod(modKey) {
+        const p = players[activePlayerIdx];
+        if (!p) return;
+        const costs = { thruster: 1500, shield: 2000, core: 2500, cooler: 1200 };
+        const cost = costs[modKey];
+        if (p.cash < cost) return;
+
+        p.cash -= cost;
+        if (modKey === 'shield') {
+          p.cyberMods.shield++;
+        } else {
+          p.cyberMods[modKey] = true;
+        }
+
+        playSound('upgrade');
+        updateHospitalUI();
+        renderPlayerCards();
+        setLog(`🏥【生化义体升级】成功装配【${modKey}】！机体抗性与战术收益提升！`);
+      }
+
+      function closeHospitalModal() {
+        const modal = document.getElementById('modal-tycoon-hospital');
+        if (modal) modal.classList.add('hidden');
+        setLog('🏥【赛博医院】离开生化医疗中心，机体能量充沛，继续大都会征战！');
+        finishLandingAndAdvance();
+      }
+
+      function handlePlayerBankruptcy(victim, creditor) {
+        victim.isBankrupt = true;
+        victim.cash = 0;
+        victim.bankDeposit = 0;
+        playSound('bankrupt');
+        if (victim.pawnMesh) victim.pawnMesh.visible = false;
+
+        let releasedCount = 0;
+        tiles.forEach(t => {
+          if (t.owner && t.owner.id === victim.id) {
+            releasedCount++;
+            if (creditor) {
+              t.owner = creditor;
+              if (t.isTech) creditor.techEnterprisesCount++; else creditor.propertiesCount++;
+              updateTileBuildingMesh(t);
+              refreshTileTexture(t);
+            } else {
+              t.owner = null;
+              t.level = 0;
+              updateTileBuildingMesh(t);
+              refreshTileTexture(t);
+            }
+          }
+        });
+
+        if (creditor) {
+          setLog(`💀【破产清算】${victim.name} 资金链彻底断裂宣告破产！名下 ${releasedCount} 处资产已移交给 ${creditor.name}！`);
+        } else {
+          setLog(`💀【破产清算】${victim.name} 资金链彻底断裂宣告破产！名下 ${releasedCount} 处资产全部收归市场！`);
+        }
+        renderPlayerCards();
+      }
+
+      function triggerTycoonVictory(winner) {
+        playSound('victory');
+        lastVictoryMode = 'tycoon';
+
+        let propValue = 0;
+        let propCount = 0;
+        tiles.forEach(t => {
+          if (t.owner && t.owner.id === winner.id) {
+            propCount++;
+            propValue += t.price;
+          }
+        });
+        const totalAssets = winner.cash + winner.bankDeposit + propValue;
+
+        const statsHtml = `
+          <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(245,158,11,0.25); padding-bottom:5px;">
+              <span style="color:#78716C;">最终冠军大亨:</span>
+              <b style="color:#B45309; font-size:14px;">${winner.avatar} ${winner.name}</b>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#78716C;">净总资产估值:</span>
+              <b style="color:#10B981; font-family:monospace; font-size:13px;">⚙️ ${totalAssets.toLocaleString()} 齿轮币</b>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#78716C;">名下街区/科技企业:</span>
+              <b style="color:#0284C7;">${propCount} 处垄断产业</b>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#78716C;">累计收缴过路租金:</span>
+              <b style="color:#F59E0B; font-family:monospace;">⚙️ ${(winner.totalRentCollected || 0).toLocaleString()} 齿轮币</b>
+            </div>
+            <div style="font-size:11px; color:#64748B; margin-top:4px; line-height:1.4;">
+              整座赛博夜之城大都会已被完全垄断掌控，恭喜登顶全城第一商业大亨！
+            </div>
+          </div>
+        `;
+
+        showVictoryModal({
+          mode: 'tycoon',
+          icon: '👑',
+          title: `【${winner.name}】加冕赛博大亨！`,
+          subtitle: `击溃全场竞争对手，彻底垄断夜之城！`,
+          statsHtml
+        });
+      }
+
+      function finishLandingAndAdvance() {
+        isMoving = false;
+        advanceTurn();
+      }
+
       function testRollAndMove() {
         if (isMoving || isRollingDice || players.length === 0) return;
         const curPlayer = players[activePlayerIdx];
+        if (curPlayer.isBankrupt) {
+          advanceTurn();
+          return;
+        }
 
         // 1. 检查住院隔离中机制 (关3天)
         if (curPlayer.hospitalDays > 0) {
@@ -7659,7 +8358,11 @@
         }
 
         let rollTimer = 0;
-        const finalRoll = Math.floor(Math.random() * 6) + 1;
+        let finalRoll = Math.floor(Math.random() * 6) + 1;
+        // 机动力推进引擎保底判定 (至少投出 3 点)
+        if (curPlayer.cyberMods && curPlayer.cyberMods.thruster && finalRoll < 3) {
+          finalRoll = 3;
+        }
 
         const rollAnim = setInterval(() => {
           rollTimer += 45;
@@ -7706,8 +8409,6 @@
             clearInterval(interval);
             setTimeout(() => {
               onPlayerLanded(curPlayer, curPlayer.pos);
-              isMoving = false;
-              advanceTurn();
             }, 350);
           }
         }, 200);
@@ -7715,36 +8416,85 @@
 
       function onPlayerLanded(p, tileIdx) {
         const t = tiles[tileIdx];
-        if (!t) return;
+        if (!t) { finishLandingAndAdvance(); return; }
         const S = Math.floor(tiles.length / 4);
 
         if (t.type === 'emp_grid') {
-          playSound('bump');
-          setLog(`⚡【电子笼网】滋滋滋！遭遇高压脉冲触电！${p.name} 机体电路烧毁，被直接送入【赛博医院】隔离住院3天！`);
-          p.pos = S;
-          p.hospitalDays = 3;
-          updatePawnsPlacement();
-          renderPlayerCards();
-          selectTile(S);
+          // 检查高压脉冲绝缘护盾
+          if (p.cyberMods && p.cyberMods.shield > 0) {
+            p.cyberMods.shield--;
+            playSound('shield');
+            setLog(`🛡️【绝缘护盾】滋滋——嗡！护盾成功吸收电磁笼网的高压电击，免于住院！(护盾剩余 ${p.cyberMods.shield} 层)`);
+            renderPlayerCards();
+            setTimeout(finishLandingAndAdvance, 1000);
+          } else {
+            playSound('bump');
+            setLog(`⚡【电子笼网】滋滋滋！遭遇高压脉冲触电！${p.name} 机体电路烧毁，被直接送入【赛博医院】隔离住院3天！`);
+            p.pos = S;
+            p.hospitalDays = 3;
+            updatePawnsPlacement();
+            renderPlayerCards();
+            selectTile(S);
+            setTimeout(finishLandingAndAdvance, 1200);
+          }
         } else if (t.type === 'hospital') {
           playSound('resonance');
-          setLog(`🏥【赛博医院】${p.name} 抵达生化医疗中心。检修机体正常，预留属性改装工位就绪！`);
+          if (!p.isAI) {
+            setLog(`🏥【赛博医院】${p.name} 抵达生化医疗中心，正在连接义体改装工位...`);
+            showHospitalModal(p);
+          } else {
+            // AI 在医院决策升级义体
+            if (p.cash >= 4000) {
+              if (p.cyberMods.shield === 0) {
+                p.cash -= 2000; p.cyberMods.shield++;
+                playSound('upgrade');
+                setLog(`🏥【生化改装】${p.name} 在医院充能了【脉冲绝缘护盾】！`);
+              } else if (!p.cyberMods.thruster) {
+                p.cash -= 1500; p.cyberMods.thruster = true;
+                playSound('upgrade');
+                setLog(`🏥【生化改装】${p.name} 在医院装配了【机动力推进引擎】！`);
+              } else if (!p.cyberMods.core) {
+                p.cash -= 2500; p.cyberMods.core = true;
+                playSound('upgrade');
+                setLog(`🏥【生化改装】${p.name} 在医院装配了【量子算力核心】！`);
+              } else if (!p.cyberMods.cooler) {
+                p.cash -= 1200; p.cyberMods.cooler = true;
+                playSound('upgrade');
+                setLog(`🏥【生化改装】${p.name} 在医院装配了【纳米液冷散热单元】！`);
+              } else {
+                setLog(`🏥【赛博医院】${p.name} 机体健康，完成了常规机能维护。`);
+              }
+            } else {
+              setLog(`🏥【赛博医院】${p.name} 机体健康，完成了常规机能维护。`);
+            }
+            renderPlayerCards();
+            setTimeout(finishLandingAndAdvance, 1000);
+          }
         } else if (t.type === 'cage') {
           playSound('bump');
           p.cageDays = 1;
           renderPlayerCards();
           setLog(`🔒【机械囚笼】咔嚓！智能锁死！${p.name} 被困入机械囚笼，暂停行动 1 回合！`);
+          setTimeout(finishLandingAndAdvance, 1000);
         } else if (t.type === 'bank') {
           playSound('resonance');
-          p.bankDeposit += 1200;
+          let divAmount = 1200;
+          if (p.cyberMods && p.cyberMods.core) {
+            divAmount = 1800;
+            setLog(`🏦【中央银行】${p.name} 停驻金库，在【量子算力核心】算力加持下，分红 +1,800 存入银行存款！`);
+          } else {
+            setLog(`🏦【中央银行】${p.name} 停驻于金库，机体能源分红 +1,200 存入银行存款！`);
+          }
+          p.bankDeposit += divAmount;
           renderPlayerCards();
-          setLog(`🏦【中央银行】${p.name} 停驻于金库，机体能源分红 +1,200 存入银行存款！`);
+          setTimeout(finishLandingAndAdvance, 1000);
         } else if (t.type === 'lottery') {
           playSound('firework');
           p.cash += 800;
           p.lotteryTicket = Math.floor(Math.random() * 90 + 10).toString();
           renderPlayerCards();
           setLog(`🎰【彩票店】${p.name} 抽得霓虹奖金 +800 齿轮币，并购得幸运彩票 #${p.lotteryTicket}！`);
+          setTimeout(finishLandingAndAdvance, 1000);
         } else if (t.type === 'portal') {
           playSound('resonance');
           const targetPortal = (p.pos + 2 * S) % tiles.length;
@@ -7753,40 +8503,171 @@
           renderPlayerCards();
           selectTile(p.pos);
           setLog(`🌀【量子折跃】空间撕裂！${p.name} 瞬间量子折跃传送至对角传送门 #${targetPortal.toString().padStart(2, '0')}！`);
+          setTimeout(finishLandingAndAdvance, 1200);
         } else if (t.type === 'item') {
           playSound('resonance');
-          setLog(`🛠️【机械黑市】${p.name} 购入【战术过载芯片】，机体灵敏与抗压属性获得加成！`);
+          p.cash += 500;
+          renderPlayerCards();
+          setLog(`🛠️【机械黑市】${p.name} 淘得特种机件，兑现战术赏金 +500 齿轮币！`);
+          setTimeout(finishLandingAndAdvance, 1000);
         } else if (t.type === 'reward') {
           playSound('resonance');
           p.cash += 1500;
           renderPlayerCards();
           setLog(`🎁【赛博空投】${p.name} 截获天基空投物资箱，补给金 +1,500 齿轮币！`);
+          setTimeout(finishLandingAndAdvance, 1000);
         } else if (t.type === 'penalty') {
-          playSound('bump');
-          p.cash = Math.max(0, p.cash - 1000);
-          renderPlayerCards();
-          setLog(`⚠️【能源过载】微型反应堆过热反冲！${p.name} 扣除紧急排热冷却费 -1,000 齿轮币！`);
-        } else if (t.type === 'property') {
-          if (p.cash >= t.price) {
-            p.cash -= t.price;
-            if (t.isTech) {
-              p.techEnterprisesCount++;
-              setLog(`🏢【科技企业】${p.name} 斥资 ${t.price.toLocaleString()} 齿轮币控股【${t.name}】！科技企业数增加！`);
+          // 检查纳米液冷散热单元
+          if (p.cyberMods && p.cyberMods.cooler) {
+            playSound('resonance');
+            setLog(`🔧【纳米液冷散热】微型核聚变炉过热！但纳米散热单元瞬间排热，免疫了 1,000 齿轮币罚金！`);
+            setTimeout(finishLandingAndAdvance, 1000);
+          } else {
+            playSound('bump');
+            if (p.cash >= 1000) {
+              p.cash -= 1000;
+              setLog(`⚠️【能源过载】微型反应堆过热反冲！${p.name} 扣除紧急排热冷却费 -1,000 齿轮币！`);
+              renderPlayerCards();
+              setTimeout(finishLandingAndAdvance, 1000);
+            } else if (p.cash + p.bankDeposit >= 1000) {
+              const diff = 1000 - p.cash;
+              p.cash = 0;
+              p.bankDeposit -= diff;
+              setLog(`⚠️【能源过载】现金不足，从银行扣划排热冷却费 -1,000 齿轮币！`);
+              renderPlayerCards();
+              setTimeout(finishLandingAndAdvance, 1000);
             } else {
-              p.propertiesCount++;
-              setLog(`🏙️【工坊地产】${p.name} 购置了街区工坊【${t.name}】（房产数: ${p.propertiesCount} 处）。`);
+              handlePlayerBankruptcy(p, null);
+              setTimeout(finishLandingAndAdvance, 1500);
+            }
+          }
+        } else if (t.type === 'property') {
+          if (!t.owner) {
+            // 无主地产
+            if (!p.isAI) {
+              showPropertyModal({ tile: t, mode: 'buy' });
+            } else {
+              // AI 购地评估
+              if (p.cash >= t.price * 1.25) {
+                p.cash -= t.price;
+                t.owner = p;
+                t.level = 1;
+                if (t.isTech) p.techEnterprisesCount++; else p.propertiesCount++;
+                updateTileBuildingMesh(t);
+                refreshTileTexture(t);
+                playSound('cash');
+                setLog(`🏢【地产并购】${p.name} 斥资 ⚙️${t.price.toLocaleString()} 控股了【${t.name}】！`);
+              } else {
+                setLog(`🏙️【街区巡航】${p.name} 抵达【${t.name}】，因预算规划放弃本次投资。`);
+              }
+              renderPlayerCards();
+              setTimeout(finishLandingAndAdvance, 1000);
+            }
+          } else if (t.owner.id === p.id) {
+            // 自家地产：升级扩建
+            if (t.level < 3) {
+              const upgradeCost = calculateUpgradeCost(t);
+              const nextLv = t.level + 1;
+              const nextRent = Math.floor(t.rent * (nextLv === 2 ? 2.2 : 4.0));
+              if (!p.isAI) {
+                showPropertyModal({ tile: t, mode: 'upgrade', cost: upgradeCost, nextLv, nextRent });
+              } else {
+                if (p.cash >= upgradeCost * 1.35) {
+                  p.cash -= upgradeCost;
+                  t.level = nextLv;
+                  updateTileBuildingMesh(t);
+                  refreshTileTexture(t);
+                  playSound('upgrade');
+                  setLog(`🏗️【产业升级】${p.name} 投入 ⚙️${upgradeCost.toLocaleString()} 将【${t.name}】扩建升级至 Lv.${nextLv}！`);
+                } else {
+                  setLog(`🏙️【街区视察】${p.name} 巡视名下【${t.name} (Lv.${t.level})】，暂未扩建。`);
+                }
+                renderPlayerCards();
+                setTimeout(finishLandingAndAdvance, 1000);
+              }
+            } else {
+              setLog(`👑【顶尖街区】${p.name} 视察了名下的顶级地标【${t.name} (Lv.3)】！`);
+              setTimeout(finishLandingAndAdvance, 1000);
             }
           } else {
-            setLog(`🏙️【街区工坊】${p.name} 抵达【${t.name}】（购置价 ${t.price.toLocaleString()} 齿轮币）。`);
+            // 敌方地产：缴纳租金
+            const rent = calculateRent(t);
+            if (p.cash >= rent) {
+              p.cash -= rent;
+              t.owner.cash += rent;
+              p.totalRentPaid = (p.totalRentPaid || 0) + rent;
+              t.owner.totalRentCollected = (t.owner.totalRentCollected || 0) + rent;
+              playSound('cash');
+              setLog(`💸【租金缴费】${p.name} 进驻 ${t.owner.name} 的【${t.name} (Lv.${t.level})】，支付过路租金 ⚙️${rent.toLocaleString()}！`);
+              renderPlayerCards();
+              setTimeout(finishLandingAndAdvance, 1100);
+            } else if (p.cash + p.bankDeposit >= rent) {
+              const diff = rent - p.cash;
+              p.cash = 0;
+              p.bankDeposit -= diff;
+              t.owner.cash += rent;
+              p.totalRentPaid = (p.totalRentPaid || 0) + rent;
+              t.owner.totalRentCollected = (t.owner.totalRentCollected || 0) + rent;
+              playSound('cash');
+              setLog(`💸【银行划扣】${p.name} 现金不足，从银行储蓄扣款，向 ${t.owner.name} 结清租金 ⚙️${rent.toLocaleString()}！`);
+              renderPlayerCards();
+              setTimeout(finishLandingAndAdvance, 1100);
+            } else {
+              // 资金彻底断裂，宣告破产！
+              const paid = p.cash + p.bankDeposit;
+              t.owner.cash += paid;
+              handlePlayerBankruptcy(p, t.owner);
+              setTimeout(finishLandingAndAdvance, 1500);
+            }
           }
-          renderPlayerCards();
         }
       }
 
       function advanceTurn() {
-        activePlayerIdx = (activePlayerIdx + 1) % players.length;
+        // 1. 检查游戏结束与唯一胜者
+        const solventPlayers = players.filter(p => !p.isBankrupt);
+        if (players.length > 1 && solventPlayers.length <= 1) {
+          const winner = solventPlayers[0] || players[0];
+          triggerTycoonVictory(winner);
+          return;
+        }
+
+        // 2. 推进到下一个未破产玩家
+        let nextIdx = (activePlayerIdx + 1) % players.length;
+        let safety = 0;
+        while (players[nextIdx].isBankrupt && safety < players.length) {
+          nextIdx = (nextIdx + 1) % players.length;
+          safety++;
+        }
+        activePlayerIdx = nextIdx;
         renderPlayerCards();
         updateTurnBadge();
+
+        const cur = players[activePlayerIdx];
+        const rollBtn = document.getElementById('btn-tycoon-roll');
+
+        if (cur.isAI) {
+          if (rollBtn) {
+            rollBtn.disabled = true;
+            rollBtn.style.opacity = '0.65';
+            rollBtn.innerHTML = '<span>🤖 AI 正在演算决策中...</span>';
+          }
+          // 延迟 850ms 自动触发 AI 行动
+          setTimeout(() => {
+            const viewEl = document.getElementById('view-game-tycoon');
+            if (!viewEl || viewEl.classList.contains('hidden')) return;
+            if (players[activePlayerIdx] && players[activePlayerIdx].isAI && !isMoving && !isRollingDice && !players[activePlayerIdx].isBankrupt) {
+              testRollAndMove();
+            }
+          }, 850);
+        } else {
+          if (rollBtn) {
+            rollBtn.disabled = false;
+            rollBtn.style.opacity = '1.0';
+            rollBtn.innerHTML = '<span>⚡ 启动电子掷骰 (SPACE)</span>';
+          }
+          setLog(`【你的回合】轮到 ${cur.name} 行动！点击骰子或按空格掷骰。`);
+        }
       }
 
       // =========================================================================
@@ -8006,11 +8887,29 @@
         },
         getState: () => ({
           mapSize: cfg.mapSize,
-          players,
-          tiles,
+          players: players.map(p => ({
+            id: p.id,
+            name: p.name,
+            color: p.color,
+            avatar: p.avatar,
+            isAI: p.isAI,
+            cash: p.cash,
+            bankDeposit: p.bankDeposit,
+            lotteryTicket: p.lotteryTicket,
+            propertiesCount: p.propertiesCount,
+            techEnterprisesCount: p.techEnterprisesCount,
+            hospitalDays: p.hospitalDays,
+            cageDays: p.cageDays,
+            pos: p.pos,
+            isBankrupt: p.isBankrupt,
+            cyberMods: p.cyberMods
+          })),
+          tilesCount: tiles.length,
           activePlayerIdx,
           cameraMode
         }),
+        getTiles: () => tiles,
+        getRawPlayers: () => players,
         launchFromWizard,
         exitToMenu,
         toggleCamera,
@@ -8018,6 +8917,20 @@
         triggerSteamBurstManual,
         testRollAndMove,
         selectTile,
+        confirmPropertyAction,
+        cancelPropertyAction,
+        showHospitalModal,
+        buyCyberMod,
+        closeHospitalModal,
+        restart: () => {
+          ensureStageInitialized();
+          rebuildBoardScene();
+          setLog(`【全新对局】已重新开启 ${cfg.mapSize} 格赛博大都会！各方主角已注入 ⚙️${cfg.startCash.toLocaleString()} 启动金！`);
+        },
+        testForceVictory: () => {
+          const winner = players[0] || { name: '蓝调黑客', avatar: '⚡', cash: 99999, bankDeposit: 50000 };
+          triggerTycoonVictory(winner);
+        },
         _debugState: () => ({
           cfg,
           players,
