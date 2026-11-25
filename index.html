@@ -1189,7 +1189,7 @@
     <div style="position: relative; z-index: 20; flex: 1; display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 20px; pointer-events: none;">
       
       <!-- 左侧：1P ~ 4P 玩家信息牌 -->
-      <div id="tycoon-players-col-left" style="width: 268px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; max-height: calc(100vh - 200px); overflow-y: auto;"></div>
+      <div id="tycoon-players-col-left" style="width: 274px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; max-height: calc(100vh - 190px); overflow-y: auto; scrollbar-width: none; background: transparent;"></div>
 
       <!-- 右侧：5P ~ 6P + 地格信息卡 + 大富翁双骰台 -->
       <div style="width: 280px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto;">
@@ -1232,7 +1232,7 @@
           </div>
           <div style="display: flex; gap: 6px;">
             <button onclick="TycoonApp.rollDice()" id="btn-tycoon-roll" class="primary-gold-btn" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 900; justify-content: center; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);">
-              🎲 掷双骰前进 (SPACE)
+              🎲 掷骰前进 (SPACE)
             </button>
             <button onclick="TycoonApp.focusSelectedTile()" class="scenic-hud-btn" style="padding: 8px 10px; font-size: 11px;" title="聚焦地格">
               🔍
