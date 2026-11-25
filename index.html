@@ -1168,6 +1168,9 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px;">
+          <button onclick="TycoonApp.openGarageModal()" id="btn-tycoon-garage" class="scenic-hud-btn" style="border-color: rgba(245, 158, 11, 0.7); color: #FDE047; background: rgba(245, 158, 11, 0.16);">
+            🚘 坐骑车行
+          </button>
           <button onclick="TycoonApp.toggleCamera()" id="btn-tycoon-cam" class="scenic-hud-btn" style="border-color: rgba(0, 229, 255, 0.6); color: #E0F2FE;">
             🎥 视角: 跟踪追焦
           </button>
@@ -1219,11 +1222,12 @@
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <div class="rm10-dual-dice-box">
               <div id="rm10-die-1" class="rm10-die-face">6</div>
-              <div id="rm10-die-2" class="rm10-die-face">6</div>
+              <div id="rm10-die-2" class="rm10-die-face hidden">6</div>
+              <div id="rm10-die-3" class="rm10-die-face hidden">6</div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 10px; color: #94A3B8; font-weight: 800;">双骰点数合计</div>
-              <div id="rm10-dice-total" style="font-size: 20px; font-weight: 900; color: #FDE047; font-family: monospace;">12 步</div>
+              <div id="rm10-dice-label" style="font-size: 10px; color: #94A3B8; font-weight: 800;">当前 1 颗骰子</div>
+              <div id="rm10-dice-total" style="font-size: 20px; font-weight: 900; color: #FDE047; font-family: monospace;">6 步</div>
             </div>
           </div>
           <div style="display: flex; gap: 6px;">
@@ -1947,6 +1951,37 @@
         <button onclick="TycoonApp.executeRemoteRoll(4)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">4 步</button>
         <button onclick="TycoonApp.executeRemoteRoll(5)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">5 步</button>
         <button onclick="TycoonApp.executeRemoteRoll(6)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">6 步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15. 机械大亨：赛博坐骑车行弹窗 (幻工重卡 / 热力轿跑 / 赛轮机车) -->
+  <div id="modal-tycoon-garage" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 600px; gap: 12px; border-color: #F59E0B !important;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(245, 158, 11, 0.45); padding-bottom: 8px;">
+        <span style="font-size: 16px; font-weight: 900; color: #FDE047;">🚘 赛博坐骑车行 • 豪华座驾改装</span>
+        <span id="tycoon-garage-cash" style="font-size: 12px; font-weight: 900; color: #38BDF8;">⚙️ 15,000 齿轮币</span>
+      </div>
+      <div style="font-size: 12px; color: #CBD5E1; line-height: 1.5;">
+        坐上强力坐骑不仅能将每回合<b>骰子数量提升至 2~3 颗</b>，更拥有抵挡【力压地雷】与【电子笼网】的强力装甲护盾！
+      </div>
+      <div id="tycoon-garage-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px;"></div>
+      <button onclick="TycoonApp.closeGarageModal()" class="glass-btn" style="width: 100%; justify-content: center; border-color: #94A3B8; color: #E2E8F0;">关闭车行</button>
+    </div>
+  </div>
+
+  <!-- 16. 机械大亨：埋设【力压地雷】选格弹窗 -->
+  <div id="modal-tycoon-mine" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 400px; gap: 12px; text-align: center; border-color: #EF4444 !important;">
+      <div style="font-size: 16px; font-weight: 900; color: #F87171;">💣 埋设【力压地雷】 • 选择前方格数</div>
+      <div style="font-size: 12px; color: #CBD5E1;">选择埋在前方第几格（走到该格子的人将被炸进赛博医院住院3天）：</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+        <button onclick="TycoonApp.placeLandmineAt(1)" class="primary-gold-btn" style="justify-content:center;">前方 1 格</button>
+        <button onclick="TycoonApp.placeLandmineAt(2)" class="primary-gold-btn" style="justify-content:center;">前方 2 格</button>
+        <button onclick="TycoonApp.placeLandmineAt(3)" class="primary-gold-btn" style="justify-content:center;">前方 3 格</button>
+        <button onclick="TycoonApp.placeLandmineAt(4)" class="primary-gold-btn" style="justify-content:center;">前方 4 格</button>
+        <button onclick="TycoonApp.placeLandmineAt(5)" class="primary-gold-btn" style="justify-content:center;">前方 5 格</button>
+        <button onclick="TycoonApp.placeLandmineAt(6)" class="primary-gold-btn" style="justify-content:center;">前方 6 格</button>
       </div>
     </div>
   </div>
@@ -6535,7 +6570,7 @@
     // =========================================================================
     window.TycoonApp = (() => {
       // =========================================================================
-      // 1. 核心配置与大富翁10角色/卡牌库
+      // 1. 核心配置、坐骑库与大富翁10道具库
       // =========================================================================
       const cfg = {
         mapSize: 64,      // 48 (小地图), 64 (中地图), 128 (大地图)
@@ -6543,30 +6578,37 @@
         startCash: 15000  // 初始齿轮币
       };
 
+      // 三大特色坐骑 + 默认步行
+      const MOUNTS = {
+        none: { id: 'none', name: '步行巡游', icon: '🚶', price: 0, diceCount: 1, shieldMine: 0, shieldEmp: 0, desc: '未装备坐骑，每次投掷 1 颗骰子。' },
+        moto: { id: 'moto', name: '赛轮机车', icon: '🏍️', price: 1200, diceCount: 2, shieldMine: 0, shieldEmp: 0, desc: '敏捷两轮机车！坐上后初始骰子提升为 2 颗！' },
+        sportscar: { id: 'sportscar', name: '热力轿跑', icon: '🏎️', price: 2200, diceCount: 2, shieldMine: 0, shieldEmp: 1, desc: '流线型绝缘跑车！可抵挡 1 次电子笼网电击，骰子为 2 颗！' },
+        truck: { id: 'truck', name: '幻工重卡', icon: '🚛', price: 3500, diceCount: 3, shieldMine: 1, shieldEmp: 1, desc: '重装霸主！可抵挡 1 次【力压地雷】与 1 次【电子笼网】，骰子高达 3 颗！' }
+      };
+
       const CHARACTERS = [
-        { id: 0, name: '极速跑车 (你)', color: '#00E5FF', hex: 0x00E5FF, img: 'assets/tycoon/13_跑车棋子.png', avatar: '🏎️', isAI: false },
-        { id: 1, name: '黄金绅士 (AI)', color: '#F59E0B', hex: 0xF59E0B, img: 'assets/tycoon/11_绅士帽棋子.png', avatar: '🎩', isAI: true },
-        { id: 2, name: '招财灵猫 (AI)', color: '#A855F7', hex: 0xA855F7, img: 'assets/tycoon/12_招财猫棋子.png', avatar: '🐱', isAI: true },
-        { id: 3, name: '旺财机械犬 (AI)', color: '#10B981', hex: 0x10B981, img: 'assets/tycoon/16_小狗棋子.png', avatar: '🐶', isAI: true },
-        { id: 4, name: '皇冠名媛 (AI)', color: '#EC4899', hex: 0xEC4899, img: 'assets/tycoon/14_皇冠手提袋.png', avatar: '👜', isAI: true },
-        { id: 5, name: '暴走战靴 (AI)', color: '#EF4444', hex: 0xEF4444, img: 'assets/tycoon/18_靴子棋子.png', avatar: '👢', isAI: true }
+        { id: 0, name: '极速跑车 (你)', color: '#00E5FF', hex: 0x00E5FF, img: 'assets/tycoon/13_跑车棋子.png', avatar: '🏎️', isAI: false, startMount: 'none' },
+        { id: 1, name: '黄金绅士 (AI)', color: '#F59E0B', hex: 0xF59E0B, img: 'assets/tycoon/11_绅士帽棋子.png', avatar: '🎩', isAI: true, startMount: 'moto' },
+        { id: 2, name: '招财灵猫 (AI)', color: '#A855F7', hex: 0xA855F7, img: 'assets/tycoon/12_招财猫棋子.png', avatar: '🐱', isAI: true, startMount: 'none' },
+        { id: 3, name: '旺财机械犬 (AI)', color: '#10B981', hex: 0x10B981, img: 'assets/tycoon/16_小狗棋子.png', avatar: '🐶', isAI: true, startMount: 'moto' },
+        { id: 4, name: '皇冠名媛 (AI)', color: '#EC4899', hex: 0xEC4899, img: 'assets/tycoon/14_皇冠手提袋.png', avatar: '👜', isAI: true, startMount: 'sportscar' },
+        { id: 5, name: '暴走战靴 (AI)', color: '#EF4444', hex: 0xEF4444, img: 'assets/tycoon/18_靴子棋子.png', avatar: '👢', isAI: true, startMount: 'none' }
       ];
 
-      // 大富翁10参考：10大核心趣味战术道具卡
+      // 大富翁10道具库 (含可购买与埋设的【力压地雷】)
       const CARD_CATALOG = [
-        { id: 'remote_dice', name: '遥控骰子', icon: '🎲', price: 600, desc: '自选本回合投出 1~6 任意点数！' },
-        { id: 'turtle', name: '乌龟卡', icon: '🐢', price: 400, desc: '本回合稳步走 1 格，精准停靠！' },
+        { id: 'landmine', name: '力压地雷', icon: '💣', price: 800, desc: '可在格子埋下地雷，走到该格子的人会被炸进赛博医院住院3天！' },
+        { id: 'remote_dice', name: '遥控骰子', icon: '🎲', price: 600, desc: '自选本回合精确投出 1~6 任意点数！' },
+        { id: 'turtle', name: '乌龟卡', icon: '🐢', price: 400, desc: '本回合稳步走 1 格，精准停靠目标地！' },
         { id: 'boost', name: '超级加速卡', icon: '🚀', price: 500, desc: '本回合掷骰总步数额外 +4 步！' },
-        { id: 'roadblock', name: '路障卡', icon: '🚧', price: 500, desc: '在前方 3 格处放置路障，经过者强制停步！' },
-        { id: 'landmine', name: '定时地雷', icon: '💣', price: 800, desc: '在前方 4 格处埋设地雷，踩中炸伤送进医院住院3天！' },
-        { id: 'swap', name: '量子换位卡', icon: '🛸', price: 700, desc: '立刻与场上领先的随机对手交换棋盘位置！' },
+        { id: 'roadblock', name: '路障卡', icon: '🚧', price: 500, desc: '在前方 3 格放置路障，经过者强制停步！' },
+        { id: 'swap', name: '量子换位卡', icon: '🛸', price: 700, desc: '立刻与场上领先的随机对手交换位置！' },
         { id: 'freeze', name: '停业查封卡', icon: '🛑', price: 600, desc: '查封对手最贵的一处房产 2 轮，路过免租！' },
-        { id: 'steal', name: '齿轮掠夺卡', icon: '💸', price: 750, desc: '从最富有的对手手中强行掠夺 ⚙️1,200 齿轮币！' },
+        { id: 'steal', name: '齿轮掠夺卡', icon: '💸', price: 750, desc: '从最富有的对手手中掠夺 ⚙️1,200 齿轮币！' },
         { id: 'bail', name: '免罪特赦卡', icon: '🕊️', price: 650, desc: '解除自身当前住院或机械囚笼禁锢状态！' },
-        { id: 'upgrade_card', name: '快速加盖卡', icon: '🏗️', price: 900, desc: '无需路过，立刻将名下的一处地产升 1 级！' }
+        { id: 'upgrade_card', name: '快速加盖卡', icon: '🏗️', price: 900, desc: '无需路过，立刻将名下一处地产升 1 级！' }
       ];
 
-      // 6 大经典彩色街区配色
       const STREET_GROUPS = [
         { id: 'red', name: '红霓商业街', color: '#EF4444', hex: 0xEF4444 },
         { id: 'amber', name: '琥珀工业区', color: '#F59E0B', hex: 0xF59E0B },
@@ -6590,44 +6632,40 @@
       let pendingPropertyAction = null;
       let pendingEventCallback = null;
 
-      // 视角模式：默认 'follow' (大富翁10风格第三人称跟踪视角) | 'isometric' (全景) | 'orbit' (自由)
       let cameraMode = 'follow';
-
       let scene, camera, renderer, raycaster;
       let boardGroup, roadGroup, cityGroup, pawnsGroup, markersGroup, trapsGroup;
       let selectionBoxMesh, hoverBoxMesh;
-      let centerSculpture = null;
+      let animatedCityObjects = [];
 
-      let camYaw = 0.72, camPitch = 0.62, camDist = 24.0;
-      let targetYaw = 0.72, targetPitch = 0.62, targetDist = 24.0;
+      let camYaw = 0.65, camPitch = 0.62, camDist = 23.0;
+      let targetYaw = 0.65, targetPitch = 0.62, targetDist = 23.0;
       let curLookAt = new THREE.Vector3(0, 0, 0);
       let targetLookAt = new THREE.Vector3(0, 0, 0);
-
-      let isDragging = false;
-      let ptrDownX = 0, ptrDownY = 0, lastPtrX = 0, lastPtrY = 0, movedDist = 0;
+      let isDragging = false, ptrDownX = 0, ptrDownY = 0, lastPtrX = 0, lastPtrY = 0, movedDist = 0;
 
       // =========================================================================
-      // 2. 经典大富翁48/64/128格赛道与彩色街区生成器
+      // 2. 山路十八弯蜿蜒赛道生成器 (48 / 64 / 128格，彻底告别方方正正!)
       // =========================================================================
-      function buildMonopolyTrack(N) {
-        let Nx = 18, Nz = 14, spacing = 2.5, tileW = 2.3, tileD = 2.3;
-        if (N === 48) {
-          Nx = 16; Nz = 8; spacing = 2.55; tileW = 2.35; tileD = 2.35;
-        } else if (N === 64) {
-          Nx = 18; Nz = 14; spacing = 2.5; tileW = 2.3; tileD = 2.3;
-        } else {
-          Nx = 36; Nz = 28; spacing = 2.15; tileW = 1.98; tileD = 1.98;
-        }
+      function buildWindingMountainTrack(N) {
+        // 16个蜿蜒曲折控制点，构成大富翁10风格的“山路十八弯”S型弯道与半岛回廊
+        const basePts = [
+          [-22, 16], [-12, 22], [-2, 13], [8, 22], [20, 16],
+          [24, 5], [14, -2], [24, -11], [18, -21],
+          [6, -15], [-4, -23], [-15, -15], [-24, -20],
+          [-26, -8], [-16, 0], [-26, 8]
+        ];
+        const scale = (N === 48) ? 0.78 : (N === 64 ? 1.0 : 1.55);
+        const ctrlVecs = basePts.map(([px, pz]) => new THREE.Vector3(px * scale, 0, pz * scale));
+        const curve = new THREE.CatmullRomCurve3(ctrlVecs, true, 'catmullrom', 0.5);
 
-        const halfW = (Nx * spacing) / 2.0;
-        const halfH = (Nz * spacing) / 2.0;
-        const dx = (2.0 * halfW) / Nx;
-        const dz = (2.0 * halfH) / Nz;
+        const tileW = (N === 128) ? 1.95 : 2.35;
+        const tileD = (N === 128) ? 1.95 : 2.35;
 
         const propNames = [
-          '齿轮工坊', '蒸汽广场', '铁甲大道', '霓虹夜市', '晶圆工厂', '光子大厦',
-          '黄金交易所', '发条钟楼', '磁悬浮港', '量子中心', '机械酒吧', '赛博剧院',
-          '动力炉厂', '超导高塔', '纳米园区', '天穹酒店', '星际码头', '聚变电站'
+          '盘山弯道坊', '霓虹观景台', '蒸汽隧道口', '翡翠山庄', '晶圆高地', '光子大桥',
+          '黄金驿站', '发条钟塔', '云端车港', '量子栈道', '星夜酒馆', '赛博歌剧院',
+          '风车谷仓', '超导高架', '纳米花园', '天穹度假村', '星际灯塔', '聚变山顶'
         ];
 
         const list = [];
@@ -6635,20 +6673,15 @@
         let propIdx = 0;
 
         for (let i = 0; i < N; i++) {
-          let x = 0, z = 0, tx = 1, tz = 0;
-          if (i < Nx) {
-            x = -halfW + i * dx; z = halfH; tx = 1; tz = 0;
-          } else if (i < Nx + Nz) {
-            const k = i - Nx;
-            x = halfW; z = halfH - k * dz; tx = 0; tz = -1;
-          } else if (i < 2 * Nx + Nz) {
-            const k = i - (Nx + Nz);
-            x = halfW - k * dx; z = -halfH; tx = -1; tz = 0;
-          } else {
-            const k = i - (2 * Nx + Nz);
-            x = -halfW; z = -halfH + k * dz; tx = 0; tz = 1;
-          }
-          const yaw = Math.atan2(tx, tz);
+          const u = i / N;
+          const pt = curve.getPointAt(u);
+          const tan = curve.getTangentAt(u);
+          // 轻微起伏山路高度，更有“山路十八弯”的立体驾驶感
+          const hillY = Math.sin(u * Math.PI * 8) * 0.35;
+          const x = Number(pt.x.toFixed(2));
+          const y = Number(hillY.toFixed(2));
+          const z = Number(pt.z.toFixed(2));
+          const yaw = Number(Math.atan2(tan.x, tan.z).toFixed(3));
 
           let type = 'property', name = '', subType = '', icon = '🏙️', color = '#0284C7';
           let desc = '', price = 1200 + (i % 6) * 350, rent = Math.floor(price * 0.25);
@@ -6656,41 +6689,41 @@
 
           if (i === 0) {
             type = 'start'; name = '起点 (GO)'; subType = '发薪枢纽 • 经过+2,000'; icon = '🏁'; color = '#F59E0B';
-            desc = '每次经过或停驻起点，可领取 ⚙️2,000 齿轮币工资！每满一轮还将触发全城彩票开奖！';
+            desc = '每次经过或停驻起点，可领取 ⚙️2,000 齿轮币工资！并触发全城彩票开奖！';
             price = 0; rent = 0;
-          } else if (i === Nx) {
+          } else if (i === S) {
             type = 'hospital'; name = '赛博医院'; subType = '住院3天 / 属性升级'; icon = '🏥'; color = '#10B981';
-            desc = '①住院机制：被电子笼网电击或地雷炸伤时关押3天；②升级属性工位：健康访问可强化属性！';
+            desc = '①住院机制：被电子笼网电击或力压地雷炸伤时关押3天；②升级属性工位：预留接口！';
             price = 0; rent = 0;
-          } else if (i === Nx + Nz) {
+          } else if (i === 2 * S) {
             type = 'bank'; name = '中央银行'; subType = '存取款 • 10%高息'; icon = '🏦'; color = '#F59E0B';
-            desc = '停驻可领取红利 ⚙️1,000 齿轮币，并可办理齿轮币存取款，享受每轮 10% 高额利息！';
+            desc = '停驻可领取红利 ⚙️1,000 齿轮币，并可办理存取款，享受每轮 10% 高额利息！';
             price = 0; rent = 0;
-          } else if (i === 2 * Nx + Nz) {
+          } else if (i === 3 * S) {
             type = 'cage'; name = '机械囚笼'; subType = '困人入狱 • 关2天'; icon = '🔒'; color = '#EF4444';
-            desc = '困人机械监牢！停驻或连掷3次双数将被困 2 回合，可掷双数越狱或交 ⚙️800 保释金！';
+            desc = '困人机械监牢！停驻或连掷3次全同点将被困 2 回合，可掷双数越狱或交 ⚙️800 保释金！';
             price = 0; rent = 0;
           } else {
             const k = i % S;
             if (k === Math.max(1, Math.round(S * 0.16))) {
-              type = 'shop'; name = '道具店'; subType = '购买大富翁战术卡'; icon = '🛠️'; color = '#F97316';
-              desc = '黑市道具商店！可使用齿轮币购买遥控骰子、路障、地雷、换位卡等 10 种道具！';
+              type = 'shop'; name = '道具店'; subType = '力压地雷/坐骑/卡牌'; icon = '🛠️'; color = '#F97316';
+              desc = '黑市道具商店！可购买【力压地雷】、遥控骰子等 10 种战术卡，也可直通坐骑车行！';
               price = 0; rent = 0;
             } else if (k === Math.round(S * 0.32)) {
               type = 'emp_grid'; name = '电子笼网'; subType = '高压电击进医院'; icon = '⚡'; color = '#00E5FF';
-              desc = '高危高压电击陷阱！踩中立刻遭遇强力电击，直接强制送进【赛博医院】住院关 3 天！';
+              desc = '高压电击陷阱！踩中直接电进【赛博医院】住院 3 天！（幻工重卡/热力轿跑可抵挡1次）';
               price = 0; rent = 0;
             } else if (k === Math.round(S * 0.48)) {
               type = 'reward'; name = '幸运奖励'; subType = '机会翻牌 • 送钱送卡'; icon = '🎁'; color = '#22C55E';
-              desc = '大富翁幸运机会格！随机翻开奖励事件：获赠齿轮币补贴或稀有道具卡！';
+              desc = '大富翁幸运机会格！随机获赠齿轮币补贴或稀有道具卡！';
               price = 0; rent = 0;
             } else if (k === Math.round(S * 0.64)) {
               type = 'portal'; name = '传送门'; subType = '量子空间折跃'; icon = '🌀'; color = '#A855F7';
-              desc = '空间虫洞传送门！踩中瞬间量子折跃至对角传送门，抢占黄金街区！';
+              desc = '空间虫洞传送门！踩中瞬间量子折跃至其他传送门，跨越山路弯道！';
               price = 0; rent = 0;
             } else if (k === Math.round(S * 0.78)) {
               type = 'lottery'; name = '彩票店'; subType = '投注开大奖'; icon = '🎰'; color = '#EC4899';
-              desc = '大都会彩票投注站！花费 ⚙️200 购买幸运号码，开奖时独得巨额齿轮币奖池！';
+              desc = '大都会彩票投注站！花费 ⚙️200 购买幸运号码，开奖独得巨额齿轮币奖池！';
               price = 0; rent = 0;
             } else if (k === Math.min(S - 1, Math.round(S * 0.90))) {
               type = 'penalty'; name = '惩罚事件'; subType = '厄运罚款 • 查税'; icon = '⚠️'; color = '#EF4444';
@@ -6708,28 +6741,196 @@
           }
 
           list.push({
-            index: i, x: Number(x.toFixed(2)), y: 0, z: Number(z.toFixed(2)),
-            yaw: Number(yaw.toFixed(2)), tileW, tileD,
+            index: i, x, y, z, yaw, tileW, tileD,
             type, name, subType, icon, color, desc, price, rent,
             groupId: type === 'property' ? group.id : null,
             groupName: type === 'property' ? group.name : null,
             owner: null, level: 0, frozenTurns: 0,
-            trap: null, // 'roadblock' | 'landmine'
-            buildingMesh: null, trapMesh: null
+            trap: null, buildingMesh: null, trapMesh: null
           });
         }
-        return { list, halfW, halfH, tileW, tileD };
+        return { list, curve, scale };
       }
 
       // =========================================================================
-      // 3. 明快清晰的大富翁地格贴图 (高对比彩色顶栏 + 拥有者标签 + 租金)
+      // 3. 彻底消除中间空旷大黑板：丰富饱满的山路弯道3D都市与公园景观
+      // =========================================================================
+      function buildRichWindingWorld(tileList, curve, scale) {
+        const grp = new THREE.Group();
+        animatedCityObjects = [];
+
+        // 1. 广袤赛博都市绿地基底 (柔和纹理，绝非死黑方板!)
+        const groundCvs = document.createElement('canvas');
+        groundCvs.width = 512; groundCvs.height = 512;
+        const gctx = groundCvs.getContext('2d');
+        gctx.fillStyle = '#0B192C';
+        gctx.fillRect(0, 0, 512, 512);
+        gctx.strokeStyle = 'rgba(56, 189, 248, 0.14)';
+        gctx.lineWidth = 2;
+        for (let i = 0; i <= 512; i += 32) {
+          gctx.beginPath(); gctx.moveTo(i, 0); gctx.lineTo(i, 512); gctx.stroke();
+          gctx.beginPath(); gctx.moveTo(0, i); gctx.lineTo(512, i); gctx.stroke();
+        }
+        const gTex = new THREE.CanvasTexture(groundCvs);
+        gTex.wrapS = gTex.wrapT = THREE.RepeatWrapping;
+        gTex.repeat.set(14, 14);
+        const ground = new THREE.Mesh(
+          new THREE.PlaneGeometry(240, 240),
+          new THREE.MeshStandardMaterial({ map: gTex, roughness: 0.85, metalness: 0.15 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.5;
+        ground.receiveShadow = true;
+        grp.add(ground);
+
+        // 2. 连续蜿蜒的3D盘山公路路面 (TubeGeometry 连接全路，呈现山路十八弯视觉!)
+        const roadPts = [];
+        for (let i = 0; i < 160; i++) {
+          const u = i / 160;
+          const p = curve.getPointAt(u);
+          roadPts.push(new THREE.Vector3(p.x, Math.sin(u * Math.PI * 8) * 0.35 - 0.15, p.z));
+        }
+        const roadCurve = new THREE.CatmullRomCurve3(roadPts, true);
+        const roadRibbon = new THREE.Mesh(
+          new THREE.TubeGeometry(roadCurve, 220, 1.45, 6, true),
+          new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.6, metalness: 0.3 })
+        );
+        roadRibbon.scale.y = 0.18;
+        grp.add(roadRibbon);
+
+        // 公路中央发光引导线
+        const centerLine = new THREE.Mesh(
+          new THREE.TubeGeometry(roadCurve, 220, 0.12, 4, true),
+          new THREE.MeshBasicMaterial({ color: 0x00E5FF })
+        );
+        centerLine.position.y = 0.04;
+        grp.add(centerLine);
+
+        // 3. 中央核心地标广场 (不再空旷！高耸旋转齿轮塔 + 全息喷泉 + 能量环)
+        const towerGrp = new THREE.Group();
+        const baseRing = new THREE.Mesh(
+          new THREE.CylinderGeometry(4.8, 5.4, 0.5, 24),
+          new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.7, roughness: 0.3 })
+        );
+        baseRing.position.y = -0.2;
+        towerGrp.add(baseRing);
+
+        const glowPool = new THREE.Mesh(
+          new THREE.CylinderGeometry(3.8, 3.8, 0.55, 24),
+          new THREE.MeshStandardMaterial({ color: 0x0284C7, emissive: 0x00E5FF, emissiveIntensity: 0.6 })
+        );
+        glowPool.position.y = -0.18;
+        towerGrp.add(glowPool);
+
+        const mainSpire = new THREE.Mesh(
+          new THREE.ConeGeometry(1.6, 8.5, 6),
+          new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.5, metalness: 0.85 })
+        );
+        mainSpire.position.y = 4.2;
+        towerGrp.add(mainSpire);
+
+        const spinGear = new THREE.Mesh(
+          new THREE.TorusGeometry(2.6, 0.28, 10, 24),
+          new THREE.MeshStandardMaterial({ color: 0xFDE047, emissive: 0xF59E0B, emissiveIntensity: 0.7 })
+        );
+        spinGear.position.y = 5.0;
+        towerGrp.add(spinGear);
+        animatedCityObjects.push({ mesh: spinGear, type: 'spin' });
+        grp.add(towerGrp);
+
+        // 4. 在蜿蜒弯道内外侧与每个空隙中，智能密布赛博大厦、公园发光树群与街景！
+        const winCvs = document.createElement('canvas');
+        winCvs.width = 256; winCvs.height = 256;
+        const wctx = winCvs.getContext('2d');
+        wctx.fillStyle = '#0F172A'; wctx.fillRect(0, 0, 256, 256);
+        const wColors = ['#00E5FF', '#FDE047', '#EC4899', '#38BDF8', '#A855F7', '#0F172A'];
+        for (let wy = 8; wy < 256; wy += 16) {
+          for (let wx = 8; wx < 256; wx += 16) {
+            wctx.fillStyle = wColors[Math.floor(Math.random() * wColors.length)];
+            wctx.fillRect(wx, wy, 9, 9);
+          }
+        }
+        const winTex = new THREE.CanvasTexture(winCvs);
+        winTex.wrapS = winTex.wrapT = THREE.RepeatWrapping;
+
+        const maxR = 36 * scale;
+        const step = 4.6 * scale;
+        for (let cx = -maxR; cx <= maxR; cx += step) {
+          for (let cz = -maxR; cz <= maxR; cz += step) {
+            const jx = cx + (Math.random() - 0.5) * 1.8;
+            const jz = cz + (Math.random() - 0.5) * 1.8;
+            const distCenter = Math.hypot(jx, jz);
+            if (distCenter < 6.5) continue; // 避开中心齿轮塔
+
+            // 检查是否安全远离所有弯道地格
+            let minRoadDist = 999;
+            for (let k = 0; k < tileList.length; k++) {
+              const d = Math.hypot(jx - tileList[k].x, jz - tileList[k].z);
+              if (d < minRoadDist) minRoadDist = d;
+            }
+            if (minRoadDist < 3.6) continue;
+
+            if (Math.random() < 0.62) {
+              // 放置亮丽自发光赛博商业大厦
+              const w = 1.6 + Math.random() * 1.8;
+              const d = 1.6 + Math.random() * 1.8;
+              const h = 3.2 + Math.random() * 7.5;
+              const bMat = new THREE.MeshStandardMaterial({
+                color: 0xFFFFFF, map: winTex, emissive: 0x94A3B8, emissiveMap: winTex, emissiveIntensity: 0.85, roughness: 0.3
+              });
+              const bMesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bMat);
+              bMesh.position.set(jx, h / 2 - 0.5, jz);
+              bMesh.castShadow = true;
+              grp.add(bMesh);
+
+              // 楼顶霓虹灯带
+              const topColor = [0x00E5FF, 0xEC4899, 0xF59E0B, 0x10B981][Math.floor(Math.random() * 4)];
+              const cap = new THREE.Mesh(
+                new THREE.BoxGeometry(w * 0.85, 0.25, d * 0.85),
+                new THREE.MeshBasicMaterial({ color: topColor })
+              );
+              cap.position.set(jx, h - 0.35, jz);
+              grp.add(cap);
+            } else {
+              // 放置城市公园与发光能量树
+              const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.22, 1.0, 6),
+                new THREE.MeshStandardMaterial({ color: 0x78350F })
+              );
+              trunk.position.set(jx, 0.0, jz);
+              const foliage = new THREE.Mesh(
+                new THREE.ConeGeometry(0.95, 2.2, 7),
+                new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x059669, emissiveIntensity: 0.45 })
+              );
+              foliage.position.set(jx, 1.4, jz);
+              grp.add(trunk, foliage);
+            }
+          }
+        }
+
+        // 5. 空中巡航霓虹飞艇
+        const ship = new THREE.Group();
+        const hull = new THREE.Mesh(
+          new THREE.SphereGeometry(1.1, 14, 12),
+          new THREE.MeshStandardMaterial({ color: 0x0EA5E9, emissive: 0x00E5FF, emissiveIntensity: 0.65 })
+        );
+        hull.scale.set(2.2, 0.8, 0.8);
+        ship.add(hull);
+        ship.position.set(0, 12, 0);
+        grp.add(ship);
+        animatedCityObjects.push({ mesh: ship, type: 'ship', radius: 14 * scale });
+
+        return grp;
+      }
+
+      // =========================================================================
+      // 4. 贴图、建筑与陷阱模型
       // =========================================================================
       function calculateRent(tile) {
         if (!tile || tile.type !== 'property' || !tile.owner) return 0;
         if (tile.frozenTurns > 0) return 0;
         const mult = [0, 1.0, 2.2, 4.0][tile.level] || 1.0;
         let r = Math.floor(tile.rent * mult);
-        // 同色街区垄断：全套拥有则租金翻倍！
         const groupTiles = tiles.filter(t => t.groupId === tile.groupId);
         if (groupTiles.length > 0 && groupTiles.every(t => t.owner && t.owner.id === tile.owner.id)) {
           r *= 2;
@@ -6746,15 +6947,11 @@
         const cvs = document.createElement('canvas');
         cvs.width = 512; cvs.height = 512;
         const ctx = cvs.getContext('2d');
-
-        // 明快清透的浅深蓝底色 (不再死黑)
         ctx.fillStyle = tile.owner ? '#0F172A' : '#1E293B';
         ctx.fillRect(0, 0, 512, 512);
-
         const headerColor = tile.owner ? tile.owner.color : tile.color;
         ctx.fillStyle = headerColor;
         ctx.fillRect(0, 0, 512, 136);
-
         ctx.strokeStyle = headerColor;
         ctx.lineWidth = 16;
         ctx.strokeRect(8, 8, 496, 496);
@@ -6776,10 +6973,10 @@
         if (tile.owner) {
           ctx.fillStyle = tile.owner.color;
           ctx.font = 'bold 38px "Microsoft YaHei", sans-serif';
-          ctx.fillText(`[${tile.owner.name.split(' ')[0]}] 拥有`, 256, 330);
+          ctx.fillText(`[${tile.owner.name.split(' ')[0]}]`, 256, 330);
           ctx.fillStyle = tile.frozenTurns > 0 ? '#EF4444' : '#FDE047';
           ctx.font = 'bold 42px monospace';
-          ctx.fillText(tile.frozenTurns > 0 ? '🛑 已查封免租' : `过路租: ⚙️${calculateRent(tile).toLocaleString()}`, 256, 430);
+          ctx.fillText(tile.frozenTurns > 0 ? '🛑 查封免租' : `租: ⚙️${calculateRent(tile)}`, 256, 430);
         } else if (tile.type === 'property') {
           ctx.fillStyle = '#FDE047';
           ctx.font = 'bold 46px monospace';
@@ -6804,39 +7001,27 @@
         }
       }
 
-      // =========================================================================
-      // 4. 3D 房产建筑与路障/地雷实体模型
-      // =========================================================================
       function updateTileBuildingMesh(tile) {
-        if (tile.buildingMesh) {
-          markersGroup.remove(tile.buildingMesh);
-          tile.buildingMesh = null;
-        }
+        if (tile.buildingMesh) { markersGroup.remove(tile.buildingMesh); tile.buildingMesh = null; }
         if (!tile.owner || tile.level <= 0) return;
 
         const grp = new THREE.Group();
-        const matOwner = new THREE.MeshStandardMaterial({
-          color: tile.owner.hex, emissive: tile.owner.hex, emissiveIntensity: 0.45, roughness: 0.3
-        });
-        const matWall = new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.4 });
+        const matOwner = new THREE.MeshStandardMaterial({ color: tile.owner.hex, emissive: tile.owner.hex, emissiveIntensity: 0.45 });
+        const matWall = new THREE.MeshStandardMaterial({ color: 0xF8FAFC });
 
         if (tile.level === 1) {
-          // Lv.1 可爱立体小洋房
           const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.45, 0.65), matWall);
           body.position.y = 0.38;
           const roof = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.4, 4), matOwner);
-          roof.rotation.y = Math.PI / 4;
-          roof.position.y = 0.8;
+          roof.rotation.y = Math.PI / 4; roof.position.y = 0.8;
           grp.add(body, roof);
         } else if (tile.level === 2) {
-          // Lv.2 双层商业大厦
           const b1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.5), matWall);
           b1.position.set(-0.26, 0.6, 0);
           const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), matOwner);
           b2.position.set(0.26, 0.5, 0);
           grp.add(b1, b2);
         } else {
-          // Lv.3 地标黄金摩天楼
           const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.8), matOwner);
           base.position.y = 0.4;
           const tower = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.3, 0.55), matWall);
@@ -6846,78 +7031,47 @@
           grp.add(base, tower, spire);
         }
 
-        grp.position.set(tile.x, 0, tile.z);
+        grp.position.set(tile.x, tile.y, tile.z);
         grp.rotation.y = tile.yaw;
         markersGroup.add(grp);
         tile.buildingMesh = grp;
       }
 
       function updateTileTrapMesh(tile) {
-        if (tile.trapMesh) {
-          trapsGroup.remove(tile.trapMesh);
-          tile.trapMesh = null;
-        }
+        if (tile.trapMesh) { trapsGroup.remove(tile.trapMesh); tile.trapMesh = null; }
         if (!tile.trap) return;
 
         const grp = new THREE.Group();
         if (tile.trap === 'roadblock') {
           const bar = new THREE.Mesh(
             new THREE.BoxGeometry(1.5, 0.35, 0.28),
-            new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.6 })
+            new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.7 })
           );
           bar.position.y = 0.35;
           grp.add(bar);
         } else if (tile.trap === 'landmine') {
+          // 力压地雷：红黑高危地雷实体
           const mine = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.4, 0.48, 0.18, 16),
-            new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xDC2626, emissiveIntensity: 0.8 })
+            new THREE.CylinderGeometry(0.42, 0.52, 0.22, 16),
+            new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xDC2626, emissiveIntensity: 0.9 })
           );
-          mine.position.y = 0.25;
-          grp.add(mine);
+          mine.position.y = 0.28;
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.18, 10, 10),
+            new THREE.MeshBasicMaterial({ color: 0xFDE047 })
+          );
+          core.position.y = 0.42;
+          grp.add(mine, core);
         }
-        grp.position.set(tile.x, 0, tile.z);
+        grp.position.set(tile.x, tile.y, tile.z);
         grp.rotation.y = tile.yaw;
         trapsGroup.add(grp);
         tile.trapMesh = grp;
       }
 
       // =========================================================================
-      // 5. 清爽开阔的大富翁中央公园与 3D 舞台初始化
+      // 5. Three.js 舞台初始化与重建
       // =========================================================================
-      function buildOpenCenterPlaza(halfW, halfH) {
-        const grp = new THREE.Group();
-
-        // 中央草坪/科技广场底盘 (明快柔和，不挡视线)
-        const plazaGeo = new THREE.BoxGeometry(halfW * 1.65, 0.2, halfH * 1.65);
-        const plazaMat = new THREE.MeshStandardMaterial({
-          color: 0x0F172A, metalness: 0.4, roughness: 0.6
-        });
-        const plaza = new THREE.Mesh(plazaGeo, plazaMat);
-        plaza.position.y = -0.05;
-        grp.add(plaza);
-
-        // 中心旋转金色齿轮喷泉雕塑 (清晰低矮，绝不挡棋盘)
-        const hub = new THREE.Group();
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(2.8, 0.22, 12, 36),
-          new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.6, metalness: 0.8 })
-        );
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = 0.6;
-        hub.add(ring);
-
-        const core = new THREE.Mesh(
-          new THREE.OctahedronGeometry(1.4, 0),
-          new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.8, wireframe: true })
-        );
-        core.position.y = 2.0;
-        hub.add(core);
-
-        grp.add(hub);
-        centerSculpture = hub;
-        return grp;
-      }
-
       function ensureStageInitialized() {
         if (renderer) return;
         const stageEl = document.getElementById('tycoon-3d-stage');
@@ -6925,7 +7079,7 @@
         const h = stageEl.clientHeight || window.innerHeight;
 
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 300);
+        camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 350);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(w, h);
@@ -6934,10 +7088,9 @@
         stageEl.innerHTML = '';
         stageEl.appendChild(renderer.domElement);
 
-        // 明亮清晰的全局光照，告别黑漆漆
-        scene.add(new THREE.HemisphereLight(0xE0F2FE, 0x1E293B, 1.35));
-        const dirLight = new THREE.DirectionalLight(0xFFFFFF, 1.2);
-        dirLight.position.set(22, 42, 26);
+        scene.add(new THREE.HemisphereLight(0xE0F2FE, 0x1E293B, 1.4));
+        const dirLight = new THREE.DirectionalLight(0xFFFFFF, 1.25);
+        dirLight.position.set(28, 52, 32);
         dirLight.castShadow = true;
         scene.add(dirLight);
 
@@ -6950,26 +7103,18 @@
         scene.add(roadGroup, boardGroup, cityGroup, markersGroup, trapsGroup, pawnsGroup);
 
         selectionBoxMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(2.45, 0.4, 2.45),
+          new THREE.BoxGeometry(2.5, 0.42, 2.5),
           new THREE.MeshBasicMaterial({ color: 0xFDE047, wireframe: true })
         );
         selectionBoxMesh.visible = false;
         scene.add(selectionBoxMesh);
-
-        hoverBoxMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(2.4, 0.38, 2.4),
-          new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true })
-        );
-        hoverBoxMesh.visible = false;
-        scene.add(hoverBoxMesh);
 
         raycaster = new THREE.Raycaster();
         bindPointerEvents(renderer.domElement);
         window.addEventListener('resize', () => {
           const nw = stageEl.clientWidth || window.innerWidth;
           const nh = stageEl.clientHeight || window.innerHeight;
-          camera.aspect = nw / nh;
-          camera.updateProjectionMatrix();
+          camera.aspect = nw / nh; camera.updateProjectionMatrix();
           renderer.setSize(nw, nh);
         });
         startRenderLoop();
@@ -6984,17 +7129,18 @@
         lotteryPool = 3500;
         consecutiveDoubles = 0;
 
-        const { list, halfW, halfH, tileW, tileD } = buildMonopolyTrack(cfg.mapSize);
+        const { list, curve, scale } = buildWindingMountainTrack(cfg.mapSize);
         tiles = list;
 
-        cityGroup.add(buildOpenCenterPlaza(halfW, halfH));
+        // 生成丰富饱满的都市山路弯道景观 (彻底消除中间黑板)
+        cityGroup.add(buildRichWindingWorld(tiles, curve, scale));
 
         const sideMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.4, roughness: 0.5 });
         tiles.forEach(t => {
           const geo = new THREE.BoxGeometry(t.tileW, 0.36, t.tileD);
           const topMat = new THREE.MeshStandardMaterial({ map: createTileTexture(t), roughness: 0.35 });
           const m = new THREE.Mesh(geo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]);
-          m.position.set(t.x, 0.14, t.z);
+          m.position.set(t.x, t.y + 0.14, t.z);
           m.rotation.y = t.yaw;
           m.receiveShadow = true;
           m.userData = { tileIndex: t.index };
@@ -7006,15 +7152,24 @@
         selectTile(0);
         updateTopMetaUI();
 
-        // 默认开启大富翁10 跟踪视角
         cameraMode = 'follow';
         const btn = document.getElementById('btn-tycoon-cam');
         if (btn) btn.innerText = '🎥 视角: 跟踪追焦';
       }
 
       // =========================================================================
-      // 6. 经典实体立绘棋子与玩家信息牌
+      // 6. 玩家初始化、坐骑状态与 1~3 颗骰子动态联动
       // =========================================================================
+      function equipMountToPlayer(p, mountId) {
+        const m = MOUNTS[mountId] || MOUNTS.none;
+        p.mountId = m.id;
+        p.mountName = m.name;
+        p.mountIcon = m.icon;
+        p.diceCount = m.diceCount;
+        p.mountShieldMine = m.shieldMine;
+        p.mountShieldEmp = m.shieldEmp;
+      }
+
       function setupPlayers() {
         players = [];
         const texLoader = new THREE.TextureLoader();
@@ -7029,14 +7184,14 @@
             propertiesCount: 0, hospitalDays: 0, cageDays: 0,
             pos: 0, pawnMesh: null, isBankrupt: false,
             cards: [
-              { ...CARD_CATALOG[Math.floor(Math.random() * 4)] },
-              { ...CARD_CATALOG[4 + Math.floor(Math.random() * 6)] }
+              { ...CARD_CATALOG[0] }, // 开局赠送1张【力压地雷】方便体验埋雷!
+              { ...CARD_CATALOG[1 + Math.floor(Math.random() * 6)] }
             ],
             totalRentCollected: 0,
             hopOffsetY: 0
           };
+          equipMountToPlayer(p, char.startMount || 'none');
 
-          // 3D 棋子：发光金属底座 + 竖直高清立绘令牌 (经典大富翁棋子效果)
           const pawn = new THREE.Group();
           const disc = new THREE.Mesh(
             new THREE.CylinderGeometry(0.45, 0.55, 0.18, 24),
@@ -7045,11 +7200,7 @@
           disc.position.y = 0.09;
           pawn.add(disc);
 
-          const spriteMat = new THREE.SpriteMaterial({
-            map: texLoader.load(p.img),
-            transparent: true
-          });
-          const sprite = new THREE.Sprite(spriteMat);
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texLoader.load(p.img), transparent: true }));
           sprite.scale.set(1.45, 1.45, 1.45);
           sprite.position.y = 0.95;
           pawn.add(sprite);
@@ -7064,6 +7215,18 @@
         renderPlayerCards();
         renderCardHand();
         updateTurnBadge();
+        syncDiceBoxCount();
+      }
+
+      function syncDiceBoxCount() {
+        const cur = players[activePlayerIdx];
+        const cnt = cur ? cur.diceCount : 1;
+        const d2 = document.getElementById('rm10-die-2');
+        const d3 = document.getElementById('rm10-die-3');
+        const lbl = document.getElementById('rm10-dice-label');
+        if (d2) d2.classList.toggle('hidden', cnt < 2);
+        if (d3) d3.classList.toggle('hidden', cnt < 3);
+        if (lbl) lbl.innerText = `当前 ${cnt} 颗骰子 (${cur ? cur.mountIcon + cur.mountName : ''})`;
       }
 
       function updatePawnsPlacement() {
@@ -7086,7 +7249,7 @@
               oz = Math.sin(ang) * (t.tileW * 0.25);
             }
             if (p.pawnMesh) {
-              p.pawnMesh.position.set(t.x + ox, 0.25 + (p.hopOffsetY || 0), t.z + oz);
+              p.pawnMesh.position.set(t.x + ox, t.y + 0.25 + (p.hopOffsetY || 0), t.z + oz);
               p.pawnMesh.visible = !p.isBankrupt;
             }
           });
@@ -7107,10 +7270,14 @@
           card.style.borderColor = isCur ? '#FDE047' : p.color;
           if (p.isBankrupt) card.style.opacity = '0.5';
 
-          let statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:800;">🟢 正常行动</span>`;
-          if (p.isBankrupt) statusHtml = `<span style="font-size:10px; color:#EF4444; font-weight:900;">💀 破产出局</span>`;
+          let statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:800;">🟢 正常</span>`;
+          if (p.isBankrupt) statusHtml = `<span style="font-size:10px; color:#EF4444; font-weight:900;">💀 破产</span>`;
           else if (p.hospitalDays > 0) statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:900;">🏥 住院(${p.hospitalDays}天)</span>`;
           else if (p.cageDays > 0) statusHtml = `<span style="font-size:10px; color:#F87171; font-weight:900;">🔒 囚笼(${p.cageDays}天)</span>`;
+
+          let shieldBadges = '';
+          if (p.mountShieldMine > 0) shieldBadges += `<span style="color:#F87171;">🛡️防雷×${p.mountShieldMine}</span> `;
+          if (p.mountShieldEmp > 0) shieldBadges += `<span style="color:#00E5FF;">⚡防电×${p.mountShieldEmp}</span>`;
 
           card.innerHTML = `
             <div style="display:flex; align-items:center; gap:9px;">
@@ -7122,11 +7289,15 @@
                   <span style="font-size:12px; font-weight:900; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</span>
                   ${statusHtml}
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:3px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                   <span style="font-size:13px; font-weight:900; color:#FDE047; font-family:monospace;">⚙️ ${p.cash.toLocaleString()}</span>
                   <span style="font-size:10px; color:#38BDF8; font-weight:800;">🏦 ${p.bankDeposit.toLocaleString()}</span>
                 </div>
               </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#E2E8F0; background:rgba(14,165,233,0.14); padding:3px 7px; border-radius:6px; border:1px solid rgba(56,189,248,0.25);">
+              <span>${p.mountIcon} <b>${p.mountName}</b> (🎲×${p.diceCount})</span>
+              <span>${shieldBadges || '<span style="color:#64748B;">无护盾</span>'}</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:10px; color:#CBD5E1; background:rgba(7,13,26,0.6); padding:3px 8px; border-radius:6px;">
               <span>🏠 房产: <b>${p.propertiesCount}</b></span>
@@ -7145,7 +7316,7 @@
         if (!handEl) return;
         const p = players[activePlayerIdx];
         if (!p || p.isAI || p.cards.length === 0) {
-          handEl.innerHTML = `<span style="font-size:11px; color:#94A3B8; padding:4px 10px;">${p && p.isAI ? '🤖 当前为 AI 回合...' : '🃏 暂无手牌，路过道具店可购买各种奇趣道具！'}</span>`;
+          handEl.innerHTML = `<span style="font-size:11px; color:#94A3B8; padding:4px 10px;">${p && p.isAI ? '🤖 当前为 AI 回合...' : '🃏 暂无手牌，经过道具店可购买【💣力压地雷】等道具！'}</span>`;
           return;
         }
         handEl.innerHTML = p.cards.map((c, idx) => `
@@ -7160,7 +7331,7 @@
         const badge = document.getElementById('lbl-tycoon-turn');
         if (!badge || !players[activePlayerIdx]) return;
         const cur = players[activePlayerIdx];
-        badge.innerText = `${cur.avatar} ${cur.name}`;
+        badge.innerText = `${cur.mountIcon} ${cur.name}`;
         badge.style.background = cur.color;
       }
 
@@ -7169,20 +7340,20 @@
         const mEl = document.getElementById('tycoon-map-meta');
         const lEl = document.getElementById('tycoon-lottery-pool');
         if (rEl) rEl.innerText = `第 ${roundCount} 轮`;
-        if (mEl) mEl.innerText = `${cfg.mapSize === 48 ? '小地图' : (cfg.mapSize === 64 ? '中地图' : '大地图')} (${cfg.mapSize}格) • ${cfg.playerCount}人`;
+        if (mEl) mEl.innerText = `${cfg.mapSize === 48 ? '小地图' : (cfg.mapSize === 64 ? '中地图' : '大地图')} (${cfg.mapSize}格) • 山路十八弯`;
         if (lEl) lEl.innerText = `⚙️ ${lotteryPool.toLocaleString()}`;
       }
 
       // =========================================================================
-      // 7. 摄像机跟踪视角 (大富翁10风格追焦)
+      // 7. 摄像机与选格
       // =========================================================================
       function updateCameraPosition() {
         if (!camera) return;
         const cur = players[activePlayerIdx];
         if (cameraMode === 'follow' && cur && tiles[cur.pos]) {
           const t = tiles[cur.pos];
-          targetLookAt.set(t.x, 0.5, t.z);
-          targetDist = cfg.mapSize === 128 ? 26.0 : 22.0;
+          targetLookAt.set(t.x, t.y + 0.5, t.z);
+          targetDist = cfg.mapSize === 128 ? 25.0 : 21.0;
           targetPitch = 0.62;
         }
         camYaw += (targetYaw - camYaw) * 0.08;
@@ -7203,8 +7374,8 @@
         if (cameraMode === 'follow') {
           cameraMode = 'isometric';
           targetLookAt.set(0, 0, 0);
-          targetDist = cfg.mapSize === 128 ? 82.0 : (cfg.mapSize === 64 ? 52.0 : 42.0);
-          targetPitch = 0.68;
+          targetDist = cfg.mapSize === 128 ? 84.0 : (cfg.mapSize === 64 ? 56.0 : 44.0);
+          targetPitch = 0.72;
           if (btn) btn.innerText = '🏙️ 视角: 全景俯瞰';
         } else if (cameraMode === 'isometric') {
           cameraMode = 'orbit';
@@ -7221,7 +7392,7 @@
         selectedTileIdx = ((index % tiles.length) + tiles.length) % tiles.length;
         const t = tiles[selectedTileIdx];
         if (selectionBoxMesh) {
-          selectionBoxMesh.position.set(t.x, 0.18, t.z);
+          selectionBoxMesh.position.set(t.x, t.y + 0.18, t.z);
           selectionBoxMesh.rotation.y = t.yaw;
           selectionBoxMesh.material.color.set(t.owner ? t.owner.color : t.color);
           selectionBoxMesh.visible = true;
@@ -7243,7 +7414,7 @@
         const t = tiles[selectedTileIdx];
         if (!t) return;
         cameraMode = 'orbit';
-        targetLookAt.set(t.x, 0.5, t.z);
+        targetLookAt.set(t.x, t.y + 0.5, t.z);
         targetDist = 18.0;
         document.getElementById('btn-tycoon-cam').innerText = '📐 视角: 自由拖拽';
       }
@@ -7254,17 +7425,25 @@
       }
 
       // =========================================================================
-      // 8. 道具手牌系统 (参考大富翁10)
+      // 8. 道具手牌使用 & 力压地雷埋设
       // =========================================================================
+      let pendingMineCardIdx = -1;
+
       function useCard(idx) {
         if (isMoving || isRollingDice) return;
         const p = players[activePlayerIdx];
         if (!p || p.isAI || !p.cards[idx]) return;
         const card = p.cards[idx];
 
-        // 住院/囚笼时只允许用免罪卡
         if ((p.hospitalDays > 0 || p.cageDays > 0) && card.id !== 'bail') {
           setLog('⚠️ 住院或囚笼中仅可使用【🕊️ 免罪特赦卡】！');
+          return;
+        }
+
+        if (card.id === 'landmine') {
+          pendingMineCardIdx = idx;
+          document.getElementById('modal-tycoon-mine').classList.remove('hidden');
+          playSound('open');
           return;
         }
 
@@ -7280,28 +7459,22 @@
           startPawnHopMovement(p, 1, false);
         } else if (card.id === 'boost') {
           const r1 = Math.floor(Math.random() * 6) + 1;
-          const r2 = Math.floor(Math.random() * 6) + 1;
-          const total = r1 + r2 + 4;
-          updateDualDiceUI(r1, r2, total);
-          setLog(`🚀【超级加速卡】双骰 ${r1}+${r2} 再加 4 步，共狂飙 ${total} 步！`);
+          const total = r1 + 4;
+          updateMultiDiceUI([r1], total);
+          setLog(`🚀【超级加速卡】掷出 ${r1} 再加 4 步，共狂飙 ${total} 步！`);
           startPawnHopMovement(p, total, false);
         } else if (card.id === 'roadblock') {
           const targetIdx = (p.pos + 3) % tiles.length;
           tiles[targetIdx].trap = 'roadblock';
           updateTileTrapMesh(tiles[targetIdx]);
           setLog(`🚧【路障卡】已在前方 #${targetIdx}【${tiles[targetIdx].name}】部署能量路障！`);
-        } else if (card.id === 'landmine') {
-          const targetIdx = (p.pos + 4) % tiles.length;
-          tiles[targetIdx].trap = 'landmine';
-          updateTileTrapMesh(tiles[targetIdx]);
-          setLog(`💣【定时地雷】已在前方 #${targetIdx} 埋设高爆地雷，踩中炸进医院3天！`);
         } else if (card.id === 'swap') {
           const rivals = players.filter(x => x.id !== p.id && !x.isBankrupt);
           if (rivals.length > 0) {
             const target = rivals[Math.floor(Math.random() * rivals.length)];
             const tmp = p.pos; p.pos = target.pos; target.pos = tmp;
             updatePawnsPlacement();
-            setLog(`🛸【量子换位】${p.name} 与 ${target.name} 瞬间互换了棋盘位置！`);
+            setLog(`🛸【量子换位】${p.name} 与 ${target.name} 瞬间互换了位置！`);
           }
         } else if (card.id === 'freeze') {
           const rivalProps = tiles.filter(t => t.owner && t.owner.id !== p.id && t.frozenTurns === 0);
@@ -7310,9 +7483,7 @@
             const targetT = rivalProps[0];
             targetT.frozenTurns = 2;
             refreshTileTexture(targetT);
-            setLog(`🛑【停业查封】查封了 ${targetT.owner.name} 的【${targetT.name}】2 轮，路过免收租金！`);
-          } else {
-            setLog('🛑【停业查封】场上暂无敌方房产可查封！');
+            setLog(`🛑【停业查封】查封了 ${targetT.owner.name} 的【${targetT.name}】2 轮，路过免租！`);
           }
         } else if (card.id === 'steal') {
           const rivals = players.filter(x => x.id !== p.id && !x.isBankrupt && x.cash > 0);
@@ -7321,44 +7492,58 @@
             const target = rivals[0];
             const amt = Math.min(1200, target.cash);
             target.cash -= amt; p.cash += amt;
-            playSound('cash');
-            renderPlayerCards();
-            setLog(`💸【齿轮掠夺】${p.name} 从 ${target.name} 手中强行掠夺 ⚙️${amt.toLocaleString()} 齿轮币！`);
+            playSound('cash'); renderPlayerCards();
+            setLog(`💸【齿轮掠夺】${p.name} 从 ${target.name} 掠夺了 ⚙️${amt.toLocaleString()} 齿轮币！`);
           }
         } else if (card.id === 'bail') {
           p.hospitalDays = 0; p.cageDays = 0;
           renderPlayerCards();
-          setLog(`🕊️【免罪特赦】${p.name} 使用特赦卡，立刻恢复自由行动！`);
+          setLog(`🕊️【免罪特赦】${p.name} 解除禁锢，恢复自由行动！`);
         } else if (card.id === 'upgrade_card') {
           const myProps = tiles.filter(t => t.owner && t.owner.id === p.id && t.level < 3);
           if (myProps.length > 0) {
-            const t = myProps[0];
-            t.level++;
-            updateTileBuildingMesh(t);
-            refreshTileTexture(t);
+            const t = myProps[0]; t.level++;
+            updateTileBuildingMesh(t); refreshTileTexture(t);
             setLog(`🏗️【快速加盖】名下【${t.name}】直接升至 Lv.${t.level}！`);
           } else {
-            p.cash += 800;
-            renderPlayerCards();
-            setLog('🏗️【快速加盖】暂无可升级地产，自动折现 +⚙️800 齿轮币！');
+            p.cash += 800; renderPlayerCards();
+            setLog('🏗️【快速加盖】暂无可升级地产，折现 +⚙️800 齿轮币！');
           }
         }
+      }
+
+      function placeLandmineAt(offset) {
+        document.getElementById('modal-tycoon-mine').classList.add('hidden');
+        const p = players[activePlayerIdx];
+        if (!p || pendingMineCardIdx < 0) return;
+        p.cards.splice(pendingMineCardIdx, 1);
+        pendingMineCardIdx = -1;
+        const targetIdx = (p.pos + offset) % tiles.length;
+        tiles[targetIdx].trap = 'landmine';
+        updateTileTrapMesh(tiles[targetIdx]);
+        playSound('upgrade');
+        renderCardHand(); renderPlayerCards();
+        setLog(`💣【力压地雷】已在前方 #${targetIdx}【${tiles[targetIdx].name}】埋下力压地雷！踩中者将被炸进医院！`);
       }
 
       function executeRemoteRoll(num) {
         document.getElementById('modal-tycoon-remote-dice').classList.add('hidden');
         const p = players[activePlayerIdx];
-        updateDualDiceUI(num, 0, num);
+        updateMultiDiceUI([num], num);
         setLog(`🎲【遥控骰子】${p.name} 精准遥控行进 ${num} 步！`);
         startPawnHopMovement(p, num, false);
       }
 
       // =========================================================================
-      // 9. 双骰子投掷、跳步移动与大富翁事件链
+      // 9. 1~3颗骰子投掷、跳步、坐骑护盾抵挡逻辑
       // =========================================================================
-      function updateDualDiceUI(d1, d2, total) {
-        document.getElementById('rm10-die-1').innerText = d1;
-        document.getElementById('rm10-die-2').innerText = d2 || '-';
+      function updateMultiDiceUI(rolls, total) {
+        const d1 = document.getElementById('rm10-die-1');
+        const d2 = document.getElementById('rm10-die-2');
+        const d3 = document.getElementById('rm10-die-3');
+        if (d1) d1.innerText = rolls[0] || '-';
+        if (d2) d2.innerText = rolls[1] || '-';
+        if (d3) d3.innerText = rolls[2] || '-';
         document.getElementById('rm10-dice-total').innerText = `${total} 步`;
       }
 
@@ -7367,90 +7552,57 @@
         const p = players[activePlayerIdx];
         if (p.isBankrupt) { advanceTurn(); return; }
 
-        // 1. 住院机制 (关3天)
         if (p.hospitalDays > 0) {
           p.hospitalDays--;
-          renderPlayerCards();
-          playSound('click');
-          if (p.hospitalDays === 0) {
-            setLog(`🏥【赛博医院】${p.name} 住院期满出院！下回合恢复正常行动。`);
-          } else {
-            setLog(`🏥【赛博医院】${p.name} 住院隔离中（关3天），还需休养 ${p.hospitalDays} 天！`);
-          }
+          renderPlayerCards(); playSound('click');
+          setLog(p.hospitalDays === 0 ? `🏥【赛博医院】${p.name} 出院！下回合恢复自由。` : `🏥【赛博医院】${p.name} 住院休养中，剩余 ${p.hospitalDays} 天！`);
           setTimeout(advanceTurn, 850);
           return;
         }
 
-        // 2. 机械囚笼机制 (困人2天，掷双数越狱或交保释金)
         if (p.cageDays > 0) {
-          const d1 = Math.floor(Math.random() * 6) + 1;
-          const d2 = Math.floor(Math.random() * 6) + 1;
-          updateDualDiceUI(d1, d2, d1 + d2);
-          if (d1 === d2) {
-            p.cageDays = 0;
-            playSound('upgrade');
-            renderPlayerCards();
-            setLog(`🔒【越狱成功】${p.name} 掷出双数 (${d1}+${d2})！成功挣脱机械囚笼！`);
-            startPawnHopMovement(p, d1 + d2, false);
+          const r1 = Math.floor(Math.random() * 6) + 1;
+          const r2 = Math.floor(Math.random() * 6) + 1;
+          updateMultiDiceUI([r1, r2], r1 + r2);
+          if (r1 === r2) {
+            p.cageDays = 0; playSound('upgrade'); renderPlayerCards();
+            setLog(`🔒【越狱成功】${p.name} 掷出双数 (${r1}+${r2}) 挣脱机械囚笼！`);
+            startPawnHopMovement(p, r1 + r2, false);
             return;
           } else if (p.isAI && p.cash >= 2500) {
-            p.cash -= 800; p.cageDays = 0;
-            playSound('cash');
-            renderPlayerCards();
-            setLog(`🔒【缴纳保释金】${p.name} 支付 ⚙️800 保释金脱离机械囚笼！`);
-            startPawnHopMovement(p, d1 + d2, false);
+            p.cash -= 800; p.cageDays = 0; playSound('cash'); renderPlayerCards();
+            setLog(`🔒【保释脱困】${p.name} 支付 ⚙️800 脱离机械囚笼！`);
+            startPawnHopMovement(p, r1 + r2, false);
             return;
           } else {
-            p.cageDays--;
-            playSound('bump');
-            renderPlayerCards();
-            setLog(`🔒【机械囚笼】${p.name} 未能掷出双数，继续被困（剩余 ${p.cageDays} 回合）！`);
+            p.cageDays--; playSound('bump'); renderPlayerCards();
+            setLog(`🔒【机械囚笼】${p.name} 未能脱困（剩余 ${p.cageDays} 回合）！`);
             setTimeout(advanceTurn, 850);
             return;
           }
         }
 
-        // 3. 正常双骰投掷动画
+        const cnt = p.diceCount || 1;
         isRollingDice = true;
         playSound('dice');
-        document.getElementById('rm10-die-1').classList.add('rolling');
-        document.getElementById('rm10-die-2').classList.add('rolling');
+        ['rm10-die-1', 'rm10-die-2', 'rm10-die-3'].forEach(id => document.getElementById(id).classList.add('rolling'));
 
-        const d1 = Math.floor(Math.random() * 6) + 1;
-        const d2 = Math.floor(Math.random() * 6) + 1;
+        const finalRolls = Array.from({ length: cnt }, () => Math.floor(Math.random() * 6) + 1);
+        const totalSteps = finalRolls.reduce((a, b) => a + b, 0);
         let timer = 0;
 
         const anim = setInterval(() => {
           timer += 60;
-          const t1 = Math.floor(Math.random() * 6) + 1;
-          const t2 = Math.floor(Math.random() * 6) + 1;
-          updateDualDiceUI(t1, t2, t1 + t2);
+          const tmp = Array.from({ length: cnt }, () => Math.floor(Math.random() * 6) + 1);
+          updateMultiDiceUI(tmp, tmp.reduce((a, b) => a + b, 0));
           if (timer >= 540) {
             clearInterval(anim);
-            document.getElementById('rm10-die-1').classList.remove('rolling');
-            document.getElementById('rm10-die-2').classList.remove('rolling');
-            updateDualDiceUI(d1, d2, d1 + d2);
+            ['rm10-die-1', 'rm10-die-2', 'rm10-die-3'].forEach(id => document.getElementById(id).classList.remove('rolling'));
+            updateMultiDiceUI(finalRolls, totalSteps);
             isRollingDice = false;
 
-            const isDouble = (d1 === d2);
-            if (isDouble) {
-              consecutiveDoubles++;
-              if (consecutiveDoubles >= 3) {
-                consecutiveDoubles = 0;
-                const cageIdx = tiles.findIndex(t => t.type === 'cage');
-                p.pos = cageIdx >= 0 ? cageIdx : 0;
-                p.cageDays = 2;
-                updatePawnsPlacement();
-                renderPlayerCards();
-                playSound('bump');
-                setLog(`🚨【连续三次双数】${p.name} 引擎超速违章，直接关入【机械囚笼】2 天！`);
-                setTimeout(advanceTurn, 1200);
-                return;
-              }
-            } else {
-              consecutiveDoubles = 0;
-            }
-            startPawnHopMovement(p, d1 + d2, isDouble);
+            const isDouble = (cnt >= 2 && finalRolls[0] === finalRolls[1]);
+            startPawnHopMovement(p, totalSteps, isDouble);
           }
         }, 60);
       }
@@ -7465,11 +7617,9 @@
           p.pos = (p.pos + 1) % tiles.length;
           playSound('hop');
 
-          // 弹性跳步弧线动画
           p.hopOffsetY = 0.65;
           setTimeout(() => { p.hopOffsetY = 0; updatePawnsPlacement(); }, 100);
 
-          // 经过起点发薪 + 触发彩票开奖
           if (p.pos === 0) {
             p.cash += 2000;
             roundCount++;
@@ -7478,7 +7628,7 @@
             triggerLotteryDraw();
           }
 
-          // 路过陷阱检测 (路障 / 地雷)
+          // 检测【路障】与【力压地雷】
           const curTile = tiles[p.pos];
           if (curTile && curTile.trap === 'roadblock') {
             curTile.trap = null;
@@ -7488,9 +7638,18 @@
           } else if (curTile && curTile.trap === 'landmine') {
             curTile.trap = null;
             updateTileTrapMesh(curTile);
-            stoppedByTrap = true;
-            sendToHospital(p, '💣 踩中定时地雷炸伤！直接送入赛博朋克医院住院 3 天！');
             clearInterval(stepInterval);
+            if (p.mountShieldMine > 0) {
+              p.mountShieldMine--;
+              playSound('shield');
+              renderPlayerCards();
+              const msg = `🚛【幻工重卡硬抗】轰隆！${p.name} 的幻工重卡成功抵挡了 1 次【力压地雷】爆炸，安然无恙！`;
+              setLog(msg);
+              if (!p.isAI) showEventModal('🚛', '重卡抵挡地雷！', msg, () => finishTurn(false));
+              else setTimeout(() => finishTurn(false), 1000);
+            } else {
+              sendToHospital(p, `💣【力压地雷引爆】${p.name} 踩中玩家埋下的力压地雷！直接被炸进【赛博医院】住院 3 天！`);
+            }
             return;
           }
 
@@ -7500,11 +7659,9 @@
 
           if (count >= steps || stoppedByTrap) {
             clearInterval(stepInterval);
-            setTimeout(() => {
-              onPlayerLanded(p, p.pos, bonusTurn && !stoppedByTrap);
-            }, 300);
+            setTimeout(() => onPlayerLanded(p, p.pos, bonusTurn && !stoppedByTrap), 300);
           }
-        }, 210);
+        }, 200);
       }
 
       function triggerLotteryDraw() {
@@ -7514,7 +7671,7 @@
           const prize = Math.floor(lotteryPool / winners.length);
           winners.forEach(w => { w.cash += prize; });
           playSound('victory');
-          setLog(`🎉【全城彩票开奖】开出幸运号 #${winNum}！${winners.map(w=>w.name).join('、')} 独揽头奖 ⚙️${prize.toLocaleString()} 齿轮币！`);
+          setLog(`🎉【彩票开奖】幸运号 #${winNum}！${winners.map(w => w.name).join('、')} 独揽 ⚙️${prize.toLocaleString()}！`);
           lotteryPool = 3500;
         } else {
           lotteryPool += 1000;
@@ -7543,7 +7700,16 @@
         if (!t) { finishTurn(bonusTurn); return; }
 
         if (t.type === 'emp_grid') {
-          sendToHospital(p, `⚡【电子笼网电击】${p.name} 遭遇高压脉冲电击！直接被送进【赛博医院】住院 3 天！`);
+          if (p.mountShieldEmp > 0) {
+            p.mountShieldEmp--;
+            playSound('shield');
+            renderPlayerCards();
+            const msg = `🛡️【坐骑绝缘护盾】滋滋——！${p.name} 的【${p.mountName}】成功抵挡了 1 次【电子笼网】高压电击，免于住院！`;
+            if (!p.isAI) showEventModal(p.mountIcon, '坐骑抵挡电子笼网！', msg, () => finishTurn(bonusTurn));
+            else { setLog(msg); setTimeout(() => finishTurn(bonusTurn), 1000); }
+          } else {
+            sendToHospital(p, `⚡【电子笼网电击】${p.name} 遭遇高压脉冲电击！直接被电进【赛博医院】住院 3 天！`);
+          }
         } else if (t.type === 'hospital') {
           if (!p.isAI) {
             document.getElementById('tycoon-hosp-cash').innerText = `⚙️ ${p.cash.toLocaleString()}`;
@@ -7554,32 +7720,25 @@
             setTimeout(() => finishTurn(bonusTurn), 800);
           }
         } else if (t.type === 'cage') {
-          p.cageDays = 2;
-          playSound('bump');
-          renderPlayerCards();
+          p.cageDays = 2; playSound('bump'); renderPlayerCards();
           const msg = `🔒【机械囚笼】${p.name} 落入机械囚笼被困 2 天！`;
           if (!p.isAI) showEventModal('🔒', '进入机械囚笼！', msg, () => finishTurn(false));
           else { setLog(msg); setTimeout(() => finishTurn(false), 900); }
         } else if (t.type === 'bank') {
-          p.cash += 1000;
-          playSound('cash');
-          renderPlayerCards();
-          if (!p.isAI) {
-            openBankModal(p);
-          } else {
+          p.cash += 1000; playSound('cash'); renderPlayerCards();
+          if (!p.isAI) openBankModal(p);
+          else {
             if (p.cash > 6000) { p.cash -= 2000; p.bankDeposit += 2000; }
-            setLog(`🏦【中央银行】${p.name} 领取红利 +⚙️1,000 并办理了储蓄业务！`);
+            setLog(`🏦【中央银行】${p.name} 领取红利 +⚙️1,000 齿轮币！`);
             setTimeout(() => finishTurn(bonusTurn), 900);
           }
         } else if (t.type === 'shop') {
-          if (!p.isAI) {
-            openShopModal(p);
-          } else {
+          if (!p.isAI) openShopModal(p);
+          else {
             if (p.cash >= 1500 && p.cards.length < 5) {
               const c = CARD_CATALOG[Math.floor(Math.random() * CARD_CATALOG.length)];
-              p.cash -= c.price; p.cards.push({ ...c });
-              playSound('cash');
-              setLog(`🛠️【道具店】${p.name} 购买了一张【${c.icon} ${c.name}】！`);
+              p.cash -= c.price; p.cards.push({ ...c }); playSound('cash');
+              setLog(`🛠️【道具店】${p.name} 购入了【${c.icon} ${c.name}】！`);
             }
             renderPlayerCards();
             setTimeout(() => finishTurn(bonusTurn), 900);
@@ -7588,35 +7747,27 @@
           if (p.cash >= 200) {
             p.cash -= 200; lotteryPool += 500;
             p.lotteryTicket = (10 + Math.floor(Math.random() * 89)).toString();
-            playSound('cash');
-            updateTopMetaUI(); renderPlayerCards();
-            const msg = `🎰 ${p.name} 花费 ⚙️200 购得幸运彩票号码 #${p.lotteryTicket}（当前奖池 ⚙️${lotteryPool.toLocaleString()}）！`;
+            playSound('cash'); updateTopMetaUI(); renderPlayerCards();
+            const msg = `🎰 ${p.name} 花费 ⚙️200 购得幸运彩票 #${p.lotteryTicket}！`;
             if (!p.isAI) showEventModal('🎰', '购入幸运彩票！', msg, () => finishTurn(bonusTurn));
             else { setLog(msg); setTimeout(() => finishTurn(bonusTurn), 900); }
-          } else {
-            setTimeout(() => finishTurn(bonusTurn), 600);
-          }
+          } else setTimeout(() => finishTurn(bonusTurn), 600);
         } else if (t.type === 'portal') {
           const portals = tiles.filter(x => x.type === 'portal' && x.index !== t.index);
           const dest = portals.length > 0 ? portals[Math.floor(Math.random() * portals.length)] : tiles[(t.index + 8) % tiles.length];
-          p.pos = dest.index;
-          playSound('resonance');
-          updatePawnsPlacement(); selectTile(p.pos);
+          p.pos = dest.index; playSound('resonance'); updatePawnsPlacement(); selectTile(p.pos);
           const msg = `🌀【量子折跃】${p.name} 穿越空间虫洞，瞬移至 #${dest.index}【${dest.name}】！`;
           if (!p.isAI) showEventModal('🌀', '量子传送门激活！', msg, () => finishTurn(bonusTurn));
           else { setLog(msg); setTimeout(() => finishTurn(bonusTurn), 900); }
         } else if (t.type === 'reward') {
-          const rnd = Math.random();
           let msg = '';
-          if (rnd < 0.5) {
-            p.cash += 2000;
-            playSound('cash');
-            msg = `🎁【幸运大丰收】获得赛博都市科研补贴 +⚙️2,000 齿轮币！`;
+          if (Math.random() < 0.5) {
+            p.cash += 2000; playSound('cash');
+            msg = `🎁【幸运奖励】获得政府齿轮币补贴 +⚙️2,000！`;
           } else {
             const c = CARD_CATALOG[Math.floor(Math.random() * CARD_CATALOG.length)];
-            if (p.cards.length < 6) p.cards.push({ ...c });
-            playSound('upgrade');
-            msg = `🎁【幸运盲盒】天降好运，获赠稀有道具卡【${c.icon} ${c.name}】！`;
+            if (p.cards.length < 6) p.cards.push({ ...c }); playSound('upgrade');
+            msg = `🎁【幸运盲盒】天降好运，获赠【${c.icon} ${c.name}】！`;
           }
           renderPlayerCards(); renderCardHand();
           if (!p.isAI) showEventModal('🎁', '幸运机会奖励！', msg, () => finishTurn(bonusTurn));
@@ -7624,7 +7775,7 @@
         } else if (t.type === 'penalty') {
           const fine = 1000 + p.propertiesCount * 200;
           playSound('bump');
-          deductCashOrBankrupt(p, fine, null, `⚠️【厄运惩罚】城市维护与反应堆排热查税，扣除 ⚙️${fine.toLocaleString()} 齿轮币！`, () => finishTurn(bonusTurn));
+          deductCashOrBankrupt(p, fine, null, `⚠️【厄运惩罚】反应堆排热与维护查税，扣除 ⚙️${fine.toLocaleString()} 齿轮币！`, () => finishTurn(bonusTurn));
         } else if (t.type === 'property') {
           if (!t.owner) {
             if (!p.isAI) showPropertyModal(t, 'buy');
@@ -7632,10 +7783,9 @@
               if (p.cash >= t.price * 1.2) {
                 p.cash -= t.price; t.owner = p; t.level = 1; p.propertiesCount++;
                 updateTileBuildingMesh(t); refreshTileTexture(t); playSound('cash');
-                setLog(`🏠【购置地契】${p.name} 斥资 ⚙️${t.price.toLocaleString()} 买下【${t.name}】！`);
+                setLog(`🏠【购置地契】${p.name} 买下【${t.name}】！`);
               }
-              renderPlayerCards();
-              setTimeout(() => finishTurn(bonusTurn), 850);
+              renderPlayerCards(); setTimeout(() => finishTurn(bonusTurn), 850);
             }
           } else if (t.owner.id === p.id) {
             if (t.level < 3) {
@@ -7645,22 +7795,18 @@
                 if (p.cash >= upCost * 1.35) {
                   p.cash -= upCost; t.level++;
                   updateTileBuildingMesh(t); refreshTileTexture(t); playSound('upgrade');
-                  setLog(`🏗️【加盖升级】${p.name} 将【${t.name}】扩建至 Lv.${t.level}！`);
+                  setLog(`🏗️【加盖升级】${p.name} 将【${t.name}】升级至 Lv.${t.level}！`);
                 }
-                renderPlayerCards();
-                setTimeout(() => finishTurn(bonusTurn), 850);
+                renderPlayerCards(); setTimeout(() => finishTurn(bonusTurn), 850);
               }
-            } else {
-              setLog(`👑【地标巡视】${p.name} 抵达自家顶级地标【${t.name}】！`);
-              setTimeout(() => finishTurn(bonusTurn), 700);
-            }
+            } else setTimeout(() => finishTurn(bonusTurn), 700);
           } else {
             const rent = calculateRent(t);
             if (rent === 0) {
-              setLog(`🛑【停业免租】${t.owner.name} 的【${t.name}】已被查封，${p.name} 免费通行！`);
+              setLog(`🛑【停业免租】${t.owner.name} 的【${t.name}】已被查封，免费通行！`);
               setTimeout(() => finishTurn(bonusTurn), 850);
             } else {
-              deductCashOrBankrupt(p, rent, t.owner, `💸【缴纳过路费】${p.name} 路过 ${t.owner.name} 的【${t.name}】，支付租金 ⚙️${rent.toLocaleString()}！`, () => finishTurn(bonusTurn));
+              deductCashOrBankrupt(p, rent, t.owner, `💸【缴纳过路费】${p.name} 路过 ${t.owner.name} 的【${t.name}】，支付 ⚙️${rent.toLocaleString()}！`, () => finishTurn(bonusTurn));
             }
           }
         } else {
@@ -7674,8 +7820,7 @@
           if (creditor) { creditor.cash += amount; creditor.totalRentCollected += amount; }
           playSound('cash');
         } else if (p.cash + p.bankDeposit >= amount) {
-          const diff = amount - p.cash;
-          p.cash = 0; p.bankDeposit -= diff;
+          const diff = amount - p.cash; p.cash = 0; p.bankDeposit -= diff;
           if (creditor) { creditor.cash += amount; creditor.totalRentCollected += amount; }
           playSound('cash');
         } else {
@@ -7687,20 +7832,15 @@
           tiles.forEach(t => {
             if (t.owner && t.owner.id === p.id) {
               t.owner = creditor || null;
-              if (!creditor) t.level = 0;
-              else if (creditor) creditor.propertiesCount++;
+              if (!creditor) t.level = 0; else creditor.propertiesCount++;
               updateTileBuildingMesh(t); refreshTileTexture(t);
             }
           });
           msg = `💀【破产清退】${p.name} 资金链断裂宣告破产！名下所有资产已清算！`;
         }
-        renderPlayerCards();
-        setLog(msg);
-        if (!p.isAI && !p.isBankrupt && amount >= 500) {
-          showEventModal('💸', '齿轮币结算', msg, doneCb);
-        } else {
-          setTimeout(doneCb, 950);
-        }
+        renderPlayerCards(); setLog(msg);
+        if (!p.isAI && !p.isBankrupt && amount >= 500) showEventModal('💸', '齿轮币结算', msg, doneCb);
+        else setTimeout(doneCb, 950);
       }
 
       function finishTurn(bonusTurn) {
@@ -7711,7 +7851,7 @@
           return;
         }
         if (bonusTurn && !players[activePlayerIdx].isBankrupt && players[activePlayerIdx].hospitalDays === 0 && players[activePlayerIdx].cageDays === 0) {
-          setLog(`🎲【双数奖励】${players[activePlayerIdx].name} 掷出双数，奖励再投一次！`);
+          setLog(`🎲【双数奖励】${players[activePlayerIdx].name} 掷出同点，奖励再投一次！`);
           if (players[activePlayerIdx].isAI) setTimeout(rollDice, 800);
           return;
         }
@@ -7719,26 +7859,18 @@
       }
 
       function advanceTurn() {
-        // 每回合末缩减查封回合 & 发放银行10%利息 (轮转回1P时)
         let next = (activePlayerIdx + 1) % players.length;
         let safety = 0;
         while (players[next].isBankrupt && safety < players.length) {
-          next = (next + 1) % players.length;
-          safety++;
+          next = (next + 1) % players.length; safety++;
         }
         if (next <= activePlayerIdx) {
-          tiles.forEach(t => {
-            if (t.frozenTurns > 0) { t.frozenTurns--; refreshTileTexture(t); }
-          });
-          players.forEach(p => {
-            if (!p.isBankrupt && p.bankDeposit > 0) p.bankDeposit = Math.floor(p.bankDeposit * 1.1);
-          });
+          tiles.forEach(t => { if (t.frozenTurns > 0) { t.frozenTurns--; refreshTileTexture(t); } });
+          players.forEach(p => { if (!p.isBankrupt && p.bankDeposit > 0) p.bankDeposit = Math.floor(p.bankDeposit * 1.1); });
         }
 
         activePlayerIdx = next;
-        renderPlayerCards();
-        renderCardHand();
-        updateTurnBadge();
+        renderPlayerCards(); renderCardHand(); updateTurnBadge(); syncDiceBoxCount();
 
         const cur = players[activePlayerIdx];
         const btn = document.getElementById('btn-tycoon-roll');
@@ -7747,28 +7879,70 @@
           setTimeout(() => {
             const viewEl = document.getElementById('view-game-tycoon');
             if (!viewEl || viewEl.classList.contains('hidden')) return;
-            // AI 智能使用手牌
-            if (cur.cards.length > 0 && cur.hospitalDays === 0 && cur.cageDays === 0 && Math.random() < 0.35) {
-              const c = cur.cards.shift();
-              if (c.id === 'steal') {
-                const target = players.find(x => x.id !== cur.id && !x.isBankrupt && x.cash >= 1000);
-                if (target) { target.cash -= 1000; cur.cash += 1000; setLog(`💸【AI用卡】${cur.name} 使用掠夺卡抢走 ${target.name} ⚙️1,000！`); }
-              } else if (c.id === 'roadblock') {
-                const ti = (cur.pos + 3) % tiles.length;
-                tiles[ti].trap = 'roadblock'; updateTileTrapMesh(tiles[ti]);
-              }
+            // AI 买坐骑
+            if (cur.mountId === 'none' && cur.cash >= 4000) {
+              cur.cash -= 3500; equipMountToPlayer(cur, 'truck'); renderPlayerCards(); syncDiceBoxCount();
+              setLog(`🚛【AI提车】${cur.name} 在坐骑车行购置了【幻工重卡】(3骰+防雷防电)！`);
             }
             rollDice();
           }, 850);
         } else {
-          if (btn) { btn.disabled = false; btn.innerText = '🎲 掷双骰前进 (SPACE)'; }
-          setLog(`【你的回合】可使用底部道具卡，或按 SPACE 掷双骰前进！`);
+          if (btn) { btn.disabled = false; btn.innerText = '🎲 掷骰子前进 (SPACE)'; }
+          setLog(`【你的回合】可使用手牌道具、逛坐骑车行，或按 SPACE 掷骰前进！`);
         }
       }
 
       // =========================================================================
-      // 10. 弹窗交互控制器
+      // 10. 弹窗控制 (地契 / 道具店 / 坐骑车行 / 银行 / 医院)
       // =========================================================================
+      function openGarageModal() {
+        if (isMoving || isRollingDice) return;
+        const p = players[activePlayerIdx];
+        if (!p || p.isAI) { setLog('⚠️ 请在你的回合进入坐骑车行！'); return; }
+        renderGarageUI(p);
+        document.getElementById('modal-tycoon-garage').classList.remove('hidden');
+        playSound('open');
+      }
+
+      function renderGarageUI(p) {
+        document.getElementById('tycoon-garage-cash').innerText = `⚙️ ${p.cash.toLocaleString()} 齿轮币`;
+        const grid = document.getElementById('tycoon-garage-grid');
+        grid.innerHTML = ['truck', 'sportscar', 'moto'].map(mid => {
+          const m = MOUNTS[mid];
+          const isCur = (p.mountId === mid);
+          return `
+            <div class="cyber-mod-card ${isCur ? 'installed' : ''}" style="flex-direction:row; align-items:center; gap:12px;">
+              <div style="font-size:34px;">${m.icon}</div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <b style="font-size:14px; color:#FDE047;">${m.name}</b>
+                  <span style="font-size:11px; font-weight:900; color:#38BDF8;">🎲 ${m.diceCount}颗骰子</span>
+                </div>
+                <div style="font-size:11px; color:#CBD5E1; margin-top:2px;">${m.desc}</div>
+              </div>
+              <button onclick="TycoonApp.buyMount('${mid}')" ${isCur || p.cash < m.price ? 'disabled' : ''} class="primary-gold-btn" style="padding:7px 12px; font-size:11px; opacity:${isCur || p.cash < m.price ? 0.5 : 1};">
+                ${isCur ? '✓ 已装备' : `⚙️ ${m.price}`}
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function buyMount(mountId) {
+        const p = players[activePlayerIdx];
+        const m = MOUNTS[mountId];
+        if (!p || !m || p.cash < m.price) return;
+        p.cash -= m.price;
+        equipMountToPlayer(p, mountId);
+        playSound('upgrade');
+        renderGarageUI(p); renderPlayerCards(); updateTurnBadge(); syncDiceBoxCount();
+        setLog(`🚘【喜提新车】${p.name} 购入并坐上了【${m.icon} ${m.name}】（骰子数: ${m.diceCount} 颗）！`);
+      }
+
+      function closeGarageModal() {
+        document.getElementById('modal-tycoon-garage').classList.add('hidden');
+      }
+
       function showPropertyModal(tile, mode) {
         const p = players[activePlayerIdx];
         const cost = mode === 'buy' ? tile.price : calculateUpgradeCost(tile);
@@ -7776,7 +7950,7 @@
         pendingPropertyAction = { tile, mode, cost, player: p };
 
         document.getElementById('tycoon-prop-banner').style.background = tile.color;
-        document.getElementById('tycoon-prop-modal-badge').innerText = mode === 'buy' ? '🏠 地契购置协议' : `🏗️ 产业加盖升级 (Lv.${tile.level + 1})`;
+        document.getElementById('tycoon-prop-modal-badge').innerText = mode === 'buy' ? '🏠 地契购置协议' : `🏗️ 产业升级 (Lv.${tile.level + 1})`;
         document.getElementById('tycoon-prop-tile-id').innerText = `#${tile.index}`;
         document.getElementById('tycoon-prop-icon').innerText = tile.icon;
         document.getElementById('tycoon-prop-name').innerText = tile.name;
@@ -7790,7 +7964,6 @@
         btn.innerText = mode === 'buy' ? `✅ 买下地契 (⚙️${cost.toLocaleString()})` : `🏗️ 升级加盖 (⚙️${cost.toLocaleString()})`;
         btn.disabled = p.cash < cost;
         btn.style.opacity = p.cash < cost ? '0.5' : '1.0';
-
         document.getElementById('modal-tycoon-property').classList.remove('hidden');
         playSound('open');
       }
@@ -7801,15 +7974,8 @@
         const { tile, mode, cost, player } = pendingPropertyAction;
         if (player.cash >= cost) {
           player.cash -= cost;
-          if (mode === 'buy') {
-            tile.owner = player; tile.level = 1; player.propertiesCount++;
-            playSound('cash');
-            setLog(`🏠【成功置业】你买下了【${tile.name}】！`);
-          } else {
-            tile.level++;
-            playSound('upgrade');
-            setLog(`🏗️【扩建成功】你的【${tile.name}】升级为 Lv.${tile.level}！`);
-          }
+          if (mode === 'buy') { tile.owner = player; tile.level = 1; player.propertiesCount++; playSound('cash'); setLog(`🏠【成功置业】买下【${tile.name}】！`); }
+          else { tile.level++; playSound('upgrade'); setLog(`🏗️【扩建成功】【${tile.name}】升级至 Lv.${tile.level}！`); }
           updateTileBuildingMesh(tile); refreshTileTexture(tile);
           renderPlayerCards(); selectTile(tile.index);
         }
@@ -7826,7 +7992,9 @@
       function openShopModal(p) {
         document.getElementById('tycoon-shop-cash').innerText = `⚙️ ${p.cash.toLocaleString()} 齿轮币`;
         const grid = document.getElementById('tycoon-shop-grid');
-        const sample = [...CARD_CATALOG].sort(() => Math.random() - 0.5).slice(0, 4);
+        // 保证力压地雷大概率出现在商店，其余随机抽取
+        const others = CARD_CATALOG.filter(c => c.id !== 'landmine').sort(() => Math.random() - 0.5).slice(0, 3);
+        const sample = [CARD_CATALOG[0], ...others];
         grid.innerHTML = sample.map(c => `
           <div class="cyber-mod-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -7847,9 +8015,7 @@
         if (!p || !card) return;
         if (p.cards.length >= 6) { setLog('⚠️ 手牌已达上限 6 张！'); return; }
         if (p.cash < card.price) { setLog('⚠️ 齿轮币现金不足！'); return; }
-        p.cash -= card.price;
-        p.cards.push({ ...card });
-        playSound('cash');
+        p.cash -= card.price; p.cards.push({ ...card }); playSound('cash');
         document.getElementById('tycoon-shop-cash').innerText = `⚙️ ${p.cash.toLocaleString()} 齿轮币`;
         renderPlayerCards(); renderCardHand();
         setLog(`🛠️【购买道具】成功购入【${card.icon} ${card.name}】！`);
@@ -7900,21 +8066,16 @@
 
       function closeEventModal() {
         document.getElementById('modal-tycoon-event').classList.add('hidden');
-        if (pendingEventCallback) {
-          const cb = pendingEventCallback;
-          pendingEventCallback = null;
-          cb();
-        }
+        if (pendingEventCallback) { const cb = pendingEventCallback; pendingEventCallback = null; cb(); }
       }
 
       function triggerTycoonVictory(winner) {
-        playSound('victory');
-        lastVictoryMode = 'tycoon';
+        playSound('victory'); lastVictoryMode = 'tycoon';
         const total = winner.cash + winner.bankDeposit;
         showVictoryModal({
           mode: 'tycoon', icon: '👑',
           title: `【${winner.name}】加冕大富翁！`,
-          subtitle: `凭借卓越投资与策略称霸齿轮大都会！`,
+          subtitle: `凭借卓越投资与策略称霸山路大都会！`,
           statsHtml: `<div>最终净现金与存款: <b>⚙️ ${total.toLocaleString()} 齿轮币</b><br>名下地产数量: <b>${winner.propertiesCount} 处</b></div>`
         });
       }
@@ -7936,10 +8097,7 @@
             movedDist += Math.hypot(dx, dy);
             lastPtrX = e.clientX; lastPtrY = e.clientY;
             if (movedDist > 6) {
-              if (cameraMode !== 'orbit') {
-                cameraMode = 'orbit';
-                document.getElementById('btn-tycoon-cam').innerText = '📐 视角: 自由拖拽';
-              }
+              if (cameraMode !== 'orbit') { cameraMode = 'orbit'; document.getElementById('btn-tycoon-cam').innerText = '📐 视角: 自由拖拽'; }
               targetYaw -= dx * 0.0055;
               targetPitch = Math.max(0.25, Math.min(1.48, targetPitch + dy * 0.005));
             }
@@ -7960,7 +8118,7 @@
         });
         domEl.addEventListener('wheel', (e) => {
           e.preventDefault();
-          targetDist = Math.max(14.0, Math.min(cfg.mapSize === 128 ? 100.0 : 70.0, targetDist + e.deltaY * 0.04));
+          targetDist = Math.max(14.0, Math.min(cfg.mapSize === 128 ? 105.0 : 72.0, targetDist + e.deltaY * 0.04));
         }, { passive: false });
       }
 
@@ -7974,9 +8132,15 @@
           const v = document.getElementById('view-game-tycoon');
           if (!v || v.classList.contains('hidden')) return;
           updateCameraPosition();
-          if (centerSculpture) {
-            centerSculpture.rotation.y += dt * 0.5;
-          }
+          animatedCityObjects.forEach(item => {
+            if (item.type === 'spin') item.mesh.rotation.y += dt * 0.8;
+            else if (item.type === 'ship') {
+              const ang = now * 0.00025;
+              item.mesh.position.x = Math.cos(ang) * item.radius;
+              item.mesh.position.z = Math.sin(ang) * item.radius;
+              item.mesh.rotation.y = -ang + Math.PI / 2;
+            }
+          });
           renderer.render(scene, camera);
         }
         tick(performance.now());
@@ -8002,7 +8166,7 @@
         document.getElementById('view-game-tycoon').classList.remove('hidden');
         ensureStageInitialized();
         rebuildBoardScene();
-        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格大富翁棋盘！使用下方道具卡或按空格掷双骰吧！`);
+        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格山路十八弯大富翁棋盘！`);
       }
 
       return {
@@ -8020,7 +8184,8 @@
         restart: () => { ensureStageInitialized(); rebuildBoardScene(); },
         launchFromWizard, exitToMenu, toggleCamera, focusSelectedTile, selectTile,
         rollDice, testRollAndMove: rollDice,
-        useCard, executeRemoteRoll,
+        useCard, placeLandmineAt, executeRemoteRoll,
+        openGarageModal, buyMount, closeGarageModal,
         confirmPropertyAction, cancelPropertyAction,
         buyCard, closeShopModal, bankAction, closeBankModal,
         closeHospitalModal, closeEventModal,
@@ -8030,6 +8195,8 @@
           players: players.map(p => ({
             id: p.id, name: p.name, cash: p.cash, bankDeposit: p.bankDeposit,
             pos: p.pos, propertiesCount: p.propertiesCount, cardsCount: p.cards.length,
+            mountId: p.mountId, diceCount: p.diceCount,
+            mountShieldMine: p.mountShieldMine, mountShieldEmp: p.mountShieldEmp,
             hospitalDays: p.hospitalDays, cageDays: p.cageDays, isBankrupt: p.isBankrupt
           }))
         }),
