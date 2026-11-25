@@ -605,6 +605,101 @@
       border-color: #10B981;
       background: rgba(16, 185, 129, 0.12);
     }
+
+    /* === 大富翁10风格 机械大亨重构版专属样式 === */
+    .rm10-player-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.88) 100%);
+      border: 2px solid rgba(56, 189, 248, 0.45);
+      border-radius: 14px;
+      padding: 8px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      transition: all 0.25s ease;
+      backdrop-filter: blur(8px);
+    }
+    .rm10-player-card.active-turn {
+      border-color: #FDE047 !important;
+      box-shadow: 0 0 22px rgba(253, 224, 71, 0.55), inset 0 0 12px rgba(253, 224, 71, 0.15);
+      transform: scale(1.03);
+    }
+    .rm10-avatar-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(15,23,42,0.8) 100%);
+      border: 2px solid #38BDF8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .rm10-avatar-box img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+    }
+    .rm10-card-hand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(7, 13, 26, 0.95) 100%);
+      border: 1.5px solid rgba(56, 189, 248, 0.5);
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(10px);
+      max-width: 680px;
+      overflow-x: auto;
+    }
+    .rm10-item-card {
+      min-width: 84px;
+      max-width: 96px;
+      background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+      border: 1.5px solid rgba(56, 189, 248, 0.55);
+      border-radius: 10px;
+      padding: 6px 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .rm10-item-card:hover {
+      transform: translateY(-6px) scale(1.05);
+      border-color: #FDE047;
+      box-shadow: 0 6px 16px rgba(253, 224, 71, 0.4);
+    }
+    .rm10-dual-dice-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rm10-die-face {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #FFFFFF 0%, #E2E8F0 100%);
+      border: 2px solid #94A3B8;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+      color: #0F172A;
+      font-family: monospace;
+    }
+    .rm10-die-face.rolling {
+      animation: pulse 0.2s infinite;
+      border-color: #F59E0B;
+      color: #D97706;
+    }
   </style>
 </head>
 <body id="app-body" class="theme-default">
@@ -1039,175 +1134,124 @@
     </footer>
   </div>
 
-  <!-- ======================== 视图 4：机械大亨 3D 赛博朋克棋盘对局界面 ======================== -->
+  <!-- ======================== 视图 4：机械大亨 3D (大富翁10风格重构版) ======================== -->
   <div id="view-game-tycoon" class="hidden">
-    <div id="tycoon-scenic-bg" class="cyber-atmosphere"></div>
-    <div id="tycoon-grid-bg"></div>
-    <div id="tycoon-scenic-vignette"></div>
+    <div id="tycoon-scenic-bg" style="position:fixed; inset:0; background: url('assets/tycoon/01_赛博朋克都市背景.png') center/cover no-repeat; filter: brightness(0.75) saturate(1.15); z-index:0;"></div>
+    <div id="tycoon-scenic-vignette" style="position:fixed; inset:0; background: radial-gradient(circle at center, transparent 40%, rgba(7, 13, 26, 0.72) 100%); z-index:1; pointer-events:none;"></div>
     <div id="tycoon-ambient-sparks"></div>
 
-    <!-- 全屏 3D 机械大都会舞台 -->
-    <div id="tycoon-3d-stage"></div>
+    <!-- 全屏 3D 大富翁舞台 -->
+    <div id="tycoon-3d-stage" style="position:fixed; inset:0; z-index:5;"></div>
 
-    <!-- 顶栏悬浮玻璃导航 -->
-    <header style="position: relative; z-index: 20; padding: 14px 22px 0 22px; pointer-events: none;">
-      <div class="scenic-hud-card" style="padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; pointer-events: auto; border-color: rgba(14, 165, 233, 0.45);">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <button onclick="TycoonApp.exitToMenu()" class="scenic-hud-btn" style="border-color: rgba(14, 165, 233, 0.45); color: #E0F2FE;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;">
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            <span>返回大厅</span>
+    <!-- 顶栏悬浮玻璃导航 (大富翁10清爽风格) -->
+    <header style="position: relative; z-index: 20; padding: 12px 20px 0 20px; pointer-events: none;">
+      <div class="scenic-hud-card" style="padding: 8px 18px; display: flex; align-items: center; justify-content: space-between; pointer-events: auto; background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.55); border-radius: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="TycoonApp.exitToMenu()" class="scenic-hud-btn" style="border-color: rgba(14, 165, 233, 0.5); color: #E0F2FE;">
+            <span>← 返回大厅</span>
           </button>
-          <span style="font-size: 13px; font-weight: 900; color: #38BDF8; background: rgba(14, 165, 233, 0.22); padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.5);">
-            《机械大亨》3D 赛博齿轮大都会
+          <span style="font-size: 13px; font-weight: 900; color: #FDE047; background: rgba(245, 158, 11, 0.2); padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(253, 224, 71, 0.55);">
+            《机械大亨》3D • 大富翁经典版
           </span>
         </div>
 
-        <!-- 动力炉与地图状态指示 -->
-        <div style="display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.78); padding: 5px 16px; border-radius: 999px; border: 1px solid rgba(14, 165, 233, 0.45);">
-          <span style="font-size: 18px;" class="animate-pulse">⚙️</span>
-          <div>
-            <div id="tycoon-reactor-status" style="font-size: 12px; font-weight: 900; color: #38BDF8;">机械动力炉: 稳定运转 • 120 RPM</div>
-            <div id="tycoon-map-meta" style="font-size: 10px; color: #94A3B8;">中地图 (64格) • 4人对局 • 初始 ₡15,000</div>
+        <!-- 回合数、地图规模与彩票奖池播报 -->
+        <div style="display: flex; align-items: center; gap: 14px; background: rgba(7, 13, 26, 0.85); padding: 5px 18px; border-radius: 999px; border: 1px solid rgba(253, 224, 71, 0.45);">
+          <div style="font-size: 12px; font-weight: 900; color: #38BDF8;" id="tycoon-round-badge">第 1 轮</div>
+          <span style="color: #475569;">|</span>
+          <div id="tycoon-map-meta" style="font-size: 11px; color: #CBD5E1; font-weight: 700;">中地图 (64格) • 4人</div>
+          <span style="color: #475569;">|</span>
+          <div style="font-size: 12px; font-weight: 900; color: #EC4899; display:flex; align-items:center; gap:4px;">
+            <span>🎰 彩票奖池:</span>
+            <span id="tycoon-lottery-pool" style="color:#FDE047; font-family:monospace;">⚙️ 3,500</span>
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button onclick="TycoonApp.triggerSteamBurstManual()" id="btn-tycoon-steam" class="scenic-hud-btn" style="border-color: rgba(245, 158, 11, 0.65); color: #FDE047;" title="手动泄压喷出高压蒸汽">
-            💨 手动泄压喷气
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button onclick="TycoonApp.toggleCamera()" id="btn-tycoon-cam" class="scenic-hud-btn" style="border-color: rgba(0, 229, 255, 0.6); color: #E0F2FE;">
+            🎥 视角: 跟踪追焦
           </button>
-          <button onclick="TycoonApp.toggleCamera()" id="btn-tycoon-cam" class="scenic-hud-btn" style="border-color: rgba(0, 229, 255, 0.6); color: #E0F2FE;" title="切换第三人称跟随、3D自由轨道与正交全景俯视">
-            🎥 视角: 第三人称跟随 (追焦主角)
+          <button onclick="openModal('modal-settings')" class="bronze-gear-btn" id="btn-tycoon-settings" title="系统设置">
+            <div class="bronze-gear-spin">⚙️</div>
+            <span style="font-size: 11px; font-weight: 900; color: #FDE68A;">设置</span>
           </button>
-          <!-- 实时旋转古铜色金属齿轮设置按钮 -->
-          <button onclick="openModal('modal-settings')" class="bronze-gear-btn" id="btn-tycoon-settings" title="系统设置（古铜色齿轮实时旋转）">
-            <div class="bronze-gear-spin">
-              <svg viewBox="0 0 40 40" width="20" height="20">
-                <defs>
-                  <radialGradient id="bronzeGrad" cx="40%" cy="40%" r="60%">
-                    <stop offset="0%" stop-color="#FDE68A"/>
-                    <stop offset="35%" stop-color="#CD7F32"/>
-                    <stop offset="70%" stop-color="#92400E"/>
-                    <stop offset="100%" stop-color="#451A03"/>
-                  </radialGradient>
-                </defs>
-                <circle cx="20" cy="20" r="16" fill="url(#bronzeGrad)" stroke="#FDE68A" stroke-width="1.2"/>
-                <g fill="url(#bronzeGrad)" stroke="#B45309" stroke-width="0.8">
-                  <rect x="18" y="1" width="4" height="6" rx="1"/>
-                  <rect x="18" y="33" width="4" height="6" rx="1"/>
-                  <rect x="1" y="18" width="6" height="4" rx="1"/>
-                  <rect x="33" y="18" width="6" height="4" rx="1"/>
-                  <rect x="6" y="6" width="5" height="5" rx="1" transform="rotate(45 8.5 8.5)"/>
-                  <rect x="29" y="6" width="5" height="5" rx="1" transform="rotate(-45 31.5 8.5)"/>
-                  <rect x="6" y="29" width="5" height="5" rx="1" transform="rotate(-45 8.5 31.5)"/>
-                  <rect x="29" y="29" width="5" height="5" rx="1" transform="rotate(45 31.5 31.5)"/>
-                </g>
-                <circle cx="20" cy="20" r="9" fill="#1E293B" stroke="#CD7F32" stroke-width="1.5"/>
-                <circle cx="20" cy="20" r="4.5" fill="url(#bronzeGrad)" stroke="#FDE68A" stroke-width="1"/>
-              </svg>
-            </div>
-            <span style="font-size: 11px; font-weight: 900; color: #FDE68A; text-shadow: 0 0 6px rgba(245, 158, 11, 0.8);">设置</span>
-          </button>
-          <span id="lbl-tycoon-turn" style="padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #00E5FF; color: #090D16; box-shadow: 0 2px 14px rgba(0, 229, 255, 0.65);">
-            1P 蓝调黑客 (你)
+          <span id="lbl-tycoon-turn" style="padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 900; background: #00E5FF; color: #090D16;">
+            1P 极速跑车 (你)
           </span>
         </div>
       </div>
     </header>
 
-    <!-- 两侧浮空 HUD 与地格全息终端 -->
-    <div style="position: relative; z-index: 20; flex: 1; display: flex; justify-content: space-between; align-items: stretch; padding: 12px 22px; pointer-events: none;">
+    <!-- 中间主体区域：左侧玩家栏 + 右侧地契终端 & 双骰子操作台 -->
+    <div style="position: relative; z-index: 20; flex: 1; display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 20px; pointer-events: none;">
       
-      <!-- 左侧：蓝色霓虹玩家信息版 (包含实际现金、银行存款、彩票号码、房产数、科技企业数) -->
-      <div id="tycoon-players-col-left" style="width: 275px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; justify-content: flex-start; max-height: calc(100vh - 165px); overflow-y: auto; padding-right: 4px;">
-        <!-- 动态由 TycoonApp.renderPlayerCards() 渲染为蓝色霓虹风格卡片 -->
-      </div>
+      <!-- 左侧：1P ~ 4P 玩家信息牌 -->
+      <div id="tycoon-players-col-left" style="width: 268px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; max-height: calc(100vh - 200px); overflow-y: auto;"></div>
 
-      <!-- 右侧：玩家 4P ~ 6P 席位栏 + 全息地格终端 + 霓虹 LED 电子骰子操作台 -->
-      <div style="width: 295px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; justify-content: space-between;">
-        
-        <!-- 右侧备用玩家席位（4P ~ 6P） -->
-        <div id="tycoon-players-col-right" style="display: flex; flex-direction: column; gap: 8px;">
-          <!-- 动态渲染 -->
+      <!-- 右侧：5P ~ 6P + 地格信息卡 + 大富翁双骰台 -->
+      <div style="width: 280px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto;">
+        <div id="tycoon-players-col-right" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+        <!-- 选定地格展示牌 -->
+        <div class="scenic-hud-card" style="padding: 11px; border: 1.5px solid rgba(56, 189, 248, 0.55); background: rgba(15, 23, 42, 0.88); border-radius: 14px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(56, 189, 248, 0.35); padding-bottom: 4px;">
+            <span style="font-size: 11px; font-weight: 900; color: #38BDF8;">📍 地块地契信息</span>
+            <span id="inspector-tile-index" style="font-family: monospace; font-size: 11px; color: #94A3B8;">#00 / 64</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div id="inspector-tile-icon" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(0, 229, 255, 0.18); border: 1.5px solid #00E5FF; display: flex; align-items: center; justify-content: center; font-size: 18px;">🏁</div>
+            <div style="min-width: 0; flex: 1;">
+              <div id="inspector-tile-name" style="font-size: 13px; font-weight: 900; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">起点</div>
+              <div id="inspector-tile-type" style="font-size: 10px; color: #38BDF8; font-weight: 800;">发薪枢纽</div>
+            </div>
+          </div>
+          <div id="inspector-tile-desc" style="font-size: 11px; color: #CBD5E1; line-height: 1.45; background: rgba(7, 13, 26, 0.65); padding: 6px 8px; border-radius: 8px;">
+            每次经过或停驻起点，即可领取齿轮币工资！
+          </div>
+          <div id="inspector-tile-props" style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; color: #FDE047; background: rgba(245, 158, 11, 0.14); padding: 4px 8px; border-radius: 6px;">
+            <span>归属: --</span>
+            <span>租金: --</span>
+          </div>
         </div>
 
-        <!-- 全息地格终端 (Tile Inspector) -->
-        <div class="scenic-hud-card" style="padding: 12px; border: 1.5px solid rgba(0, 229, 255, 0.5); display: flex; flex-direction: column; gap: 8px; background: rgba(10, 25, 47, 0.88); box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);">
-          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(0, 229, 255, 0.35); padding-bottom: 5px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 14px;">📡</span>
-              <span style="font-size: 12px; font-weight: 900; color: #38BDF8; letter-spacing: 0.5px;">赛博地格全息终端</span>
+        <!-- 大富翁10 双骰子操作台 -->
+        <div class="scenic-hud-card" style="padding: 12px; border: 2px solid #F59E0B; background: rgba(15, 23, 42, 0.92); border-radius: 16px; display: flex; flex-direction: column; gap: 9px; box-shadow: 0 0 24px rgba(245, 158, 11, 0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="rm10-dual-dice-box">
+              <div id="rm10-die-1" class="rm10-die-face">6</div>
+              <div id="rm10-die-2" class="rm10-die-face">6</div>
             </div>
-            <span id="inspector-tile-index" style="font-family: monospace; font-size: 11px; color: #94A3B8; font-weight: 800;">#00 / 64</span>
-          </div>
-
-          <div id="inspector-content" style="display: flex; flex-direction: column; gap: 6px;">
-            <div style="display: flex; align-items: center; gap: 9px;">
-              <div id="inspector-tile-icon" style="width: 38px; height: 38px; border-radius: 9px; background: rgba(0, 229, 255, 0.18); border: 1.5px solid #00E5FF; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">🏁</div>
-              <div style="min-width: 0;">
-                <div id="inspector-tile-name" style="font-size: 13px; font-weight: 900; color: #F8FAFC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">赛博起点 (Cyber Start)</div>
-                <div id="inspector-tile-type" style="font-size: 10px; color: #38BDF8; font-weight: 800;">核心地标 • 周期发薪区</div>
-              </div>
-            </div>
-            <div id="inspector-tile-desc" style="font-size: 11px; color: #CBD5E1; line-height: 1.5; background: rgba(15, 23, 42, 0.65); padding: 7px 9px; border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.25);">
-              环路起始发薪区。每次经过或停驻即可领取启动津贴 2,000 齿轮币，机体能源充满！
-            </div>
-            <div id="inspector-tile-props" style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; color: #FDE047; background: rgba(245, 158, 11, 0.14); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.35);">
-              <span>基础租金: --</span>
-              <span>购置价格: --</span>
+            <div style="text-align: right;">
+              <div style="font-size: 10px; color: #94A3B8; font-weight: 800;">双骰点数合计</div>
+              <div id="rm10-dice-total" style="font-size: 20px; font-weight: 900; color: #FDE047; font-family: monospace;">12 步</div>
             </div>
           </div>
-
-          <!-- 赛博朋克霓虹 LED 电子骰子操作台 -->
-          <div style="display: flex; flex-direction: column; gap: 7px; padding-top: 7px; border-top: 1px dashed rgba(0, 229, 255, 0.35);">
-            <div style="display: flex; align-items: center; gap: 10px; background: rgba(9, 13, 22, 0.75); padding: 6px 10px; border-radius: 10px; border: 1.5px solid rgba(0, 229, 255, 0.45); box-shadow: 0 0 14px rgba(0, 229, 255, 0.2);">
-              <!-- 霓虹骰子 + 电子 LED 点阵屏 -->
-              <div class="neon-dice-housing">
-                <div class="dice-led-display">
-                  <div class="led-matrix-scanline"></div>
-                  <div id="cyber-dice-val" class="led-digit">6</div>
-                  <div id="cyber-dice-dots" class="led-pip-matrix">
-                    <span class="led-pip active"></span>
-                    <span class="led-pip active"></span>
-                    <span class="led-pip active"></span>
-                    <span class="led-pip active"></span>
-                    <span class="led-pip active"></span>
-                    <span class="led-pip active"></span>
-                  </div>
-                </div>
-              </div>
-              <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                  <span style="font-size: 10px; font-weight: 900; color: #38BDF8; letter-spacing: 0.5px;">CYBER NEON DICE</span>
-                  <span id="cyber-dice-badge" style="font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 4px; background: rgba(0, 229, 255, 0.2); color: #00E5FF; border: 1px solid #00E5FF;">LED点阵屏</span>
-                </div>
-                <div id="cyber-dice-subtext" style="font-size: 10px; color: #CBD5E1; font-weight: 700;">电子屏幕显示: <b style="color:#00E5FF; font-family: monospace;">6 点</b></div>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 6px;">
-              <button onclick="TycoonApp.testRollAndMove()" id="btn-tycoon-roll" class="primary-gold-btn" style="flex: 1; padding: 8px 10px; font-size: 11px; font-weight: 900; justify-content: center; background: linear-gradient(135deg, #0284C7 0%, #00E5FF 100%); border-color: #38BDF8; color: #090D16; box-shadow: 0 0 16px rgba(0, 229, 255, 0.55);">
-                <span>⚡ 启动电子掷骰 (SPACE)</span>
-              </button>
-              <button onclick="TycoonApp.focusSelectedTile()" class="scenic-hud-btn" style="padding: 7px 9px; font-size: 10px; border-color: rgba(0, 229, 255, 0.5); color: #38BDF8;" title="摄像机镜头对焦当前地格">
-                🔍 对焦
-              </button>
-            </div>
+          <div style="display: flex; gap: 6px;">
+            <button onclick="TycoonApp.rollDice()" id="btn-tycoon-roll" class="primary-gold-btn" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 900; justify-content: center; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);">
+              🎲 掷双骰前进 (SPACE)
+            </button>
+            <button onclick="TycoonApp.focusSelectedTile()" class="scenic-hud-btn" style="padding: 8px 10px; font-size: 11px;" title="聚焦地格">
+              🔍
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 底部半透明战报条 -->
-    <footer style="position: relative; z-index: 20; padding: 0 22px 14px 22px; pointer-events: none;">
-      <div class="scenic-hud-card" style="padding: 9px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; pointer-events: auto; border-color: rgba(14, 165, 233, 0.45);">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #00E5FF;" class="animate-pulse"></span>
-          <span id="tycoon-event-log" style="font-weight: 800; color: #F8FAFC;">【齿轮大都会就绪】单机鼠标左键可点击任意地格查看全息说明；拖拽旋转 3D 视角，滚轮缩放！</span>
+    <!-- 底部：大富翁10 手牌卡槽 + 实时战报条 -->
+    <footer style="position: relative; z-index: 20; padding: 0 20px 12px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;">
+      <!-- 底部居中：大富翁10 玩家手牌栏 -->
+      <div id="rm10-card-hand" class="rm10-card-hand" style="pointer-events: auto;">
+        <span style="font-size: 11px; color: #94A3B8; padding: 4px 8px;">🃏 暂无道具手牌，经过道具店可购买</span>
+      </div>
+
+      <!-- 底部战报条 -->
+      <div class="scenic-hud-card" style="width: 100%; padding: 8px 18px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; pointer-events: auto; background: rgba(15, 23, 42, 0.88); border-color: rgba(56, 189, 248, 0.45); border-radius: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #FDE047;" class="animate-pulse"></span>
+          <span id="tycoon-event-log" style="font-weight: 800; color: #F8FAFC;">【机械大亨就绪】欢迎来到大富翁赛博都市！点击手牌或按空格掷骰开始你的财富征途！</span>
         </div>
-        <div style="font-size: 11px; font-family: monospace; color: #94A3B8;">Cyberpunk Gear Tycoon 3D • 动态齿轮联动 & 蒸汽粒子系统</div>
+        <div style="font-size: 11px; color: #94A3B8;">大富翁10风格 • ⚙️ 齿轮币体系</div>
       </div>
     </footer>
   </div>
@@ -1788,140 +1832,121 @@
     </div>
   </div>
 
-  <!-- 9. 机械大亨：街区地块收购与升级协商面板 -->
+  <!-- 9. 机械大亨：地契买卖与建房升级弹窗 -->
   <div id="modal-tycoon-property" class="modal-backdrop hidden">
-    <div class="cyber-modal-card" style="max-width: 480px; gap: 14px;">
-      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(0, 229, 255, 0.4); padding-bottom: 8px;">
-        <span id="tycoon-prop-modal-badge" style="padding: 3px 10px; border-radius: 999px; background: rgba(0, 229, 255, 0.2); color: #00E5FF; font-size: 11px; font-weight: 900; border: 1px solid #00E5FF;">🏢 街区资产商业终端</span>
-        <span id="tycoon-prop-tile-id" style="font-family: monospace; font-size: 12px; color: #94A3B8; font-weight: 800;">#00 / 64</span>
+    <div class="cyber-modal-card" style="max-width: 440px; gap: 12px; border-color: #F59E0B !important;">
+      <div id="tycoon-prop-banner" style="height: 12px; width: 100%; border-radius: 6px; background: #00E5FF;"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span id="tycoon-prop-modal-badge" style="font-size: 12px; font-weight: 900; color: #FDE047;">🏠 地产地契交易</span>
+        <span id="tycoon-prop-tile-id" style="font-family: monospace; font-size: 12px; color: #94A3B8;">#01</span>
       </div>
-
-      <div style="display: flex; align-items: center; gap: 14px; background: rgba(15, 23, 42, 0.65); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(0, 229, 255, 0.3);">
-        <div id="tycoon-prop-icon" style="width: 52px; height: 52px; border-radius: 12px; background: rgba(0, 229, 255, 0.15); border: 1.5px solid #00E5FF; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;">🏙️</div>
-        <div style="flex: 1; min-width: 0;">
-          <h2 id="tycoon-prop-name" style="font-size: 17px; font-weight: 900; color: #FFFFFF; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">芯片晶圆厂</h2>
-          <div id="tycoon-prop-type" style="font-size: 11px; color: #38BDF8; font-weight: 800; margin-top: 2px;">战略科技企业 • 产业控股</div>
+      <div style="display: flex; align-items: center; gap: 12px; background: rgba(15, 23, 42, 0.7); padding: 12px; border-radius: 12px;">
+        <div id="tycoon-prop-icon" style="font-size: 32px;">🏙️</div>
+        <div>
+          <h2 id="tycoon-prop-name" style="margin: 0; font-size: 18px; font-weight: 900; color: #FFFFFF;">街区名</h2>
+          <div id="tycoon-prop-type" style="font-size: 11px; color: #38BDF8; font-weight: 800;">所属彩色街区</div>
         </div>
       </div>
-
-      <p id="tycoon-prop-desc" style="font-size: 12px; color: #CBD5E1; line-height: 1.6; margin: 0; background: rgba(6, 11, 20, 0.6); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.2);">
-        商业说明加载中...
-      </p>
-
+      <p id="tycoon-prop-desc" style="font-size: 12px; color: #CBD5E1; line-height: 1.5; margin: 0;">说明...</p>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div style="background: rgba(245, 158, 11, 0.12); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.35);">
-          <div style="font-size: 10px; color: #FCD34D;">投资费用:</div>
-          <div id="tycoon-prop-price" style="font-size: 14px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,200 齿轮币</div>
+        <div style="background: rgba(245, 158, 11, 0.15); padding: 8px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.4);">
+          <div style="font-size: 10px; color: #FCD34D;">需要支付</div>
+          <div id="tycoon-prop-price" style="font-size: 14px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,200</div>
         </div>
-        <div style="background: rgba(14, 165, 233, 0.12); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(14, 165, 233, 0.35);">
-          <div style="font-size: 10px; color: #7DD3FC;">预计过路租金:</div>
-          <div id="tycoon-prop-rent" style="font-size: 14px; font-weight: 900; color: #38BDF8; font-family: monospace;">⚙️ 300 齿轮币</div>
+        <div style="background: rgba(56, 189, 248, 0.15); padding: 8px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.4);">
+          <div style="font-size: 10px; color: #7DD3FC;">收租收益</div>
+          <div id="tycoon-prop-rent" style="font-size: 14px; font-weight: 900; color: #38BDF8; font-family: monospace;">⚙️ 300</div>
         </div>
       </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 229, 255, 0.25);">
-        <span style="color: #94A3B8;">你的可用现金储备:</span>
-        <b id="tycoon-prop-player-cash" style="color: #FDE047; font-family: monospace; font-size: 12px;">⚙️ 15,000 齿轮币</b>
+      <div style="font-size: 11px; color: #94A3B8; display: flex; justify-content: space-between;">
+        <span>当前持有现金:</span>
+        <b id="tycoon-prop-player-cash" style="color: #FDE047;">⚙️ 15,000 齿轮币</b>
       </div>
-
-      <div style="display: flex; width: 100%; gap: 10px; padding-top: 4px;">
-        <button id="btn-tycoon-prop-confirm" type="button" onclick="TycoonApp.confirmPropertyAction()" class="primary-gold-btn" style="flex: 1.2; justify-content: center; background: linear-gradient(135deg, #0284C7 0%, #00E5FF 100%); border-color: #38BDF8; color: #090D16; font-size: 13px; font-weight: 900;">
-          ⚡ 立即投资购置
-        </button>
-        <button id="btn-tycoon-prop-cancel" type="button" onclick="TycoonApp.cancelPropertyAction()" class="glass-btn" style="flex: 0.8; justify-content: center; border-color: rgba(148, 163, 184, 0.4); color: #94A3B8;">
-          暂缓投资
-        </button>
+      <div style="display: flex; gap: 10px; margin-top: 4px;">
+        <button id="btn-tycoon-prop-confirm" onclick="TycoonApp.confirmPropertyAction()" class="primary-gold-btn" style="flex: 1.3; justify-content: center;">✅ 确认购置</button>
+        <button id="btn-tycoon-prop-cancel" onclick="TycoonApp.cancelPropertyAction()" class="glass-btn" style="flex: 0.7; justify-content: center;">放弃</button>
       </div>
     </div>
   </div>
 
-  <!-- 10. 机械大亨：赛博医院义体机能改装工位 -->
+  <!-- 10. 机械大亨：道具店弹窗 (大富翁10手牌商店) -->
+  <div id="modal-tycoon-shop" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 580px; gap: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(245, 158, 11, 0.4); padding-bottom: 8px;">
+        <span style="font-size: 15px; font-weight: 900; color: #FDE047;">🛠️ 机械黑市道具店 • 战术卡牌补给</span>
+        <span id="tycoon-shop-cash" style="font-size: 12px; font-weight: 900; color: #38BDF8;">⚙️ 15,000 齿轮币</span>
+      </div>
+      <div style="font-size: 12px; color: #CBD5E1;">挑选大富翁战术道具卡加入你的手牌（掷骰前可点击使用，上限 6 张）：</div>
+      <div id="tycoon-shop-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+      <button onclick="TycoonApp.closeShopModal()" class="primary-gold-btn" style="width: 100%; justify-content: center; margin-top: 4px;">离开道具店 (结束回合)</button>
+    </div>
+  </div>
+
+  <!-- 11. 机械大亨：银行弹窗 (存取款与利息) -->
+  <div id="modal-tycoon-bank" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 440px; gap: 12px; border-color: #F59E0B !important;">
+      <div style="font-size: 16px; font-weight: 900; color: #FDE047; border-bottom: 1px dashed rgba(245, 158, 11, 0.4); padding-bottom: 8px;">🏦 中央储备银行 • 齿轮币存贷中心</div>
+      <div style="font-size: 12px; color: #CBD5E1; line-height: 1.5;">
+        停驻银行获赠红利 <b style="color:#34D399;">+⚙️1,000 齿轮币</b>！存入银行的资金每轮可享 <b style="color:#FDE047;">10% 高额利息</b>，且能避开部分现金惩罚！
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px;">
+        <div><div style="font-size: 10px; color: #94A3B8;">现金</div><b id="tycoon-bank-cash" style="color: #FDE047; font-size: 14px;">⚙️ 0</b></div>
+        <div><div style="font-size: 10px; color: #94A3B8;">银行存款</div><b id="tycoon-bank-dep" style="color: #38BDF8; font-size: 14px;">⚙️ 0</b></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button onclick="TycoonApp.bankAction('deposit', 2000)" class="scenic-hud-btn" style="justify-content:center; border-color:#38BDF8;">存入 ⚙️2,000</button>
+        <button onclick="TycoonApp.bankAction('withdraw', 2000)" class="scenic-hud-btn" style="justify-content:center; border-color:#F59E0B;">取出 ⚙️2,000</button>
+        <button onclick="TycoonApp.bankAction('deposit_all', 0)" class="scenic-hud-btn" style="justify-content:center; border-color:#10B981;">存入一半现金</button>
+        <button onclick="TycoonApp.bankAction('withdraw_all', 0)" class="scenic-hud-btn" style="justify-content:center; border-color:#EC4899;">全部取出</button>
+      </div>
+      <button onclick="TycoonApp.closeBankModal()" class="primary-gold-btn" style="width: 100%; justify-content: center;">办理完毕离开银行</button>
+    </div>
+  </div>
+
+  <!-- 12. 机械大亨：赛博朋克医院弹窗 (住院3天 + 预留属性升级机制) -->
   <div id="modal-tycoon-hospital" class="modal-backdrop hidden">
-    <div class="cyber-modal-card" style="max-width: 580px; gap: 14px;">
-      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(16, 185, 129, 0.45); padding-bottom: 8px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">🏥</span>
-          <span style="font-size: 14px; font-weight: 900; color: #34D399; letter-spacing: 0.5px;">赛博生化医疗中心 · 义体机能改装工位</span>
-        </div>
-        <span style="font-size: 11px; font-weight: 800; color: #94A3B8;">顶级生化义体改造</span>
+    <div class="cyber-modal-card" style="max-width: 520px; gap: 14px; border-color: #10B981 !important;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(16, 185, 129, 0.45); padding-bottom: 8px;">
+        <span style="font-size: 15px; font-weight: 900; color: #34D399;">🏥 赛博朋克医院 • 医疗隔离与属性升级工位</span>
+        <span id="tycoon-hosp-cash" style="font-size: 12px; font-weight: 900; color: #FDE047;">⚙️ 15,000</span>
       </div>
-
-      <div style="font-size: 12px; color: #CBD5E1; line-height: 1.5; background: rgba(15, 23, 42, 0.65); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
-        欢迎抵达大都会生化医疗中心！除常规机能检修外，可消耗金色齿轮币装配尖端义体，强化骰子机动与战术抗性：
+      <div id="tycoon-hosp-status-box" style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10B981; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #E2E8F0; line-height: 1.55;">
+        欢迎抵达赛博朋克医院！<br>• <b>住院机制</b>：被电子笼网电击或踩中地雷时，将在此强制住院隔离 <b>3 天</b>。<br>• <b>属性升级工位</b>：已预留好核心接口，等待装配专属属性升级方案！
       </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px 12px; border-radius: 8px; background: rgba(6, 11, 20, 0.8); border: 1px solid rgba(16, 185, 129, 0.35);">
-        <span style="color: #94A3B8;">你的当前可用现金:</span>
-        <b id="tycoon-hosp-cash" style="color: #FDE047; font-family: monospace; font-size: 13px;">⚙️ 15,000 齿轮币</b>
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px dashed rgba(56, 189, 248, 0.5); border-radius: 12px; padding: 14px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 900; color: #38BDF8; margin-bottom: 4px;">🔧 属性升级模块插槽 (待接入具体属性规则)</div>
+        <div style="font-size: 11px; color: #94A3B8;">此处预留了赛博属性强化升级界面与齿轮币结算通道，确定好升级属性条目后即可瞬间激活！</div>
       </div>
+      <button onclick="TycoonApp.closeHospitalModal()" class="primary-gold-btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #059669 0%, #10B981 100%); border-color: #34D399; color: #090D16;">
+        ✓ 离开医院 (推进回合)
+      </button>
+    </div>
+  </div>
 
-      <!-- 4 大义体改装选项网格 -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <!-- 模块 1: 机动力推进器 -->
-        <div id="card-mod-thruster" class="cyber-mod-card">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 900; color: #38BDF8;">⚡ 机动力脉冲引擎</div>
-            <span id="badge-mod-thruster" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.2); color: #38BDF8; border: 1px solid #38BDF8;">未安装</span>
-          </div>
-          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
-            掷骰行进时保底至少 <b>3 点</b>（投出 1/2 点自动补偿为 3 点），起飞与巡航效率大增！
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(56, 189, 248, 0.25);">
-            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,500</span>
-            <button id="btn-mod-thruster" onclick="TycoonApp.buyCyberMod('thruster')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #38BDF8; color: #E0F2FE;">装配引擎</button>
-          </div>
-        </div>
-
-        <!-- 模块 2: 高压绝缘护盾 -->
-        <div id="card-mod-shield" class="cyber-mod-card">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 900; color: #00E5FF;">🛡️ 脉冲绝缘护盾</div>
-            <span id="badge-mod-shield" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(0, 229, 255, 0.2); color: #00E5FF; border: 1px solid #00E5FF;">0 层</span>
-          </div>
-          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
-            抵御 1 次【电子笼网】高压脉冲触电，踩中时自动抵消并消耗 1 层护盾，<b>免于住院3天</b>！
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(0, 229, 255, 0.25);">
-            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 2,000</span>
-            <button id="btn-mod-shield" onclick="TycoonApp.buyCyberMod('shield')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #00E5FF; color: #E0F2FE;">充能护盾</button>
-          </div>
-        </div>
-
-        <!-- 模块 3: 量子算力核心 -->
-        <div id="card-mod-core" class="cyber-mod-card">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 900; color: #C084FC;">💻 量子算力核心</div>
-            <span id="badge-mod-core" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(192, 132, 252, 0.2); color: #C084FC; border: 1px solid #C084FC;">未安装</span>
-          </div>
-          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
-            停驻中央银行分红提升 <b>50%</b>（分红 ⚙️1,800），且控股科技企业地产租金额外提升 <b>30%</b>！
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(192, 132, 252, 0.25);">
-            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 2,500</span>
-            <button id="btn-mod-core" onclick="TycoonApp.buyCyberMod('core')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #C084FC; color: #E0F2FE;">装配算力核</button>
-          </div>
-        </div>
-
-        <!-- 模块 4: 纳米液冷散热单元 -->
-        <div id="card-mod-cooler" class="cyber-mod-card">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 900; color: #34D399;">🔧 纳米液冷散热单元</div>
-            <span id="badge-mod-cooler" style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: rgba(52, 211, 153, 0.2); color: #34D399; border: 1px solid #34D399;">未安装</span>
-          </div>
-          <div style="font-size: 10px; color: #94A3B8; line-height: 1.45;">
-            动力炉超强循环散热，<b>彻底免疫【反应堆过载】</b>的 ⚙️1,000 应急排热冷却处理罚金！
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px dashed rgba(52, 211, 153, 0.25);">
-            <span style="font-size: 11px; font-weight: 900; color: #FDE047; font-family: monospace;">⚙️ 1,200</span>
-            <button id="btn-mod-cooler" onclick="TycoonApp.buyCyberMod('cooler')" class="scenic-hud-btn" style="padding: 4px 10px; font-size: 10px; border-color: #34D399; color: #E0F2FE;">装配散热组</button>
-          </div>
-        </div>
+  <!-- 13. 机械大亨：通用戏剧性大事件弹窗 (奖励 / 惩罚 / 彩票 / 囚笼 / 电击) -->
+  <div id="modal-tycoon-event" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 440px; gap: 14px; text-align: center; align-items: center;">
+      <div id="tycoon-evt-icon" style="font-size: 54px; line-height: 1;">🎁</div>
+      <h2 id="tycoon-evt-title" style="margin: 0; font-size: 20px; font-weight: 900; color: #FDE047;">事件标题</h2>
+      <p id="tycoon-evt-desc" style="font-size: 13px; color: #E2E8F0; line-height: 1.6; margin: 0; background: rgba(15, 23, 42, 0.7); padding: 12px; border-radius: 10px; width: 100%;">事件详情...</p>
+      <div id="tycoon-evt-actions" style="display: flex; gap: 10px; width: 100%;">
+        <button onclick="TycoonApp.closeEventModal()" class="primary-gold-btn" style="flex: 1; justify-content: center;">确定继续</button>
       </div>
+    </div>
+  </div>
 
-      <div style="display: flex; width: 100%; justify-content: flex-end; padding-top: 4px;">
-        <button type="button" onclick="TycoonApp.closeHospitalModal()" class="primary-gold-btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #059669 0%, #10B981 100%); border-color: #34D399; color: #090D16; font-size: 13px; font-weight: 900;">
-          ✓ 完成改装离开医院 (推进回合)
-        </button>
+  <!-- 14. 机械大亨：遥控骰子选点弹窗 -->
+  <div id="modal-tycoon-remote-dice" class="modal-backdrop hidden">
+    <div class="cyber-modal-card" style="max-width: 380px; gap: 12px; text-align: center;">
+      <div style="font-size: 16px; font-weight: 900; color: #38BDF8;">🎲 遥控骰子卡 • 指定前进点数</div>
+      <div style="font-size: 12px; color: #CBD5E1;">请选择本回合要精确行进的步数：</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+        <button onclick="TycoonApp.executeRemoteRoll(1)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">1 步</button>
+        <button onclick="TycoonApp.executeRemoteRoll(2)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">2 步</button>
+        <button onclick="TycoonApp.executeRemoteRoll(3)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">3 步</button>
+        <button onclick="TycoonApp.executeRemoteRoll(4)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">4 步</button>
+        <button onclick="TycoonApp.executeRemoteRoll(5)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">5 步</button>
+        <button onclick="TycoonApp.executeRemoteRoll(6)" class="primary-gold-btn" style="justify-content:center; font-size:16px;">6 步</button>
       </div>
     </div>
   </div>
@@ -6509,381 +6534,260 @@
     // 7. 《机械大亨 (Gear Tycoon)》3D 赛博朋克夜景大都会棋盘引擎 (完全对标图2设计)
     // =========================================================================
     window.TycoonApp = (() => {
-      // 核心配置与状态
+      // =========================================================================
+      // 1. 核心配置与大富翁10角色/卡牌库
+      // =========================================================================
       const cfg = {
-        mapSize: 64,      // 48 (空中都市), 64 (霓虹港湾), 128 (超大都市)
+        mapSize: 64,      // 48 (小地图), 64 (中地图), 128 (大地图)
         playerCount: 4,   // 2 ~ 6 人
-        startCash: 15000  // 初始现金
+        startCash: 15000  // 初始齿轮币
       };
 
       const CHARACTERS = [
-        { id: 0, name: '蓝调黑客 (你)', color: '#00E5FF', hex: 0x00E5FF, avatar: '⚡', desc: '网络神经折跃特工', isAI: false },
-        { id: 1, name: '霓虹义警 (AI)', color: '#F97316', hex: 0xF97316, avatar: '🔫', desc: '夜之城重装巡警', isAI: true },
-        { id: 2, name: '智械先知 (AI)', color: '#A855F7', hex: 0xA855F7, avatar: '🔮', desc: '量子超脑先知', isAI: true },
-        { id: 3, name: '极客狂徒 (AI)', color: '#10B981', hex: 0x10B981, avatar: '🧪', desc: '化学生化改装师', isAI: true },
-        { id: 4, name: '矩阵财阀 (AI)', color: '#F59E0B', hex: 0xF59E0B, avatar: '💎', desc: '轨道金融联合体代理', isAI: true },
-        { id: 5, name: '暗影幽灵 (AI)', color: '#F43F5E', hex: 0xF43F5E, avatar: '🥷', desc: '纳米隐匿突袭刺客', isAI: true }
+        { id: 0, name: '极速跑车 (你)', color: '#00E5FF', hex: 0x00E5FF, img: 'assets/tycoon/13_跑车棋子.png', avatar: '🏎️', isAI: false },
+        { id: 1, name: '黄金绅士 (AI)', color: '#F59E0B', hex: 0xF59E0B, img: 'assets/tycoon/11_绅士帽棋子.png', avatar: '🎩', isAI: true },
+        { id: 2, name: '招财灵猫 (AI)', color: '#A855F7', hex: 0xA855F7, img: 'assets/tycoon/12_招财猫棋子.png', avatar: '🐱', isAI: true },
+        { id: 3, name: '旺财机械犬 (AI)', color: '#10B981', hex: 0x10B981, img: 'assets/tycoon/16_小狗棋子.png', avatar: '🐶', isAI: true },
+        { id: 4, name: '皇冠名媛 (AI)', color: '#EC4899', hex: 0xEC4899, img: 'assets/tycoon/14_皇冠手提袋.png', avatar: '👜', isAI: true },
+        { id: 5, name: '暴走战靴 (AI)', color: '#EF4444', hex: 0xEF4444, img: 'assets/tycoon/18_靴子棋子.png', avatar: '👢', isAI: true }
+      ];
+
+      // 大富翁10参考：10大核心趣味战术道具卡
+      const CARD_CATALOG = [
+        { id: 'remote_dice', name: '遥控骰子', icon: '🎲', price: 600, desc: '自选本回合投出 1~6 任意点数！' },
+        { id: 'turtle', name: '乌龟卡', icon: '🐢', price: 400, desc: '本回合稳步走 1 格，精准停靠！' },
+        { id: 'boost', name: '超级加速卡', icon: '🚀', price: 500, desc: '本回合掷骰总步数额外 +4 步！' },
+        { id: 'roadblock', name: '路障卡', icon: '🚧', price: 500, desc: '在前方 3 格处放置路障，经过者强制停步！' },
+        { id: 'landmine', name: '定时地雷', icon: '💣', price: 800, desc: '在前方 4 格处埋设地雷，踩中炸伤送进医院住院3天！' },
+        { id: 'swap', name: '量子换位卡', icon: '🛸', price: 700, desc: '立刻与场上领先的随机对手交换棋盘位置！' },
+        { id: 'freeze', name: '停业查封卡', icon: '🛑', price: 600, desc: '查封对手最贵的一处房产 2 轮，路过免租！' },
+        { id: 'steal', name: '齿轮掠夺卡', icon: '💸', price: 750, desc: '从最富有的对手手中强行掠夺 ⚙️1,200 齿轮币！' },
+        { id: 'bail', name: '免罪特赦卡', icon: '🕊️', price: 650, desc: '解除自身当前住院或机械囚笼禁锢状态！' },
+        { id: 'upgrade_card', name: '快速加盖卡', icon: '🏗️', price: 900, desc: '无需路过，立刻将名下的一处地产升 1 级！' }
+      ];
+
+      // 6 大经典彩色街区配色
+      const STREET_GROUPS = [
+        { id: 'red', name: '红霓商业街', color: '#EF4444', hex: 0xEF4444 },
+        { id: 'amber', name: '琥珀工业区', color: '#F59E0B', hex: 0xF59E0B },
+        { id: 'emerald', name: '翡翠能源港', color: '#10B981', hex: 0x10B981 },
+        { id: 'cyan', name: '天蓝科技园', color: '#06B6D4', hex: 0x06B6D4 },
+        { id: 'purple', name: '紫晶智械区', color: '#A855F7', hex: 0xA855F7 },
+        { id: 'pink', name: '粉霓娱乐城', color: '#EC4899', hex: 0xEC4899 }
       ];
 
       let players = [];
       let activePlayerIdx = 0;
+      let roundCount = 1;
+      let lotteryPool = 3500;
       let tiles = [];
       let tileMeshes = [];
       let selectedTileIdx = 0;
       let isMoving = false;
       let isRollingDice = false;
       let animFrameId = null;
+      let consecutiveDoubles = 0;
+      let pendingPropertyAction = null;
+      let pendingEventCallback = null;
 
-      // 视角模式：'isometric' (全景大都会，图2推荐) | 'follow' (第三人称跟随) | 'orbit' (自由旋转) | 'top' (正交俯视)
-      let cameraMode = 'isometric';
+      // 视角模式：默认 'follow' (大富翁10风格第三人称跟踪视角) | 'isometric' (全景) | 'orbit' (自由)
+      let cameraMode = 'follow';
 
-      // Three.js 核心对象
       let scene, camera, renderer, raycaster;
-      let boardGroup, roadGroup, cityGroup, pawnsGroup, markersGroup;
+      let boardGroup, roadGroup, cityGroup, pawnsGroup, markersGroup, trapsGroup;
       let selectionBoxMesh, hoverBoxMesh;
-      let cityData = null;
+      let centerSculpture = null;
 
-      // 摄像机控制变量
-      let camYaw = 0.75;
-      let camPitch = 0.65;
-      let camDist = 52.0;
-      let targetYaw = 0.75;
-      let targetPitch = 0.65;
-      let targetDist = 52.0;
+      let camYaw = 0.72, camPitch = 0.62, camDist = 24.0;
+      let targetYaw = 0.72, targetPitch = 0.62, targetDist = 24.0;
       let curLookAt = new THREE.Vector3(0, 0, 0);
       let targetLookAt = new THREE.Vector3(0, 0, 0);
 
       let isDragging = false;
-      let ptrDownX = 0, ptrDownY = 0;
-      let lastPtrX = 0, lastPtrY = 0;
-      let movedDist = 0;
-
-      // 金色齿轮币 SVG 图标生成器
-      function getGoldenGearSvg(size = 14) {
-        return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="vertical-align: -2px; filter: drop-shadow(0 0 4px #F59E0B);">
-          <circle cx="12" cy="12" r="3.2" fill="#78350F" stroke="#FDE047" stroke-width="1.2"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="#F59E0B" stroke="#FEF08A" stroke-width="0.8"/>
-        </svg>`;
-      }
+      let ptrDownX = 0, ptrDownY = 0, lastPtrX = 0, lastPtrY = 0, movedDist = 0;
 
       // =========================================================================
-      // 1. 图2对标：大富翁赛博平台与大幅面地格算法 (48 / 64 / 128格)
+      // 2. 经典大富翁48/64/128格赛道与彩色街区生成器
       // =========================================================================
-      function buildBlueprintMapTrack(N) {
-        let Nx = 18, Nz = 14;
-        let tileSpacingX = 2.4, tileSpacingZ = 2.4;
-        let tileW = 2.25, tileD = 2.25;
-
+      function buildMonopolyTrack(N) {
+        let Nx = 18, Nz = 14, spacing = 2.5, tileW = 2.3, tileD = 2.3;
         if (N === 48) {
-          // 48格：空中都市 · 天际走廊 (长条椭圆赛道，图2右下)
-          Nx = 16; Nz = 8;
-          tileSpacingX = 2.4; tileSpacingZ = 2.4;
-          tileW = 2.25; tileD = 2.25;
+          Nx = 16; Nz = 8; spacing = 2.55; tileW = 2.35; tileD = 2.35;
         } else if (N === 64) {
-          // 64格：霓虹港湾 · 科技之都 (标准方形港湾，图2左下)
-          Nx = 18; Nz = 14;
-          tileSpacingX = 2.4; tileSpacingZ = 2.4;
-          tileW = 2.25; tileD = 2.25;
+          Nx = 18; Nz = 14; spacing = 2.5; tileW = 2.3; tileD = 2.3;
         } else {
-          // 128格：超大都市 · 未来之城 (宏伟超大都市，图2上方)
-          Nx = 36; Nz = 28;
-          tileSpacingX = 2.1; tileSpacingZ = 2.1;
-          tileW = 1.95; tileD = 1.95;
+          Nx = 36; Nz = 28; spacing = 2.15; tileW = 1.98; tileD = 1.98;
         }
 
-        const halfW = (Nx * tileSpacingX) / 2.0;
-        const halfH = (Nz * tileSpacingZ) / 2.0;
+        const halfW = (Nx * spacing) / 2.0;
+        const halfH = (Nz * spacing) / 2.0;
         const dx = (2.0 * halfW) / Nx;
         const dz = (2.0 * halfH) / Nz;
 
-        const propertyNames = [
-          { name: '钛合金锻造坊', isTech: false },
-          { name: '芯片晶圆工厂', isTech: true },
-          { name: '高能光子矩阵', isTech: true },
-          { name: '碳化硅电弧炉', isTech: false },
-          { name: '反重力中继塔', isTech: true },
-          { name: '神经接入节点', isTech: true },
-          { name: '聚变反应总仓', isTech: true },
-          { name: '仿生义肢工坊', isTech: false },
-          { name: '重离子加速站', isTech: true },
-          { name: '赛博霓虹商厦', isTech: false },
-          { name: '量子存储枢纽', isTech: true },
-          { name: '超导磁悬浮港', isTech: true },
-          { name: '生物培植反应舱', isTech: true },
-          { name: '深空射电天线阵', isTech: true },
-          { name: '全息光影工场', isTech: false },
-          { name: '高频算力中心', isTech: true },
-          { name: '暗能量萃取井', isTech: true },
-          { name: '纳米装甲车间', isTech: false },
-          { name: '微光电池产线', isTech: false },
-          { name: '虚空雷达基站', isTech: true }
+        const propNames = [
+          '齿轮工坊', '蒸汽广场', '铁甲大道', '霓虹夜市', '晶圆工厂', '光子大厦',
+          '黄金交易所', '发条钟楼', '磁悬浮港', '量子中心', '机械酒吧', '赛博剧院',
+          '动力炉厂', '超导高塔', '纳米园区', '天穹酒店', '星际码头', '聚变电站'
         ];
 
-        let propIdx = 0;
         const list = [];
         const S = Math.floor(N / 4);
+        let propIdx = 0;
 
         for (let i = 0; i < N; i++) {
           let x = 0, z = 0, tx = 1, tz = 0;
-
           if (i < Nx) {
-            // 底边：从 (-halfW, halfH) 到 (halfW, halfH)，朝向 +X
-            x = -halfW + i * dx;
-            z = halfH;
-            tx = 1; tz = 0;
+            x = -halfW + i * dx; z = halfH; tx = 1; tz = 0;
           } else if (i < Nx + Nz) {
-            // 右边：从 (halfW, halfH) 到 (halfW, -halfH)，朝向 -Z
             const k = i - Nx;
-            x = halfW;
-            z = halfH - k * dz;
-            tx = 0; tz = -1;
+            x = halfW; z = halfH - k * dz; tx = 0; tz = -1;
           } else if (i < 2 * Nx + Nz) {
-            // 顶边：从 (halfW, -halfH) 到 (-halfW, -halfH)，朝向 -X
             const k = i - (Nx + Nz);
-            x = halfW - k * dx;
-            z = -halfH;
-            tx = -1; tz = 0;
+            x = halfW - k * dx; z = -halfH; tx = -1; tz = 0;
           } else {
-            // 左边：从 (-halfW, -halfH) 到 (-halfW, halfH)，朝向 +Z
             const k = i - (2 * Nx + Nz);
-            x = -halfW;
-            z = -halfH + k * dz;
-            tx = 0; tz = 1;
+            x = -halfW; z = -halfH + k * dz; tx = 0; tz = 1;
           }
-
           const yaw = Math.atan2(tx, tz);
 
-          // 丰富多彩的色盘（对标图2六色高亮色调）
-          let type = 'property';
-          let name = '';
-          let subType = '';
-          let icon = '🏙️';
-          let color = '#0284C7';
-          let desc = '';
-          let price = 1200 + (i % 8) * 400;
-          let rent = Math.floor(price * 0.25);
-          let isTech = false;
+          let type = 'property', name = '', subType = '', icon = '🏙️', color = '#0284C7';
+          let desc = '', price = 1200 + (i % 6) * 350, rent = Math.floor(price * 0.25);
+          let group = STREET_GROUPS[Math.floor((i / N) * STREET_GROUPS.length) % STREET_GROUPS.length];
 
-          // 核心地标固定于四角
           if (i === 0) {
-            type = 'start';
-            name = 'GO 起点发薪';
-            subType = '核心地标 • 周期发薪';
-            icon = '🏁';
-            color = '#EC4899';
-            desc = '大都会环路起点发薪枢纽。每次经过或停驻即可领取启动津贴 2,000 齿轮币，机体能源充满！';
+            type = 'start'; name = '起点 (GO)'; subType = '发薪枢纽 • 经过+2,000'; icon = '🏁'; color = '#F59E0B';
+            desc = '每次经过或停驻起点，可领取 ⚙️2,000 齿轮币工资！每满一轮还将触发全城彩票开奖！';
             price = 0; rent = 0;
           } else if (i === Nx) {
-            type = 'hospital';
-            name = '赛博重症医院';
-            subType = '核心地标 • 隔离住院(关3天)';
-            icon = '🏥';
-            color = '#10B981';
-            desc = '夜之城顶尖生化医疗中心。停驻此处将触发：①住院机制：因机体过载或触电被收治时，强制住院隔离3天（3回合无法行动）；②义体属性改造：可消耗齿轮币升级动力与算力属性！';
+            type = 'hospital'; name = '赛博医院'; subType = '住院3天 / 属性升级'; icon = '🏥'; color = '#10B981';
+            desc = '①住院机制：被电子笼网电击或地雷炸伤时关押3天；②升级属性工位：健康访问可强化属性！';
             price = 0; rent = 0;
           } else if (i === Nx + Nz) {
-            type = 'bank';
-            name = '义体中央银行';
-            subType = '核心地标 • 存款分红';
-            icon = '🏦';
-            color = '#F59E0B';
-            desc = '赛博大都会核心储备金库。每次停驻可结算并领取机体能源存款分红 1,200 齿轮币！';
+            type = 'bank'; name = '中央银行'; subType = '存取款 • 10%高息'; icon = '🏦'; color = '#F59E0B';
+            desc = '停驻可领取红利 ⚙️1,000 齿轮币，并可办理齿轮币存取款，享受每轮 10% 高额利息！';
             price = 0; rent = 0;
           } else if (i === 2 * Nx + Nz) {
-            type = 'cage';
-            name = '机械囚笼';
-            subType = '核心地标 • 智能困人禁锢';
-            icon = '🔒';
-            color = '#EF4444';
-            desc = '高能电磁合金拘禁力场。停驻或被判定关押时，动力机体将被智能锁死，禁锢暂停行动 1 回合！';
+            type = 'cage'; name = '机械囚笼'; subType = '困人入狱 • 关2天'; icon = '🔒'; color = '#EF4444';
+            desc = '困人机械监牢！停驻或连掷3次双数将被困 2 回合，可掷双数越狱或交 ⚙️800 保释金！';
             price = 0; rent = 0;
           } else {
             const k = i % S;
-            const k_item = Math.max(1, Math.round(S * 0.16));
-            const k_emp  = Math.round(S * 0.32);
-            const k_rew  = Math.round(S * 0.48);
-            const k_port = Math.round(S * 0.64);
-            const k_lot  = Math.round(S * 0.80);
-            const k_pen  = Math.min(S - 1, Math.round(S * 0.90));
-
-            if (k === k_item) {
-              type = 'item';
-              name = '机械黑市道具';
-              subType = '隐秘集市 • 特种机件';
-              icon = '🛠️';
-              color = '#F59E0B';
-              desc = '地下黑市义体工坊。可购置遥控骰子、反重力跃迁推进器、机体避雷绝缘层等高科技战术机件！';
+            if (k === Math.max(1, Math.round(S * 0.16))) {
+              type = 'shop'; name = '道具店'; subType = '购买大富翁战术卡'; icon = '🛠️'; color = '#F97316';
+              desc = '黑市道具商店！可使用齿轮币购买遥控骰子、路障、地雷、换位卡等 10 种道具！';
               price = 0; rent = 0;
-            } else if (k === k_emp) {
-              type = 'emp_grid';
-              name = '电子笼网 (电击)';
-              subType = '高危陷阱 • 强电击送进医院';
-              icon = '⚡';
-              color = '#00E5FF';
-              desc = '非法架设的高压EMP电子笼网！踩中立刻遭遇高压脉冲强力电击，机体电路严重烧毁，直接强制移送进【赛博医院】隔离住院3天！';
+            } else if (k === Math.round(S * 0.32)) {
+              type = 'emp_grid'; name = '电子笼网'; subType = '高压电击进医院'; icon = '⚡'; color = '#00E5FF';
+              desc = '高危高压电击陷阱！踩中立刻遭遇强力电击，直接强制送进【赛博医院】住院关 3 天！';
               price = 0; rent = 0;
-            } else if (k === k_rew) {
-              type = 'reward';
-              name = '天基赛博空投';
-              subType = '随机事件 • 巨额补给';
-              icon = '🎁';
-              color = '#34D399';
-              desc = '巨型空投运输机截获的科技盲盒。立刻获得 1,500 齿轮资金与机体过载冷却液！';
+            } else if (k === Math.round(S * 0.48)) {
+              type = 'reward'; name = '幸运奖励'; subType = '机会翻牌 • 送钱送卡'; icon = '🎁'; color = '#22C55E';
+              desc = '大富翁幸运机会格！随机翻开奖励事件：获赠齿轮币补贴或稀有道具卡！';
               price = 0; rent = 0;
-            } else if (k === k_port) {
-              type = 'portal';
-              name = '量子折跃门';
-              subType = '空间奇点 • 对角瞬移';
-              icon = '🌀';
-              color = '#A855F7';
-              desc = '超空间微型虫洞发射井。踩中即可打破空间曲率，瞬间量子折跃传送至对角的折跃门，抢占关键赛区！';
+            } else if (k === Math.round(S * 0.64)) {
+              type = 'portal'; name = '传送门'; subType = '量子空间折跃'; icon = '🌀'; color = '#A855F7';
+              desc = '空间虫洞传送门！踩中瞬间量子折跃至对角传送门，抢占黄金街区！';
               price = 0; rent = 0;
-            } else if (k === k_lot) {
-              type = 'lottery';
-              name = '霓虹彩票店';
-              subType = '街区娱乐 • 随机大奖';
-              icon = '🎰';
-              color = '#EC4899';
-              desc = '全息霓虹老虎机与刮刮乐投注站。停驻可免费旋转大转盘，随机赢取 800~3,000 齿轮币暴击奖金并获赠幸运彩票！';
+            } else if (k === Math.round(S * 0.78)) {
+              type = 'lottery'; name = '彩票店'; subType = '投注开大奖'; icon = '🎰'; color = '#EC4899';
+              desc = '大都会彩票投注站！花费 ⚙️200 购买幸运号码，开奖时独得巨额齿轮币奖池！';
               price = 0; rent = 0;
-            } else if (k === k_pen) {
-              type = 'penalty';
-              name = '反应堆过载';
-              subType = '高危隐患 • 罚金';
-              icon = '⚠️';
-              color = '#F87171';
-              desc = '机体微型核聚变炉过热警报！为防止熔融，必须缴纳 1,000 齿轮币应急排热冷却处理费！';
+            } else if (k === Math.min(S - 1, Math.round(S * 0.90))) {
+              type = 'penalty'; name = '惩罚事件'; subType = '厄运罚款 • 查税'; icon = '⚠️'; color = '#EF4444';
+              desc = '厄运惩罚格！可能遭遇反应堆过载罚款、城市房产维护税等扣款！';
               price = 0; rent = 0;
             } else {
-              const pInfo = propertyNames[propIdx % propertyNames.length];
-              propIdx++;
               type = 'property';
-              name = pInfo.name;
-              isTech = pInfo.isTech;
-              subType = isTech ? '战略科技企业' : '赛博工坊地产';
-              icon = isTech ? '🏢' : '🏙️';
-              color = isTech ? '#8B5CF6' : (propIdx % 2 === 0 ? '#0284C7' : '#06B6D4');
-              desc = `赛博大都会街区资产。无主时可以基础价格购置；进驻已购置工坊需支付过路租金 ${rent} 齿轮币！`;
+              name = propNames[propIdx % propNames.length] + (N === 128 ? ` #${Math.floor(propIdx / propNames.length) + 1}` : '');
+              propIdx++;
+              subType = `${group.name} • 可建房`;
+              icon = '🏠';
+              color = group.color;
+              desc = `属于【${group.name}】。集齐同色街区全部地皮后，过路租金直接翻倍！`;
             }
           }
 
           list.push({
-            index: i,
-            x: Number(x.toFixed(2)),
-            y: 0,
-            z: Number(z.toFixed(2)),
-            yaw: Number(yaw.toFixed(2)),
-            tileW,
-            tileD,
-            type,
-            name,
-            subType,
-            icon,
-            color,
-            desc,
-            price,
-            rent,
-            isTech,
-            owner: null,
-            level: 0
+            index: i, x: Number(x.toFixed(2)), y: 0, z: Number(z.toFixed(2)),
+            yaw: Number(yaw.toFixed(2)), tileW, tileD,
+            type, name, subType, icon, color, desc, price, rent,
+            groupId: type === 'property' ? group.id : null,
+            groupName: type === 'property' ? group.name : null,
+            owner: null, level: 0, frozenTurns: 0,
+            trap: null, // 'roadblock' | 'landmine'
+            buildingMesh: null, trapMesh: null
           });
         }
-
-        return { list, halfW, halfH, Nx, Nz, tileW, tileD };
+        return { list, halfW, halfH, tileW, tileD };
       }
 
       // =========================================================================
-      // 2. 超清 512×512 动态地格贴图（大字体、醒目图标、高对比，彻底解决看不清）
+      // 3. 明快清晰的大富翁地格贴图 (高对比彩色顶栏 + 拥有者标签 + 租金)
       // =========================================================================
       function calculateRent(tile) {
         if (!tile || tile.type !== 'property' || !tile.owner) return 0;
-        const mult = (tile.level === 1 ? 1.0 : (tile.level === 2 ? 2.2 : 4.0));
-        let rent = Math.floor(tile.rent * mult);
-        if (tile.isTech && tile.owner.cyberMods && tile.owner.cyberMods.core) {
-          rent = Math.floor(rent * 1.3);
+        if (tile.frozenTurns > 0) return 0;
+        const mult = [0, 1.0, 2.2, 4.0][tile.level] || 1.0;
+        let r = Math.floor(tile.rent * mult);
+        // 同色街区垄断：全套拥有则租金翻倍！
+        const groupTiles = tiles.filter(t => t.groupId === tile.groupId);
+        if (groupTiles.length > 0 && groupTiles.every(t => t.owner && t.owner.id === tile.owner.id)) {
+          r *= 2;
         }
-        return rent;
+        return r;
       }
 
       function calculateUpgradeCost(tile) {
         if (!tile || tile.type !== 'property' || tile.level >= 3) return 0;
-        if (tile.level === 1) return Math.floor(tile.price * 0.65);
-        if (tile.level === 2) return Math.floor(tile.price * 1.1);
-        return tile.price;
+        return Math.floor(tile.price * (tile.level === 1 ? 0.6 : 1.0));
       }
 
-      function createChunkyTileTexture(tile) {
+      function createTileTexture(tile) {
         const cvs = document.createElement('canvas');
-        cvs.width = 512;
-        cvs.height = 512;
+        cvs.width = 512; cvs.height = 512;
         const ctx = cvs.getContext('2d');
 
-        // 深暗高反光底板
-        ctx.fillStyle = '#070D1A';
+        // 明快清透的浅深蓝底色 (不再死黑)
+        ctx.fillStyle = tile.owner ? '#0F172A' : '#1E293B';
         ctx.fillRect(0, 0, 512, 512);
 
-        // 如果该地块已被玩家占领，则使用玩家专属颜色作为边框与顶栏
         const headerColor = tile.owner ? tile.owner.color : tile.color;
-
-        // 顶栏鲜亮色带 (高度 140px，占据近 1/3)
         ctx.fillStyle = headerColor;
-        ctx.fillRect(0, 0, 512, 140);
+        ctx.fillRect(0, 0, 512, 136);
 
-        // 高光边框与内发光环
         ctx.strokeStyle = headerColor;
-        ctx.lineWidth = 14;
+        ctx.lineWidth = 16;
         ctx.strokeRect(8, 8, 496, 496);
 
-        // 顶栏图标 (超大清晰图标)
-        ctx.fillStyle = '#070D1A';
+        ctx.fillStyle = '#0F172A';
         ctx.font = 'bold 74px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(tile.icon, 24, 100);
+        ctx.fillText(tile.icon, 24, 98);
 
-        // 顶栏地格编号与等级
         ctx.font = 'bold 48px monospace';
         ctx.textAlign = 'right';
-        if (tile.owner && tile.level > 0) {
-          ctx.fillText(`Lv.${tile.level} #${tile.index.toString().padStart(2, '0')}`, 488, 100);
-        } else {
-          ctx.fillText('#' + tile.index.toString().padStart(2, '0'), 488, 100);
-        }
+        ctx.fillText(tile.owner ? `Lv.${tile.level} #${tile.index}` : `#${tile.index}`, 484, 98);
 
-        // 中部大字地格名称 (超大特写，高对比度白字)
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 54px "PingFang SC", "Microsoft YaHei", sans-serif';
         ctx.textAlign = 'center';
-        ctx.shadowColor = headerColor;
-        ctx.shadowBlur = 12;
-        let shortName = tile.name.replace(' (Cyber Start)', '');
-        ctx.fillText(shortName, 256, 255);
-        ctx.shadowBlur = 0;
+        ctx.fillText(tile.name.replace(' (GO)', ''), 256, 255);
 
-        // 中下部归属标签 (如果已被购买)
         if (tile.owner) {
-          ctx.fillStyle = '#E0F2FE';
-          ctx.font = 'bold 36px "Microsoft YaHei", sans-serif';
-          ctx.textAlign = 'center';
+          ctx.fillStyle = tile.owner.color;
+          ctx.font = 'bold 38px "Microsoft YaHei", sans-serif';
           ctx.fillText(`[${tile.owner.name.split(' ')[0]}] 拥有`, 256, 330);
-        }
-
-        // 底部类型、价格或租金 (大字醒目)
-        if (tile.type === 'property') {
-          if (tile.owner) {
-            const currentRent = calculateRent(tile);
-            ctx.fillStyle = '#FDE047';
-            ctx.font = 'bold 42px monospace';
-            ctx.fillText('过路租: ⚙️ ' + currentRent.toLocaleString(), 256, 430);
-          } else {
-            ctx.fillStyle = '#FDE047';
-            ctx.font = 'bold 44px monospace';
-            ctx.fillText('⚙️ ' + tile.price.toLocaleString(), 256, 420);
-          }
+          ctx.fillStyle = tile.frozenTurns > 0 ? '#EF4444' : '#FDE047';
+          ctx.font = 'bold 42px monospace';
+          ctx.fillText(tile.frozenTurns > 0 ? '🛑 已查封免租' : `过路租: ⚙️${calculateRent(tile).toLocaleString()}`, 256, 430);
+        } else if (tile.type === 'property') {
+          ctx.fillStyle = '#FDE047';
+          ctx.font = 'bold 46px monospace';
+          ctx.fillText(`⚙️ ${tile.price.toLocaleString()}`, 256, 415);
         } else {
           ctx.fillStyle = tile.color;
           ctx.font = 'bold 40px "Microsoft YaHei", sans-serif';
-          const tag = tile.subType.split('•')[0].trim();
-          ctx.fillText(tag, 256, 420);
+          ctx.fillText(tile.subType.split('•')[0].trim(), 256, 415);
         }
 
         const tex = new THREE.CanvasTexture(cvs);
@@ -6892,15 +6796,17 @@
       }
 
       function refreshTileTexture(tile) {
-        if (!tile || !tileMeshes[tile.index]) return;
         const m = tileMeshes[tile.index];
-        if (m.material && m.material[2]) {
+        if (m && m.material && m.material[2]) {
           if (m.material[2].map) m.material[2].map.dispose();
-          m.material[2].map = createChunkyTileTexture(tile);
+          m.material[2].map = createTileTexture(tile);
           m.material[2].needsUpdate = true;
         }
       }
 
+      // =========================================================================
+      // 4. 3D 房产建筑与路障/地雷实体模型
+      // =========================================================================
       function updateTileBuildingMesh(tile) {
         if (tile.buildingMesh) {
           markersGroup.remove(tile.buildingMesh);
@@ -6908,790 +6814,245 @@
         }
         if (!tile.owner || tile.level <= 0) return;
 
-        const bGrp = new THREE.Group();
-        const ownerHex = tile.owner.hex;
-        const ownerMat = new THREE.MeshStandardMaterial({
-          color: ownerHex,
-          emissive: ownerHex,
-          emissiveIntensity: 0.85,
-          metalness: 0.85,
-          roughness: 0.2
+        const grp = new THREE.Group();
+        const matOwner = new THREE.MeshStandardMaterial({
+          color: tile.owner.hex, emissive: tile.owner.hex, emissiveIntensity: 0.45, roughness: 0.3
         });
-        const darkChassisMat = new THREE.MeshStandardMaterial({
-          color: 0x0F172A,
-          metalness: 0.9,
-          roughness: 0.3
-        });
+        const matWall = new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.4 });
 
         if (tile.level === 1) {
-          // Level 1: 小型服务器机柜 + 拥有者发光装饰
-          const chassis = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.65, 0.45), darkChassisMat);
-          chassis.position.y = 0.48;
-          bGrp.add(chassis);
-
-          const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.57, 0.12, 0.47), ownerMat);
-          stripe.position.y = 0.48;
-          bGrp.add(stripe);
-
-          const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.025, 8, 20), ownerMat);
-          haloRing.rotation.x = Math.PI / 2;
-          haloRing.position.y = 0.85;
-          bGrp.add(haloRing);
+          // Lv.1 可爱立体小洋房
+          const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.45, 0.65), matWall);
+          body.position.y = 0.38;
+          const roof = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.4, 4), matOwner);
+          roof.rotation.y = Math.PI / 4;
+          roof.position.y = 0.8;
+          grp.add(body, roof);
         } else if (tile.level === 2) {
-          // Level 2: 数据中心双塔 + 天空天桥
-          const tower1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.35), darkChassisMat);
-          tower1.position.set(-0.3, 0.7, 0);
-          const tower2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.35), darkChassisMat);
-          tower2.position.set(0.3, 0.7, 0);
-          bGrp.add(tower1);
-          bGrp.add(tower2);
-
-          const skybridge = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.16, 0.25), ownerMat);
-          skybridge.position.set(0, 0.9, 0);
-          bGrp.add(skybridge);
-
-          const beacon1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), ownerMat);
-          beacon1.position.set(-0.3, 1.3, 0);
-          const beacon2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), ownerMat);
-          beacon2.position.set(0.3, 1.3, 0);
-          bGrp.add(beacon1);
-          bGrp.add(beacon2);
-        } else if (tile.level >= 3) {
-          // Level 3: 宏伟赛博摩天大厦 + 冲天垂直全息激光柱
-          const base = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.5, 0.75), darkChassisMat);
+          // Lv.2 双层商业大厦
+          const b1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.5), matWall);
+          b1.position.set(-0.26, 0.6, 0);
+          const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), matOwner);
+          b2.position.set(0.26, 0.5, 0);
+          grp.add(b1, b2);
+        } else {
+          // Lv.3 地标黄金摩天楼
+          const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.8), matOwner);
           base.position.y = 0.4;
-          bGrp.add(base);
-
-          const tower = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.55), darkChassisMat);
-          tower.position.y = 1.1;
-          bGrp.add(tower);
-
-          const penthouse = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.4, 0.38), ownerMat);
-          penthouse.position.y = 1.8;
-          bGrp.add(penthouse);
-
-          // 垂直全息发光光束
-          const beamGeo = new THREE.CylinderGeometry(0.08, 0.16, 3.2, 12, 1, true);
-          const beamMat = new THREE.MeshBasicMaterial({
-            color: ownerHex,
-            transparent: true,
-            opacity: 0.65,
-            side: THREE.DoubleSide
-          });
-          const beam = new THREE.Mesh(beamGeo, beamMat);
-          beam.position.y = 3.5;
-          bGrp.add(beam);
+          const tower = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.3, 0.55), matWall);
+          tower.position.y = 1.25;
+          const spire = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.6, 8), matOwner);
+          spire.position.y = 2.2;
+          grp.add(base, tower, spire);
         }
 
-        bGrp.position.set(tile.x, 0, tile.z);
-        bGrp.rotation.y = tile.yaw;
-        markersGroup.add(bGrp);
-        tile.buildingMesh = bGrp;
+        grp.position.set(tile.x, 0, tile.z);
+        grp.rotation.y = tile.yaw;
+        markersGroup.add(grp);
+        tile.buildingMesh = grp;
+      }
+
+      function updateTileTrapMesh(tile) {
+        if (tile.trapMesh) {
+          trapsGroup.remove(tile.trapMesh);
+          tile.trapMesh = null;
+        }
+        if (!tile.trap) return;
+
+        const grp = new THREE.Group();
+        if (tile.trap === 'roadblock') {
+          const bar = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 0.35, 0.28),
+            new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.6 })
+          );
+          bar.position.y = 0.35;
+          grp.add(bar);
+        } else if (tile.trap === 'landmine') {
+          const mine = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.4, 0.48, 0.18, 16),
+            new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xDC2626, emissiveIntensity: 0.8 })
+          );
+          mine.position.y = 0.25;
+          grp.add(mine);
+        }
+        grp.position.set(tile.x, 0, tile.z);
+        grp.rotation.y = tile.yaw;
+        trapsGroup.add(grp);
+        tile.trapMesh = grp;
       }
 
       // =========================================================================
-      // 3. 图2精髓：中央赛博朋克夜景大都市 (闪烁霓虹、摩天楼、全息能源球与飞艇)
+      // 5. 清爽开阔的大富翁中央公园与 3D 舞台初始化
       // =========================================================================
-// =========================================================================
-      // 3. 图2精髓：中央赛博朋克夜景大都市 (高质感霓虹窗户/全息立面/轮廓发光/告别黑方块)
-      // =========================================================================
-      function buildCenterCyberCity(halfW, halfH, mapSize) {
+      function buildOpenCenterPlaza(halfW, halfH) {
         const grp = new THREE.Group();
 
-        // 1. 动态生成高质感赛博地面贴图 (高科技网格与电路走向，告别纯青色实心板)
-        function createCyberGroundTexture() {
-          const cvs = document.createElement('canvas');
-          cvs.width = 512; cvs.height = 512;
-          const ctx = cvs.getContext('2d');
-          ctx.fillStyle = '#060B14';
-          ctx.fillRect(0, 0, 512, 512);
-
-          // 细微网格
-          ctx.strokeStyle = '#0F1D33';
-          ctx.lineWidth = 1.5;
-          for (let i = 0; i <= 512; i += 32) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
-          }
-
-          // 科技电路网络走线
-          ctx.strokeStyle = '#0284C7';
-          ctx.lineWidth = 2.5;
-          const circuits = [
-            [[32, 32], [96, 32], [128, 64], [128, 160], [192, 192]],
-            [[480, 480], [416, 480], [384, 448], [384, 352], [320, 320]],
-            [[32, 480], [96, 480], [160, 416], [256, 416]],
-            [[480, 32], [416, 32], [352, 96], [352, 192]]
-          ];
-          circuits.forEach(path => {
-            ctx.beginPath();
-            ctx.moveTo(path[0][0], path[0][1]);
-            for (let k = 1; k < path.length; k++) {
-              ctx.lineTo(path[k][0], path[k][1]);
-            }
-            ctx.stroke();
-          });
-
-          // 电路发光节点
-          ctx.fillStyle = '#00E5FF';
-          [[192, 192], [320, 320], [256, 416], [352, 192], [256, 256]].forEach(([nx, ny]) => {
-            ctx.beginPath();
-            ctx.arc(nx, ny, 5, 0, Math.PI * 2);
-            ctx.fill();
-          });
-
-          const tex = new THREE.CanvasTexture(cvs);
-          tex.wrapS = THREE.RepeatWrapping;
-          tex.wrapT = THREE.RepeatWrapping;
-          tex.repeat.set(3, 3);
-          return tex;
-        }
-
-        // 2. 动态生成高质感摩天大楼赛博窗户夜景贴图 (512×512，自发光不黑屏)
-        function createSkyscraperWindowTexture() {
-          const cvs = document.createElement('canvas');
-          cvs.width = 512; cvs.height = 512;
-          const ctx = cvs.getContext('2d');
-
-          // 深色幕墙底色
-          ctx.fillStyle = '#09101F';
-          ctx.fillRect(0, 0, 512, 512);
-
-          // 楼层横梁分割线
-          ctx.strokeStyle = '#1E293B';
-          ctx.lineWidth = 4;
-          for (let y = 0; y <= 512; y += 32) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(512, y); ctx.stroke();
-          }
-          // 纵向百叶立柱
-          ctx.strokeStyle = '#0F172A';
-          ctx.lineWidth = 3;
-          for (let x = 0; x <= 512; x += 16) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
-          }
-
-          // 璀璨夜景霓虹发光窗口 (高密度自发光矩阵)
-          const colors = [
-            '#00E5FF', '#38BDF8', '#67E8F9',  // 赛博青蓝
-            '#EC4899', '#F472B6',            // 霓虹紫粉
-            '#FDE047', '#FBBF24',            // 科技明黄
-            '#A855F7', '#C084FC',            // 量子深紫
-            '#FFFFFF',                       // 亮白照明
-            '#060C18', '#060C18'             // 未点亮暗窗
-          ];
-
-          for (let row = 4; row < 512; row += 16) {
-            for (let col = 3; col < 512; col += 16) {
-              const c = colors[Math.floor(Math.random() * colors.length)];
-              ctx.fillStyle = c;
-              ctx.fillRect(col, row, 10, 8);
-            }
-          }
-
-          const tex = new THREE.CanvasTexture(cvs);
-          tex.wrapS = THREE.RepeatWrapping;
-          tex.wrapT = THREE.RepeatWrapping;
-          return tex;
-        }
-
-        // 3. 动态生成商业科技全息巨幕贴图 (带霓虹巨幅广告)
-        function createHoloAdTexture(textLabel, accentColor) {
-          const cvs = document.createElement('canvas');
-          cvs.width = 512; cvs.height = 256;
-          const ctx = cvs.getContext('2d');
-
-          // 屏幕深色反光底
-          ctx.fillStyle = '#050811';
-          ctx.fillRect(0, 0, 512, 256);
-
-          // 动态全息边框
-          ctx.strokeStyle = accentColor;
-          ctx.lineWidth = 8;
-          ctx.strokeRect(10, 10, 492, 236);
-
-          // 扫描线质感
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-          for (let y = 0; y < 256; y += 4) {
-            ctx.fillRect(10, y, 492, 2);
-          }
-
-          // 发光文字
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '900 68px "Arial Black", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.shadowColor = accentColor;
-          ctx.shadowBlur = 24;
-          ctx.fillText(textLabel, 256, 140);
-          ctx.shadowBlur = 0;
-
-          // 底部副标
-          ctx.fillStyle = accentColor;
-          ctx.font = 'bold 26px monospace';
-          ctx.fillText('CYBER METROPOLIS 2077', 256, 195);
-
-          const tex = new THREE.CanvasTexture(cvs);
-          return tex;
-        }
-
-        // 实例化高品质贴图
-        const groundTex = createCyberGroundTexture();
-        const winTex = createSkyscraperWindowTexture();
-        const adTexList = [
-          createHoloAdTexture('CYBER CORP', '#00E5FF'),
-          createHoloAdTexture('NEON CITY', '#EC4899'),
-          createHoloAdTexture('AI MATRIX', '#FDE047'),
-          createHoloAdTexture('G-TYCOON', '#38BDF8')
-        ];
-
-        // 平台底盘复合高科技基座 (深暗高反光，告别纯青板)
-        const padW = halfW * 1.58;
-        const padH = halfH * 1.58;
-        const podGeo = new THREE.BoxGeometry(padW, 0.45, padH);
-        const podMat = new THREE.MeshStandardMaterial({
-          color: 0xFFFFFF,
-          map: groundTex,
-          emissive: 0x051326,
-          emissiveIntensity: 0.25,
-          metalness: 0.88,
-          roughness: 0.25
+        // 中央草坪/科技广场底盘 (明快柔和，不挡视线)
+        const plazaGeo = new THREE.BoxGeometry(halfW * 1.65, 0.2, halfH * 1.65);
+        const plazaMat = new THREE.MeshStandardMaterial({
+          color: 0x0F172A, metalness: 0.4, roughness: 0.6
         });
-        const podium = new THREE.Mesh(podGeo, podMat);
-        podium.position.y = -0.25;
-        podium.receiveShadow = true;
-        grp.add(podium);
+        const plaza = new THREE.Mesh(plazaGeo, plazaMat);
+        plaza.position.y = -0.05;
+        grp.add(plaza);
 
-        // 四周精致霓虹青光导轨 (仅围绕在平台边缘四周，宽度 0.18，绝不遮挡地面！)
-        function addEdgeRims() {
-          const rimMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF });
-          const rw = padW, rh = padH, rwThick = 0.18, ry = 0.02;
-          // 北边与南边导轨
-          const northSGeo = new THREE.BoxGeometry(rw + rwThick, 0.06, rwThick);
-          const northM = new THREE.Mesh(northSGeo, rimMat); northM.position.set(0, ry, rh / 2); grp.add(northM);
-          const southM = new THREE.Mesh(northSGeo, rimMat); southM.position.set(0, ry, -rh / 2); grp.add(southM);
-          // 西边与东边导轨
-          const westEGeo = new THREE.BoxGeometry(rwThick, 0.06, rh + rwThick);
-          const westM = new THREE.Mesh(westEGeo, rimMat); westM.position.set(-rw / 2, ry, 0); grp.add(westM);
-          const eastM = new THREE.Mesh(westEGeo, rimMat); eastM.position.set(rw / 2, ry, 0); grp.add(eastM);
-        }
-        addEdgeRims();
+        // 中心旋转金色齿轮喷泉雕塑 (清晰低矮，绝不挡棋盘)
+        const hub = new THREE.Group();
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(2.8, 0.22, 12, 36),
+          new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.6, metalness: 0.8 })
+        );
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = 0.6;
+        hub.add(ring);
 
-        // 摩天大楼通用自发光高亮材质 (map + emissiveMap 双通道自发光，确保夜景中绝不黑漆漆！)
-        const bldgMat = new THREE.MeshStandardMaterial({
-          color: 0xFFFFFF,
-          map: winTex,
-          emissive: 0xCCDDF4,
-          emissiveMap: winTex,
-          emissiveIntensity: 0.95,
-          metalness: 0.85,
-          roughness: 0.25
-        });
+        const core = new THREE.Mesh(
+          new THREE.OctahedronGeometry(1.4, 0),
+          new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.8, wireframe: true })
+        );
+        core.position.y = 2.0;
+        hub.add(core);
 
-        const bldgCount = (mapSize === 128 ? 26 : (mapSize === 48 ? 14 : 18));
-        const innerW = halfW * 0.65;
-        const innerH = halfH * 0.65;
-        const beacons = [];
-
-        // 摩天大楼集群构建
-        for (let i = 0; i < bldgCount; i++) {
-          const bw = 1.8 + Math.random() * 1.6;
-          const bd = 1.8 + Math.random() * 1.6;
-          const bh = 3.8 + Math.random() * (mapSize === 128 ? 11.5 : 8.0);
-
-          let bx = (Math.random() - 0.5) * innerW * 1.85;
-          let bz = (Math.random() - 0.5) * innerH * 1.85;
-          // 避让中央地标核心区域 (半径 4.5)
-          if (Math.hypot(bx, bz) < 4.5) {
-            bx += (bx >= 0 ? 3.6 : -3.6);
-            bz += (bz >= 0 ? 3.6 : -3.6);
-          }
-
-          // 1. 主楼体 (自发光绚丽摩天大楼)
-          const bGeo = new THREE.BoxGeometry(bw, bh, bd);
-          const bMesh = new THREE.Mesh(bGeo, bldgMat);
-          bMesh.position.set(bx, bh / 2, bz);
-          bMesh.castShadow = true;
-          bMesh.receiveShadow = true;
-          grp.add(bMesh);
-
-          // 2. 赛博建筑轮廓发光线条 (EdgesGeometry 线框微光，图2精髓)
-          const edgeGeo = new THREE.EdgesGeometry(bGeo);
-          const edgeColor = (i % 3 === 0 ? 0x00E5FF : (i % 3 === 1 ? 0xEC4899 : 0x38BDF8));
-          const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.85 });
-          const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
-          bMesh.add(edgeLines);
-
-          // 3. 楼顶分层结构 (顶楼小阁楼 / 机房 / 天台停机坪)
-          const roofH = 0.8 + Math.random() * 1.0;
-          const roofW = bw * 0.65;
-          const roofD = bd * 0.65;
-          const roofGeo = new THREE.BoxGeometry(roofW, roofH, roofD);
-          const roofMat = new THREE.MeshStandardMaterial({
-            color: 0x0E1A2F,
-            emissive: edgeColor,
-            emissiveIntensity: 0.35,
-            metalness: 0.9,
-            roughness: 0.2
-          });
-          const roofMesh = new THREE.Mesh(roofGeo, roofMat);
-          roofMesh.position.set(bx, bh + roofH / 2, bz);
-          grp.add(roofMesh);
-
-          // 4. 楼顶通讯天线与按周期脉冲呼吸的航空警示灯
-          const antH = 1.4 + Math.random() * 1.2;
-          const ant = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.04, 0.04, antH, 8),
-            new THREE.MeshBasicMaterial({ color: 0x94A3B8 })
-          );
-          ant.position.set(bx, bh + roofH + antH / 2, bz);
-          grp.add(ant);
-
-          const tipColor = (i % 2 === 0 ? 0x00E5FF : 0xEF4444);
-          const tipMat = new THREE.MeshBasicMaterial({ color: tipColor, transparent: true, opacity: 1.0 });
-          const tip = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), tipMat);
-          tip.position.set(bx, bh + roofH + antH, bz);
-          grp.add(tip);
-          beacons.push({ mesh: tip, phase: Math.random() * Math.PI * 2, speed: 4.0 + Math.random() * 2.0 });
-
-          // 5. 大楼外立面悬挂巨型全息发光霓虹广告牌 (Holographic LED Screen)
-          if (i % 2 === 0) {
-            const adTex = adTexList[i % adTexList.length];
-            const adGeo = new THREE.PlaneGeometry(bw * 0.95, bw * 0.48);
-            const adMat = new THREE.MeshBasicMaterial({
-              map: adTex,
-              transparent: true,
-              opacity: 0.95,
-              side: THREE.DoubleSide
-            });
-            const adMesh = new THREE.Mesh(adGeo, adMat);
-            // 贴在面向中心或前方的大楼外侧面
-            const outOffset = (bz > 0 ? bd / 2 + 0.05 : -bd / 2 - 0.05);
-            adMesh.position.set(bx, bh * 0.65, bz + outOffset);
-            if (bz <= 0) adMesh.rotation.y = Math.PI;
-            grp.add(adMesh);
-          }
-        }
-
-        // 中心核心地标 (Central Landmark) - 完美契合图2
-        const centerHub = new THREE.Group();
-        centerHub.position.set(0, 0, 0);
-
-        if (mapSize === 64) {
-          // 【64格：霓虹港湾中央全息能源球 + 双层圆环基座 (图2左下同款)】
-          const baseCyl = new THREE.Mesh(
-            new THREE.CylinderGeometry(3.6, 4.0, 0.6, 24),
-            new THREE.MeshStandardMaterial({ color: 0x0C1A30, emissive: 0x00E5FF, emissiveIntensity: 0.35, metalness: 0.92, roughness: 0.2 })
-          );
-          baseCyl.position.y = 0.3;
-          centerHub.add(baseCyl);
-
-          // 能源台阶与光柱
-          const midCyl = new THREE.Mesh(
-            new THREE.CylinderGeometry(2.4, 2.6, 0.5, 24),
-            new THREE.MeshStandardMaterial({ color: 0x112340, emissive: 0x38BDF8, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.2 })
-          );
-          midCyl.position.y = 0.85;
-          centerHub.add(midCyl);
-
-          // 悬浮全息发光球体
-          const orbMat = new THREE.MeshStandardMaterial({
-            color: 0x00E5FF,
-            emissive: 0x00E5FF,
-            emissiveIntensity: 1.2,
-            metalness: 0.3,
-            roughness: 0.1,
-            wireframe: true
-          });
-          const orbMesh = new THREE.Mesh(new THREE.SphereGeometry(1.4, 20, 20), orbMat);
-          orbMesh.position.y = 2.6;
-          centerHub.add(orbMesh);
-
-          // 悬浮能量光环 (倾斜自转)
-          const ringGeo = new THREE.TorusGeometry(2.2, 0.08, 12, 36);
-          const ringMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8 });
-          const orbRing = new THREE.Mesh(ringGeo, ringMat);
-          orbRing.position.y = 2.6;
-          orbRing.rotation.x = Math.PI / 4;
-          centerHub.add(orbRing);
-
-          // 4 根垂直能量导管
-          for (let pi = 0; pi < 4; pi++) {
-            const ang = (pi / 4) * Math.PI * 2;
-            const pCyl = new THREE.Mesh(
-              new THREE.CylinderGeometry(0.12, 0.12, 1.8, 12),
-              new THREE.MeshBasicMaterial({ color: 0x00E5FF })
-            );
-            pCyl.position.set(Math.cos(ang) * 2.8, 1.4, Math.sin(ang) * 2.8);
-            centerHub.add(pCyl);
-          }
-
-          centerHub.userData = { orbMesh, orbRing };
-
-        } else if (mapSize === 48) {
-          // 【48格：空中都市中央高耸天际通讯塔 (图2右下同款)】
-          const towerBase = new THREE.Mesh(
-            new THREE.CylinderGeometry(2.2, 2.6, 0.6, 16),
-            new THREE.MeshStandardMaterial({ color: 0x0E1F38, emissive: 0x38BDF8, emissiveIntensity: 0.4, metalness: 0.9 })
-          );
-          towerBase.position.y = 0.3;
-          centerHub.add(towerBase);
-
-          // 通讯主塔身
-          const spire = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.35, 1.1, 7.5, 16),
-            new THREE.MeshStandardMaterial({ color: 0x1E293B, emissive: 0x00E5FF, emissiveIntensity: 0.5, metalness: 0.88 })
-          );
-          spire.position.y = 4.3;
-          centerHub.add(spire);
-
-          // 塔顶环形观景台与旋转天线雷达
-          const deck = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.6, 1.6, 0.4, 16),
-            new THREE.MeshBasicMaterial({ color: 0x00E5FF })
-          );
-          deck.position.y = 7.0;
-          centerHub.add(deck);
-
-          // 冲天垂直全息激光束
-          const beamGeo = new THREE.CylinderGeometry(0.08, 0.08, 22, 8);
-          const beamMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.75 });
-          const beam = new THREE.Mesh(beamGeo, beamMat);
-          beam.position.y = 15.0;
-          centerHub.add(beam);
-
-          centerHub.userData = { spire, deck };
-
-        } else {
-          // 【128格：超大都市中央未来帝国核心主堡垒 (图2上方同款)】
-          const castleBase = new THREE.Mesh(
-            new THREE.BoxGeometry(7.0, 1.2, 7.0),
-            new THREE.MeshStandardMaterial({ color: 0x0A1526, emissive: 0xA855F7, emissiveIntensity: 0.45, metalness: 0.9 })
-          );
-          castleBase.position.y = 0.6;
-          centerHub.add(castleBase);
-
-          const midTower = new THREE.Mesh(
-            new THREE.BoxGeometry(4.4, 3.2, 4.4),
-            new THREE.MeshStandardMaterial({ color: 0x111E36, emissive: 0x00E5FF, emissiveIntensity: 0.55, metalness: 0.85 })
-          );
-          midTower.position.y = 2.8;
-          centerHub.add(midTower);
-
-          const highTower = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.6, 1.4, 8.5, 16),
-            new THREE.MeshStandardMaterial({ color: 0x1E293B, emissive: 0xEC4899, emissiveIntensity: 0.6, metalness: 0.9 })
-          );
-          highTower.position.y = 8.5;
-          centerHub.add(highTower);
-
-          // 顶部全息紫金光柱
-          const grandBeam = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.2, 0.2, 28, 8),
-            new THREE.MeshBasicMaterial({ color: 0xC084FC, transparent: true, opacity: 0.85 })
-          );
-          grandBeam.position.y = 22.0;
-          centerHub.add(grandBeam);
-
-          centerHub.userData = { castleBase, midTower, highTower };
-        }
-
-        grp.add(centerHub);
-
-        // 空中巡航飞艇 (带双引擎喷气尾流，在摩天楼群上空平稳巡航)
-        const shipGrp = new THREE.Group();
-        const hullGeo = new THREE.ConeGeometry(0.7, 3.2, 12);
-        hullGeo.rotateX(Math.PI / 2);
-        const hullMat = new THREE.MeshStandardMaterial({
-          color: 0x1E293B,
-          emissive: 0x00E5FF,
-          emissiveIntensity: 0.45,
-          metalness: 0.92,
-          roughness: 0.2
-        });
-        const hull = new THREE.Mesh(hullGeo, hullMat);
-        shipGrp.add(hull);
-
-        // 飞艇双侧发光尾翼与喷气火光
-        const finGeo = new THREE.BoxGeometry(1.6, 0.06, 0.6);
-        const finMat = new THREE.MeshBasicMaterial({ color: 0xEC4899 });
-        const fin = new THREE.Mesh(finGeo, finMat);
-        fin.position.z = -0.7;
-        shipGrp.add(fin);
-
-        const thrusterGeo = new THREE.CylinderGeometry(0.12, 0.02, 0.8, 8);
-        thrusterGeo.rotateX(Math.PI / 2);
-        const thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF });
-        const thrusterL = new THREE.Mesh(thrusterGeo, thrusterMat);
-        thrusterL.position.set(-0.35, 0, -1.3);
-        const thrusterR = thrusterL.clone();
-        thrusterR.position.x = 0.35;
-        shipGrp.add(thrusterL);
-        shipGrp.add(thrusterR);
-
-        shipGrp.position.set(innerW * 0.85, (mapSize === 128 ? 16.0 : 9.5), 0);
-        grp.add(shipGrp);
-
-        grp.userData = { beacons, centerHub, shipGrp, orbitR: innerW * 0.85, shipAngle: 0 };
+        grp.add(hub);
+        centerSculpture = hub;
         return grp;
       }
 
-      // =========================================================================
-      // 4. 3D 舞台初始化与事件绑定
-      // =========================================================================
       function ensureStageInitialized() {
+        if (renderer) return;
         const stageEl = document.getElementById('tycoon-3d-stage');
-        if (!stageEl) return;
-
-        if (!renderer) {
-          scene = new THREE.Scene();
-          scene.fog = new THREE.FogExp2(0x030712, 0.010);
-
-          camera = new THREE.PerspectiveCamera(48, stageEl.clientWidth / stageEl.clientHeight, 0.1, 400);
-
-          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-          renderer.setSize(stageEl.clientWidth, stageEl.clientHeight);
-          renderer.shadowMap.enabled = true;
-          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-          stageEl.appendChild(renderer.domElement);
-
-          raycaster = new THREE.Raycaster();
-
-          // 灯光系统：深邃赛博天幕环境光 + 强烈主聚光 + 霓虹轮廓光
-          const hemiLight = new THREE.HemisphereLight(0x38BDF8, 0x090D16, 0.8);
-          scene.add(hemiLight);
-
-          const dirLight = new THREE.DirectionalLight(0xFFFFFF, 1.4);
-          dirLight.position.set(22, 42, 26);
-          dirLight.castShadow = true;
-          scene.add(dirLight);
-
-          const purpleRim = new THREE.PointLight(0xD946EF, 2.0, 80);
-          purpleRim.position.set(-26, 16, -26);
-          scene.add(purpleRim);
-
-          const cyanRim = new THREE.PointLight(0x00E5FF, 2.0, 80);
-          cyanRim.position.set(26, 14, 26);
-          scene.add(cyanRim);
-
-          roadGroup = new THREE.Group();
-          boardGroup = new THREE.Group();
-          cityGroup = new THREE.Group();
-          pawnsGroup = new THREE.Group();
-          markersGroup = new THREE.Group();
-
-          scene.add(roadGroup);
-          scene.add(boardGroup);
-          scene.add(cityGroup);
-          scene.add(pawnsGroup);
-          scene.add(markersGroup);
-
-          // 悬浮高亮选框
-          const selBoxGeo = new THREE.BoxGeometry(2.5, 0.45, 2.5);
-          const selBoxMat = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.9 });
-          selectionBoxMesh = new THREE.Mesh(selBoxGeo, selBoxMat);
-          selectionBoxMesh.visible = false;
-          scene.add(selectionBoxMesh);
-
-          const hovBoxMat = new THREE.MeshBasicMaterial({ color: 0xFDE047, wireframe: true, transparent: true, opacity: 0.7 });
-          hoverBoxMesh = new THREE.Mesh(selBoxGeo.clone(), hovBoxMat);
-          hoverBoxMesh.visible = false;
-          scene.add(hoverBoxMesh);
-
-          bindPointerEvents(renderer.domElement);
-          window.addEventListener('resize', onWindowResize);
-          startRenderLoop();
-        }
-
-        buildCyberSparks();
-      }
-
-      function onWindowResize() {
-        const stageEl = document.getElementById('tycoon-3d-stage');
-        if (!stageEl || !camera || !renderer) return;
         const w = stageEl.clientWidth || window.innerWidth;
         const h = stageEl.clientHeight || window.innerHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 300);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(w, h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        stageEl.innerHTML = '';
+        stageEl.appendChild(renderer.domElement);
+
+        // 明亮清晰的全局光照，告别黑漆漆
+        scene.add(new THREE.HemisphereLight(0xE0F2FE, 0x1E293B, 1.35));
+        const dirLight = new THREE.DirectionalLight(0xFFFFFF, 1.2);
+        dirLight.position.set(22, 42, 26);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        roadGroup = new THREE.Group();
+        boardGroup = new THREE.Group();
+        cityGroup = new THREE.Group();
+        markersGroup = new THREE.Group();
+        trapsGroup = new THREE.Group();
+        pawnsGroup = new THREE.Group();
+        scene.add(roadGroup, boardGroup, cityGroup, markersGroup, trapsGroup, pawnsGroup);
+
+        selectionBoxMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(2.45, 0.4, 2.45),
+          new THREE.MeshBasicMaterial({ color: 0xFDE047, wireframe: true })
+        );
+        selectionBoxMesh.visible = false;
+        scene.add(selectionBoxMesh);
+
+        hoverBoxMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(2.4, 0.38, 2.4),
+          new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true })
+        );
+        hoverBoxMesh.visible = false;
+        scene.add(hoverBoxMesh);
+
+        raycaster = new THREE.Raycaster();
+        bindPointerEvents(renderer.domElement);
+        window.addEventListener('resize', () => {
+          const nw = stageEl.clientWidth || window.innerWidth;
+          const nh = stageEl.clientHeight || window.innerHeight;
+          camera.aspect = nw / nh;
+          camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        });
+        startRenderLoop();
       }
 
-      // =========================================================================
-      // 5. 重构赛博棋盘：大幅面地格、消除浮空标牌、中心全景夜景城市
-      // =========================================================================
       function rebuildBoardScene() {
-        while (roadGroup.children.length > 0) roadGroup.remove(roadGroup.children[0]);
-        while (boardGroup.children.length > 0) boardGroup.remove(boardGroup.children[0]);
-        while (cityGroup.children.length > 0) cityGroup.remove(cityGroup.children[0]);
-        while (markersGroup.children.length > 0) markersGroup.remove(markersGroup.children[0]);
-        while (pawnsGroup.children.length > 0) pawnsGroup.remove(pawnsGroup.children[0]);
-
+        [roadGroup, boardGroup, cityGroup, markersGroup, trapsGroup, pawnsGroup].forEach(g => {
+          while (g.children.length > 0) g.remove(g.children[0]);
+        });
         tileMeshes = [];
+        roundCount = 1;
+        lotteryPool = 3500;
+        consecutiveDoubles = 0;
 
-        const { list, halfW, halfH, tileW, tileD } = buildBlueprintMapTrack(cfg.mapSize);
+        const { list, halfW, halfH, tileW, tileD } = buildMonopolyTrack(cfg.mapSize);
         tiles = list;
 
-        // 根据地图规模设定图2推荐的最佳全景鸟瞰视距
-        if (cfg.mapSize === 48) {
-          targetDist = 44.0;
-        } else if (cfg.mapSize === 64) {
-          targetDist = 52.0;
-        } else {
-          targetDist = 82.0;
-        }
-        targetPitch = 0.65;
-        targetYaw = 0.75;
-        camDist = targetDist;
-        camPitch = targetPitch;
-        camYaw = targetYaw;
+        cityGroup.add(buildOpenCenterPlaza(halfW, halfH));
 
-        // 1. 生成中央赛博朋克夜景都市 (彻底替代旧齿轮)
-        cityData = buildCenterCyberCity(halfW, halfH, cfg.mapSize);
-        cityGroup.add(cityData);
-
-        // 2. 棋盘大道基底与双层霓虹光带 (外圈紫红 + 内圈青光，匹配图2)
-        const outerPoints = [
-          new THREE.Vector3(-halfW - tileW * 0.55, 0.18, halfH + tileD * 0.55),
-          new THREE.Vector3(halfW + tileW * 0.55, 0.18, halfH + tileD * 0.55),
-          new THREE.Vector3(halfW + tileW * 0.55, 0.18, -halfH - tileD * 0.55),
-          new THREE.Vector3(-halfW - tileW * 0.55, 0.18, -halfH - tileD * 0.55)
-        ];
-        const innerPoints = [
-          new THREE.Vector3(-halfW + tileW * 0.55, 0.18, halfH - tileD * 0.55),
-          new THREE.Vector3(halfW - tileW * 0.55, 0.18, halfH - tileD * 0.55),
-          new THREE.Vector3(halfW - tileW * 0.55, 0.18, -halfH + tileD * 0.55),
-          new THREE.Vector3(-halfW + tileW * 0.55, 0.18, -halfH + tileD * 0.55)
-        ];
-
-        const outerCurve = new THREE.CatmullRomCurve3(outerPoints, true);
-        const innerCurve = new THREE.CatmullRomCurve3(innerPoints, true);
-
-        const outerRail = new THREE.Mesh(
-          new THREE.TubeGeometry(outerCurve, 64, 0.09, 8, true),
-          new THREE.MeshStandardMaterial({ color: 0xEC4899, emissive: 0xBE185D, emissiveIntensity: 0.95, metalness: 0.8 })
-        );
-        const innerRail = new THREE.Mesh(
-          new THREE.TubeGeometry(innerCurve, 64, 0.09, 8, true),
-          new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.95, metalness: 0.8 })
-        );
-        roadGroup.add(outerRail);
-        roadGroup.add(innerRail);
-
-        // 3. 生成大幅面加厚地格 (宽大清晰，大字高对比，彻底消除浮空杂乱广告牌)
-        const sideMat = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.85, roughness: 0.35 });
-
+        const sideMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.4, roughness: 0.5 });
         tiles.forEach(t => {
-          const tileGeo = new THREE.BoxGeometry(t.tileW, 0.34, t.tileD);
-          const topMat = new THREE.MeshStandardMaterial({
-            map: createChunkyTileTexture(t),
-            roughness: 0.25,
-            metalness: 0.25
-          });
-          const m = new THREE.Mesh(tileGeo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]);
+          const geo = new THREE.BoxGeometry(t.tileW, 0.36, t.tileD);
+          const topMat = new THREE.MeshStandardMaterial({ map: createTileTexture(t), roughness: 0.35 });
+          const m = new THREE.Mesh(geo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]);
           m.position.set(t.x, 0.14, t.z);
           m.rotation.y = t.yaw;
           m.receiveShadow = true;
-          m.castShadow = true;
           m.userData = { tileIndex: t.index };
           boardGroup.add(m);
           tileMeshes.push(m);
-
-          // 特殊地格精简实体 3D 模型（贴地紧凑，不遮挡大字）
-          if (t.type === 'hospital') {
-            const crMat = new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x059669, emissiveIntensity: 0.9 });
-            const crGrp = new THREE.Group();
-            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), crMat));
-            crGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 0.25), crMat));
-            crGrp.position.set(t.x, 1.0, t.z);
-            crGrp.userData = { isHospital: true };
-            markersGroup.add(crGrp);
-          } else if (t.type === 'emp_grid') {
-            const empMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x0284C7, emissiveIntensity: 0.95 });
-            const empRing = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.045, 8, 24), empMat);
-            empRing.rotation.x = Math.PI / 4;
-            empRing.position.set(t.x, 0.7, t.z);
-            empRing.userData = { isEmp: true };
-            markersGroup.add(empRing);
-          } else if (t.type === 'bank') {
-            const bMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, emissive: 0xD97706, emissiveIntensity: 0.75 });
-            const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 24), bMat);
-            coin.rotation.x = Math.PI / 2;
-            coin.position.set(t.x, 0.8, t.z);
-            coin.userData = { isSpinning: true, rotSpeed: 1.5 };
-            markersGroup.add(coin);
-          } else if (t.type === 'cage') {
-            const cageMat = new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xB91C1C, emissiveIntensity: 0.8 });
-            const cageBox = new THREE.Mesh(new THREE.BoxGeometry(t.tileW * 0.75, 0.8, t.tileD * 0.75), cageMat);
-            cageBox.position.set(t.x, 0.55, t.z);
-            markersGroup.add(cageBox);
-          }
         });
 
-        // 4. 初始化玩家角色与模型
         setupPlayers();
-
-        // 默认选中起点
         selectTile(0);
-        updateMapMetaUI();
+        updateTopMetaUI();
+
+        // 默认开启大富翁10 跟踪视角
+        cameraMode = 'follow';
+        const btn = document.getElementById('btn-tycoon-cam');
+        if (btn) btn.innerText = '🎥 视角: 跟踪追焦';
       }
 
       // =========================================================================
-      // 6. 玩家席位卡片与 6 大关键数据渲染
+      // 6. 经典实体立绘棋子与玩家信息牌
       // =========================================================================
       function setupPlayers() {
         players = [];
+        const texLoader = new THREE.TextureLoader();
+
         for (let i = 0; i < cfg.playerCount; i++) {
           const char = CHARACTERS[i];
           const p = {
-            id: i,
-            name: char.name,
-            color: char.color,
-            hex: char.hex,
-            avatar: char.avatar,
-            isAI: char.isAI,
-            cash: cfg.startCash,
-            bankDeposit: 5000,
-            lotteryTicket: (i === 0 ? '88' : null),
-            propertiesCount: 0,
-            techEnterprisesCount: 0,
-            hospitalDays: 0,
-            cageDays: 0,
-            pos: 0,
-            pawnMesh: null,
-            isBankrupt: false,
-            cyberMods: {
-              thruster: false, // 机动力推进器 (min dice 3)
-              shield: 0,       // 绝缘脉冲护盾层数 (抵御电子笼网)
-              core: false,     // 量子算力核心 (银行分红+50%, 科技企业租金+30%)
-              cooler: false    // 纳米液冷散热 (免疫过载罚金)
-            },
+            id: i, name: char.name, color: char.color, hex: char.hex,
+            img: char.img, avatar: char.avatar, isAI: char.isAI,
+            cash: cfg.startCash, bankDeposit: 3000,
+            lotteryTicket: (10 + Math.floor(Math.random() * 89)).toString(),
+            propertiesCount: 0, hospitalDays: 0, cageDays: 0,
+            pos: 0, pawnMesh: null, isBankrupt: false,
+            cards: [
+              { ...CARD_CATALOG[Math.floor(Math.random() * 4)] },
+              { ...CARD_CATALOG[4 + Math.floor(Math.random() * 6)] }
+            ],
             totalRentCollected: 0,
-            totalRentPaid: 0
+            hopOffsetY: 0
           };
 
+          // 3D 棋子：发光金属底座 + 竖直高清立绘令牌 (经典大富翁棋子效果)
           const pawn = new THREE.Group();
-          const discMat = new THREE.MeshStandardMaterial({
-            color: p.hex,
-            emissive: p.hex,
-            emissiveIntensity: 0.7,
-            metalness: 0.85,
-            roughness: 0.2
-          });
-          const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 0.16, 16), discMat);
-          disc.position.y = 0.08;
-          disc.castShadow = true;
+          const disc = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.45, 0.55, 0.18, 24),
+            new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.45, metalness: 0.7 })
+          );
+          disc.position.y = 0.09;
           pawn.add(disc);
 
-          const orb = new THREE.Mesh(
-            new THREE.SphereGeometry(0.2, 16, 16),
-            new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: p.hex, emissiveIntensity: 0.95 })
-          );
-          orb.position.y = 0.32;
-          pawn.add(orb);
-
-          const halo = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.03, 8, 24), new THREE.MeshBasicMaterial({ color: p.hex }));
-          halo.rotation.x = Math.PI / 2;
-          halo.position.y = 0.18;
-          pawn.add(halo);
+          const spriteMat = new THREE.SpriteMaterial({
+            map: texLoader.load(p.img),
+            transparent: true
+          });
+          const sprite = new THREE.Sprite(spriteMat);
+          sprite.scale.set(1.45, 1.45, 1.45);
+          sprite.position.y = 0.95;
+          pawn.add(sprite);
 
           pawnsGroup.add(pawn);
           p.pawnMesh = pawn;
@@ -7701,32 +7062,31 @@
         activePlayerIdx = 0;
         updatePawnsPlacement();
         renderPlayerCards();
+        renderCardHand();
         updateTurnBadge();
       }
 
       function updatePawnsPlacement() {
-        const tileBuckets = {};
+        const buckets = {};
         players.forEach(p => {
           if (!p.isBankrupt) {
-            if (!tileBuckets[p.pos]) tileBuckets[p.pos] = [];
-            tileBuckets[p.pos].push(p);
+            if (!buckets[p.pos]) buckets[p.pos] = [];
+            buckets[p.pos].push(p);
           }
         });
-
-        Object.keys(tileBuckets).forEach(posStr => {
-          const list = tileBuckets[posStr];
+        Object.keys(buckets).forEach(posStr => {
+          const list = buckets[posStr];
           const t = tiles[parseInt(posStr)];
           if (!t) return;
           list.forEach((p, k) => {
             let ox = 0, oz = 0;
             if (list.length > 1) {
               const ang = (k / list.length) * Math.PI * 2;
-              const r = t.tileW * 0.28;
-              ox = Math.cos(ang) * r;
-              oz = Math.sin(ang) * r;
+              ox = Math.cos(ang) * (t.tileW * 0.25);
+              oz = Math.sin(ang) * (t.tileW * 0.25);
             }
             if (p.pawnMesh) {
-              p.pawnMesh.position.set(t.x + ox, 0.22, t.z + oz);
+              p.pawnMesh.position.set(t.x + ox, 0.25 + (p.hopOffsetY || 0), t.z + oz);
               p.pawnMesh.visible = !p.isBankrupt;
             }
           });
@@ -7737,1114 +7097,889 @@
         const leftCol = document.getElementById('tycoon-players-col-left');
         const rightCol = document.getElementById('tycoon-players-col-right');
         if (!leftCol) return;
-
         leftCol.innerHTML = '';
         if (rightCol) rightCol.innerHTML = '';
 
         players.forEach((p, idx) => {
           const isCur = (idx === activePlayerIdx);
           const card = document.createElement('div');
-          card.className = `blue-neon-player-card ${isCur ? 'active-turn' : ''}`;
-          if (p.isBankrupt) {
-            card.style.opacity = '0.55';
-            card.style.borderColor = '#EF4444';
-          }
+          card.className = `rm10-player-card ${isCur ? 'active-turn' : ''}`;
+          card.style.borderColor = isCur ? '#FDE047' : p.color;
+          if (p.isBankrupt) card.style.opacity = '0.5';
 
-          let statusHtml = `<span style="font-size:10px; color:#38BDF8; font-weight:800; background:rgba(14,165,233,0.18); padding:2px 7px; border-radius:4px; border:1px solid rgba(56,189,248,0.4);">🟢 运转正常</span>`;
-          if (p.isBankrupt) {
-            statusHtml = `<span style="font-size:10px; color:#EF4444; font-weight:900; background:rgba(239,68,68,0.25); padding:2px 7px; border-radius:4px; border:1px solid #EF4444;">💀 破产清算</span>`;
-          } else if (p.hospitalDays > 0) {
-            statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:900; background:rgba(16,185,129,0.25); padding:2px 7px; border-radius:4px; border:1px solid #10B981;">🏥 住院中(关3天，剩${p.hospitalDays}天)</span>`;
-          } else if (p.cageDays > 0) {
-            statusHtml = `<span style="font-size:10px; color:#F87171; font-weight:900; background:rgba(239,68,68,0.25); padding:2px 7px; border-radius:4px; border:1px solid #EF4444;">🔒 囚笼困人中(剩${p.cageDays}回合)</span>`;
-          }
-
-          const curTile = tiles[p.pos] || { name: '起点' };
-          let tileDisplay = curTile.name.replace(' (Cyber Start)', '');
-          if (tileDisplay.length > 5) tileDisplay = tileDisplay.slice(0, 5) + '..';
-
-          // 计算资产净值
-          let propVal = 0;
-          tiles.forEach(t => {
-            if (t.owner && t.owner.id === p.id) {
-              propVal += t.price;
-              if (t.level > 1) propVal += calculateUpgradeCost(t);
-            }
-          });
-          const netWorth = p.isBankrupt ? 0 : (p.cash + p.bankDeposit + propVal);
-
-          // 义体模块图标标签行
-          let modsBadges = '';
-          if (p.cyberMods) {
-            if (p.cyberMods.thruster) modsBadges += `<span style="font-size:9px; background:rgba(56,189,248,0.2); color:#38BDF8; border:1px solid #38BDF8; padding:1px 4px; border-radius:3px;">⚡推进</span> `;
-            if (p.cyberMods.shield > 0) modsBadges += `<span style="font-size:9px; background:rgba(0,229,255,0.2); color:#00E5FF; border:1px solid #00E5FF; padding:1px 4px; border-radius:3px;">🛡️护盾(x${p.cyberMods.shield})</span> `;
-            if (p.cyberMods.core) modsBadges += `<span style="font-size:9px; background:rgba(192,132,252,0.2); color:#C084FC; border:1px solid #C084FC; padding:1px 4px; border-radius:3px;">💻算力</span> `;
-            if (p.cyberMods.cooler) modsBadges += `<span style="font-size:9px; background:rgba(52,211,153,0.2); color:#34D399; border:1px solid #34D399; padding:1px 4px; border-radius:3px;">🔧散热</span> `;
-          }
-          if (!modsBadges) modsBadges = `<span style="font-size:9px; color:#64748B;">暂无改装</span>`;
+          let statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:800;">🟢 正常行动</span>`;
+          if (p.isBankrupt) statusHtml = `<span style="font-size:10px; color:#EF4444; font-weight:900;">💀 破产出局</span>`;
+          else if (p.hospitalDays > 0) statusHtml = `<span style="font-size:10px; color:#34D399; font-weight:900;">🏥 住院(${p.hospitalDays}天)</span>`;
+          else if (p.cageDays > 0) statusHtml = `<span style="font-size:10px; color:#F87171; font-weight:900;">🔒 囚笼(${p.cageDays}天)</span>`;
 
           card.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 229, 255, 0.25); padding-bottom: 5px;">
-              <div style="display: flex; align-items: center; gap: 7px;">
-                <span style="font-size: 16px;">${p.avatar}</span>
-                <span style="font-size: 13px; font-weight: 900; color: #E0F2FE; text-shadow: 0 0 8px #00E5FF;">${p.name}</span>
+            <div style="display:flex; align-items:center; gap:9px;">
+              <div class="rm10-avatar-box" style="border-color:${p.color};">
+                <img src="${p.img}" alt="${p.name}">
               </div>
-              ${isCur ? '<span class="neon-turn-badge">当前行动</span>' : `<span style="font-size: 10px; color: #94A3B8;">#${p.pos.toString().padStart(2, '0')} ${tileDisplay}</span>`}
-            </div>
-
-            <!-- 1. 玩家状态 & 净资产 -->
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-              <span style="color: #94A3B8;">机体状态:</span>
-              ${statusHtml}
-            </div>
-
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-              <span style="color: #94A3B8;">净总资产:</span>
-              <span style="font-size: 11px; font-weight: 900; color: #34D399; font-family: monospace;">⚙️ ${netWorth.toLocaleString()}</span>
-            </div>
-
-            <!-- 2. 实际现金 -->
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-              <span style="color: #94A3B8;">实际现金:</span>
-              <span style="font-size: 12px; font-weight: 900; color: #FDE047; text-shadow: 0 0 6px rgba(245, 158, 11, 0.6); display: flex; align-items: center; gap: 4px;">
-                ${getGoldenGearSvg(15)} <span>${p.cash.toLocaleString()} 齿轮币</span>
-              </span>
-            </div>
-
-            <!-- 3. 银行存款 -->
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-              <span style="color: #94A3B8;">🏦 银行存款:</span>
-              <span style="font-size: 11px; font-weight: 800; color: #38BDF8; display: flex; align-items: center; gap: 3px;">
-                ${getGoldenGearSvg(13)} <span>${p.bankDeposit.toLocaleString()} 齿轮币</span>
-              </span>
-            </div>
-
-            <!-- 4. 义体改造与彩票 -->
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-              <span style="color: #94A3B8;">🔧 义体属性:</span>
-              <div style="display: flex; align-items: center; gap: 3px;">${modsBadges}</div>
-            </div>
-
-            <!-- 5 & 6. 拥有房产数量 & 科技企业数量 -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 4px; border-top: 1px dashed rgba(0, 229, 255, 0.2);">
-              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; background: rgba(14, 165, 233, 0.12); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(14, 165, 233, 0.3);">
-                <span style="color: #94A3B8;">🏙️ 拥有房产:</span>
-                <b style="color: #E0F2FE; font-size: 11px;">${p.propertiesCount} 处</b>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:12px; font-weight:900; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</span>
+                  ${statusHtml}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:3px;">
+                  <span style="font-size:13px; font-weight:900; color:#FDE047; font-family:monospace;">⚙️ ${p.cash.toLocaleString()}</span>
+                  <span style="font-size:10px; color:#38BDF8; font-weight:800;">🏦 ${p.bankDeposit.toLocaleString()}</span>
+                </div>
               </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; background: rgba(168, 85, 247, 0.14); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(168, 85, 247, 0.35);">
-                <span style="color: #94A3B8;">🏢 科技企业:</span>
-                <b style="color: #F0ABFC; font-size: 11px;">${p.techEnterprisesCount} 家</b>
-              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#CBD5E1; background:rgba(7,13,26,0.6); padding:3px 8px; border-radius:6px;">
+              <span>🏠 房产: <b>${p.propertiesCount}</b></span>
+              <span>🃏 手牌: <b>${p.cards.length}</b></span>
+              <span>🎫 彩票: <b style="color:#EC4899;">#${p.lotteryTicket}</b></span>
             </div>
           `;
 
-          if (idx < 4 || !rightCol) {
-            leftCol.appendChild(card);
-          } else {
-            rightCol.appendChild(card);
-          }
+          if (idx < 4 || !rightCol) leftCol.appendChild(card);
+          else rightCol.appendChild(card);
         });
+      }
+
+      function renderCardHand() {
+        const handEl = document.getElementById('rm10-card-hand');
+        if (!handEl) return;
+        const p = players[activePlayerIdx];
+        if (!p || p.isAI || p.cards.length === 0) {
+          handEl.innerHTML = `<span style="font-size:11px; color:#94A3B8; padding:4px 10px;">${p && p.isAI ? '🤖 当前为 AI 回合...' : '🃏 暂无手牌，路过道具店可购买各种奇趣道具！'}</span>`;
+          return;
+        }
+        handEl.innerHTML = p.cards.map((c, idx) => `
+          <div class="rm10-item-card" onclick="TycoonApp.useCard(${idx})" title="${c.desc}">
+            <div style="font-size:20px; line-height:1;">${c.icon}</div>
+            <div style="font-size:10px; font-weight:900; color:#FDE047; white-space:nowrap;">${c.name}</div>
+          </div>
+        `).join('');
       }
 
       function updateTurnBadge() {
         const badge = document.getElementById('lbl-tycoon-turn');
-        if (!badge || players.length === 0) return;
+        if (!badge || !players[activePlayerIdx]) return;
         const cur = players[activePlayerIdx];
-        if (cur.isBankrupt) {
-          badge.innerText = `${cur.name} (已破产)`;
-          badge.style.background = '#EF4444';
-        } else {
-          badge.innerText = `${cur.name} 回合`;
-          badge.style.background = cur.isAI ? '#F59E0B' : '#00E5FF';
-        }
-        badge.style.color = '#090D16';
-        badge.style.boxShadow = `0 2px 14px rgba(0, 229, 255, 0.65)`;
+        badge.innerText = `${cur.avatar} ${cur.name}`;
+        badge.style.background = cur.color;
       }
 
-      function updateMapMetaUI() {
-        const meta = document.getElementById('tycoon-map-meta');
-        const statusEl = document.getElementById('tycoon-reactor-status');
-        if (!meta) return;
-        const names = {
-          48: '空中都市 · 天际走廊 (48格)',
-          64: '霓虹港湾 · 科技之都 (64格)',
-          128: '超大都市 · 未来之城 (128格)'
-        };
-        const title = names[cfg.mapSize] || `${cfg.mapSize}格赛博都市`;
-        meta.innerText = `${title} • ${cfg.playerCount}人对局 • 初始 ₡${cfg.startCash.toLocaleString()}`;
-        if (statusEl) statusEl.innerText = '🏙️ 赛博大都会核心: 全城霓虹点亮 • 运转正常';
+      function updateTopMetaUI() {
+        const rEl = document.getElementById('tycoon-round-badge');
+        const mEl = document.getElementById('tycoon-map-meta');
+        const lEl = document.getElementById('tycoon-lottery-pool');
+        if (rEl) rEl.innerText = `第 ${roundCount} 轮`;
+        if (mEl) mEl.innerText = `${cfg.mapSize === 48 ? '小地图' : (cfg.mapSize === 64 ? '中地图' : '大地图')} (${cfg.mapSize}格) • ${cfg.playerCount}人`;
+        if (lEl) lEl.innerText = `⚙️ ${lotteryPool.toLocaleString()}`;
       }
 
       // =========================================================================
-      // 7. 摄像机模式与视角控制
+      // 7. 摄像机跟踪视角 (大富翁10风格追焦)
       // =========================================================================
       function updateCameraPosition() {
         if (!camera) return;
-        if (cameraMode === 'follow' && players[activePlayerIdx] && players[activePlayerIdx].pawnMesh) {
-          const p = players[activePlayerIdx].pawnMesh.position;
-          const t = tiles[players[activePlayerIdx].pos] || tiles[0];
-          const tx = Math.sin(t.yaw), tz = Math.cos(t.yaw);
-          const tCam = new THREE.Vector3(p.x - tx * 9.5, p.y + 5.2, p.z - tz * 9.5);
-          const tLook = new THREE.Vector3(p.x + tx * 6.5, p.y + 0.8, p.z + tz * 6.5);
-          camera.position.lerp(tCam, 0.08);
-          curLookAt.lerp(tLook, 0.08);
-          camera.lookAt(curLookAt);
-        } else {
-          camYaw += (targetYaw - camYaw) * 0.08;
-          camPitch += (targetPitch - camPitch) * 0.08;
-          camDist += (targetDist - camDist) * 0.08;
-          curLookAt.lerp(targetLookAt, 0.08);
-
-          const cy = Math.cos(camYaw);
-          const sy = Math.sin(camYaw);
-          const cp = Math.cos(camPitch);
-          const sp = Math.sin(camPitch);
-
-          camera.position.set(
-            curLookAt.x + camDist * cp * sy,
-            curLookAt.y + camDist * sp,
-            curLookAt.z + camDist * cp * cy
-          );
-          camera.lookAt(curLookAt);
+        const cur = players[activePlayerIdx];
+        if (cameraMode === 'follow' && cur && tiles[cur.pos]) {
+          const t = tiles[cur.pos];
+          targetLookAt.set(t.x, 0.5, t.z);
+          targetDist = cfg.mapSize === 128 ? 26.0 : 22.0;
+          targetPitch = 0.62;
         }
+        camYaw += (targetYaw - camYaw) * 0.08;
+        camPitch += (targetPitch - camPitch) * 0.08;
+        camDist += (targetDist - camDist) * 0.08;
+        curLookAt.lerp(targetLookAt, 0.1);
+
+        const cx = curLookAt.x + camDist * Math.cos(camPitch) * Math.sin(camYaw);
+        const cy = curLookAt.y + camDist * Math.sin(camPitch);
+        const cz = curLookAt.z + camDist * Math.cos(camPitch) * Math.cos(camYaw);
+        camera.position.set(cx, cy, cz);
+        camera.lookAt(curLookAt);
       }
 
       function toggleCamera() {
         playSound('click');
         const btn = document.getElementById('btn-tycoon-cam');
-        if (cameraMode === 'isometric') {
-          cameraMode = 'follow';
-          if (btn) btn.innerText = '🎥 视角: 第三人称跟随 (追焦主角)';
-          setLog('【视角切换】已切换至第三人称追焦视角，近距离跟随主角巡航！');
-        } else if (cameraMode === 'follow') {
-          cameraMode = 'orbit';
-          targetYaw = 0; targetPitch = 0.82;
-          targetLookAt.set(0, 0, 0);
-          if (btn) btn.innerText = '📐 视角: 3D自由轨道 (可拖拽旋转)';
-          setLog('【视角切换】已切换至 3D 自由轨道模式，可按住鼠标左键全景拖拽与滚轮缩放！');
-        } else if (cameraMode === 'orbit') {
-          cameraMode = 'top';
-          targetYaw = 0; targetPitch = 1.565;
-          targetLookAt.set(0, 0, 0);
-          if (btn) btn.innerText = '🗺️ 视角: 正交俯视 (俯瞰大局)';
-          setLog('【视角切换】已切换至正交俯视模式，全景监控整座赛博大都会！');
-        } else {
+        if (cameraMode === 'follow') {
           cameraMode = 'isometric';
-          targetYaw = 0.75; targetPitch = 0.65;
           targetLookAt.set(0, 0, 0);
-          if (btn) btn.innerText = '🏙️ 视角: 赛博全景大都会 (图2推荐)';
-          setLog('【视角切换】已恢复图2赛博全景大都会视角，中央霓虹夜景与大棋盘一览无余！');
+          targetDist = cfg.mapSize === 128 ? 82.0 : (cfg.mapSize === 64 ? 52.0 : 42.0);
+          targetPitch = 0.68;
+          if (btn) btn.innerText = '🏙️ 视角: 全景俯瞰';
+        } else if (cameraMode === 'isometric') {
+          cameraMode = 'orbit';
+          targetLookAt.set(0, 0, 0);
+          if (btn) btn.innerText = '📐 视角: 自由拖拽';
+        } else {
+          cameraMode = 'follow';
+          if (btn) btn.innerText = '🎥 视角: 跟踪追焦';
         }
       }
 
-      // =========================================================================
-      // 8. 全息地格终端与点击拾取
-      // =========================================================================
       function selectTile(index) {
-        if (!tiles || tiles.length === 0) return;
+        if (!tiles.length) return;
         selectedTileIdx = ((index % tiles.length) + tiles.length) % tiles.length;
         const t = tiles[selectedTileIdx];
-
         if (selectionBoxMesh) {
           selectionBoxMesh.position.set(t.x, 0.18, t.z);
           selectionBoxMesh.rotation.y = t.yaw;
           selectionBoxMesh.material.color.set(t.owner ? t.owner.color : t.color);
           selectionBoxMesh.visible = true;
         }
-
-        const idxEl = document.getElementById('inspector-tile-index');
-        const iconEl = document.getElementById('inspector-tile-icon');
-        const nameEl = document.getElementById('inspector-tile-name');
-        const typeEl = document.getElementById('inspector-tile-type');
-        const descEl = document.getElementById('inspector-tile-desc');
+        document.getElementById('inspector-tile-index').innerText = `#${t.index} / ${tiles.length}`;
+        document.getElementById('inspector-tile-icon').innerText = t.icon;
+        document.getElementById('inspector-tile-name').innerText = t.name;
+        document.getElementById('inspector-tile-type').innerText = t.subType;
+        document.getElementById('inspector-tile-desc').innerText = t.desc;
         const propsEl = document.getElementById('inspector-tile-props');
-
-        if (idxEl) idxEl.innerText = `#${t.index.toString().padStart(2, '0')} / ${tiles.length}`;
-        if (iconEl) {
-          iconEl.innerText = t.icon;
-          iconEl.style.borderColor = t.owner ? t.owner.color : t.color;
-          iconEl.style.background = `${t.owner ? t.owner.color : t.color}22`;
-        }
-        if (nameEl) nameEl.innerText = t.name;
-        if (typeEl) {
-          typeEl.innerText = t.subType;
-          typeEl.style.color = t.owner ? t.owner.color : t.color;
-        }
-        if (descEl) descEl.innerText = t.desc;
-        if (propsEl) {
-          if (t.type === 'property') {
-            const currentRent = calculateRent(t);
-            const ownerText = t.owner ? `${t.owner.name.split(' ')[0]} (Lv.${t.level})` : '无主 (可购置)';
-            propsEl.innerHTML = `<span>归属: ${ownerText}</span><span>租金: ⚙️ ${currentRent.toLocaleString()}</span><span>价格: ⚙️ ${t.price.toLocaleString()}</span>`;
-            propsEl.style.color = '#FDE047';
-            propsEl.style.borderColor = 'rgba(245, 158, 11, 0.35)';
-          } else {
-            propsEl.innerHTML = `<span>地标属性: 专属机制地格</span><span>状态: 全城运转中</span>`;
-            propsEl.style.color = t.color;
-            propsEl.style.borderColor = `${t.color}55`;
-          }
+        if (t.type === 'property') {
+          propsEl.innerHTML = `<span>归属: ${t.owner ? t.owner.name.split(' ')[0] + ' Lv.' + t.level : '无主'}</span><span>租金: ⚙️${calculateRent(t) || t.rent}</span>`;
+        } else {
+          propsEl.innerHTML = `<span>特殊机制格</span><span>齿轮币体系</span>`;
         }
       }
 
       function focusSelectedTile() {
-        if (!tiles || tiles.length === 0) return;
-        playSound('click');
         const t = tiles[selectedTileIdx];
         if (!t) return;
         cameraMode = 'orbit';
         targetLookAt.set(t.x, 0.5, t.z);
         targetDist = 18.0;
-        targetPitch = 0.65;
-        const btn = document.getElementById('btn-tycoon-cam');
-        if (btn) btn.innerText = '📐 视角: 3D聚焦锁定';
+        document.getElementById('btn-tycoon-cam').innerText = '📐 视角: 自由拖拽';
       }
 
-      function setLog(text) {
+      function setLog(txt) {
         const el = document.getElementById('tycoon-event-log');
-        if (el) el.innerText = text;
-      }
-
-      function triggerSteamBurstManual() {
-        playSound('steam');
-        setLog('【全城脉冲】启动中央赛博大都会高能泄压，整座城市霓虹光晕强力过载脉冲！');
+        if (el) el.innerText = txt;
       }
 
       // =========================================================================
-      // 9. 霓虹电子 LED 屏幕掷骰机制与行棋
+      // 8. 道具手牌系统 (参考大富翁10)
       // =========================================================================
-      function updateLedDiceDisplay(num) {
-        const valEl = document.getElementById('cyber-dice-val');
-        const dotsEl = document.getElementById('cyber-dice-dots');
-        const subEl = document.getElementById('cyber-dice-subtext');
-        if (valEl) valEl.innerText = num;
-        if (subEl) subEl.innerHTML = `电子屏幕显示: <b style="color:#00E5FF; font-family: monospace;">${num} 点</b>`;
+      function useCard(idx) {
+        if (isMoving || isRollingDice) return;
+        const p = players[activePlayerIdx];
+        if (!p || p.isAI || !p.cards[idx]) return;
+        const card = p.cards[idx];
 
-        if (dotsEl) {
-          const dots = dotsEl.querySelectorAll('.led-pip');
-          dots.forEach((dot, idx) => {
-            if (idx < num) dot.classList.add('active');
-            else dot.classList.remove('active');
-          });
+        // 住院/囚笼时只允许用免罪卡
+        if ((p.hospitalDays > 0 || p.cageDays > 0) && card.id !== 'bail') {
+          setLog('⚠️ 住院或囚笼中仅可使用【🕊️ 免罪特赦卡】！');
+          return;
+        }
+
+        p.cards.splice(idx, 1);
+        playSound('upgrade');
+        renderCardHand();
+        renderPlayerCards();
+
+        if (card.id === 'remote_dice') {
+          document.getElementById('modal-tycoon-remote-dice').classList.remove('hidden');
+        } else if (card.id === 'turtle') {
+          setLog(`🐢【乌龟卡】${p.name} 使用乌龟卡，稳步前移 1 步！`);
+          startPawnHopMovement(p, 1, false);
+        } else if (card.id === 'boost') {
+          const r1 = Math.floor(Math.random() * 6) + 1;
+          const r2 = Math.floor(Math.random() * 6) + 1;
+          const total = r1 + r2 + 4;
+          updateDualDiceUI(r1, r2, total);
+          setLog(`🚀【超级加速卡】双骰 ${r1}+${r2} 再加 4 步，共狂飙 ${total} 步！`);
+          startPawnHopMovement(p, total, false);
+        } else if (card.id === 'roadblock') {
+          const targetIdx = (p.pos + 3) % tiles.length;
+          tiles[targetIdx].trap = 'roadblock';
+          updateTileTrapMesh(tiles[targetIdx]);
+          setLog(`🚧【路障卡】已在前方 #${targetIdx}【${tiles[targetIdx].name}】部署能量路障！`);
+        } else if (card.id === 'landmine') {
+          const targetIdx = (p.pos + 4) % tiles.length;
+          tiles[targetIdx].trap = 'landmine';
+          updateTileTrapMesh(tiles[targetIdx]);
+          setLog(`💣【定时地雷】已在前方 #${targetIdx} 埋设高爆地雷，踩中炸进医院3天！`);
+        } else if (card.id === 'swap') {
+          const rivals = players.filter(x => x.id !== p.id && !x.isBankrupt);
+          if (rivals.length > 0) {
+            const target = rivals[Math.floor(Math.random() * rivals.length)];
+            const tmp = p.pos; p.pos = target.pos; target.pos = tmp;
+            updatePawnsPlacement();
+            setLog(`🛸【量子换位】${p.name} 与 ${target.name} 瞬间互换了棋盘位置！`);
+          }
+        } else if (card.id === 'freeze') {
+          const rivalProps = tiles.filter(t => t.owner && t.owner.id !== p.id && t.frozenTurns === 0);
+          if (rivalProps.length > 0) {
+            rivalProps.sort((a, b) => calculateRent(b) - calculateRent(a));
+            const targetT = rivalProps[0];
+            targetT.frozenTurns = 2;
+            refreshTileTexture(targetT);
+            setLog(`🛑【停业查封】查封了 ${targetT.owner.name} 的【${targetT.name}】2 轮，路过免收租金！`);
+          } else {
+            setLog('🛑【停业查封】场上暂无敌方房产可查封！');
+          }
+        } else if (card.id === 'steal') {
+          const rivals = players.filter(x => x.id !== p.id && !x.isBankrupt && x.cash > 0);
+          if (rivals.length > 0) {
+            rivals.sort((a, b) => b.cash - a.cash);
+            const target = rivals[0];
+            const amt = Math.min(1200, target.cash);
+            target.cash -= amt; p.cash += amt;
+            playSound('cash');
+            renderPlayerCards();
+            setLog(`💸【齿轮掠夺】${p.name} 从 ${target.name} 手中强行掠夺 ⚙️${amt.toLocaleString()} 齿轮币！`);
+          }
+        } else if (card.id === 'bail') {
+          p.hospitalDays = 0; p.cageDays = 0;
+          renderPlayerCards();
+          setLog(`🕊️【免罪特赦】${p.name} 使用特赦卡，立刻恢复自由行动！`);
+        } else if (card.id === 'upgrade_card') {
+          const myProps = tiles.filter(t => t.owner && t.owner.id === p.id && t.level < 3);
+          if (myProps.length > 0) {
+            const t = myProps[0];
+            t.level++;
+            updateTileBuildingMesh(t);
+            refreshTileTexture(t);
+            setLog(`🏗️【快速加盖】名下【${t.name}】直接升至 Lv.${t.level}！`);
+          } else {
+            p.cash += 800;
+            renderPlayerCards();
+            setLog('🏗️【快速加盖】暂无可升级地产，自动折现 +⚙️800 齿轮币！');
+          }
         }
       }
 
-      let pendingPropertyAction = null; // { tile, mode: 'buy' | 'upgrade', cost, nextLv, nextRent, player }
+      function executeRemoteRoll(num) {
+        document.getElementById('modal-tycoon-remote-dice').classList.add('hidden');
+        const p = players[activePlayerIdx];
+        updateDualDiceUI(num, 0, num);
+        setLog(`🎲【遥控骰子】${p.name} 精准遥控行进 ${num} 步！`);
+        startPawnHopMovement(p, num, false);
+      }
 
-      function showPropertyModal({ tile, mode = 'buy', cost = 0, nextLv = 1, nextRent = 0 }) {
-        const curPlayer = players[activePlayerIdx];
-        pendingPropertyAction = { tile, mode, cost, nextLv, nextRent, player: curPlayer };
+      // =========================================================================
+      // 9. 双骰子投掷、跳步移动与大富翁事件链
+      // =========================================================================
+      function updateDualDiceUI(d1, d2, total) {
+        document.getElementById('rm10-die-1').innerText = d1;
+        document.getElementById('rm10-die-2').innerText = d2 || '-';
+        document.getElementById('rm10-dice-total').innerText = `${total} 步`;
+      }
 
-        const modal = document.getElementById('modal-tycoon-property');
-        if (!modal) return;
+      function rollDice() {
+        if (isMoving || isRollingDice || players.length === 0) return;
+        const p = players[activePlayerIdx];
+        if (p.isBankrupt) { advanceTurn(); return; }
 
-        const badgeEl = document.getElementById('tycoon-prop-modal-badge');
-        const idEl = document.getElementById('tycoon-prop-tile-id');
-        const iconEl = document.getElementById('tycoon-prop-icon');
-        const nameEl = document.getElementById('tycoon-prop-name');
-        const typeEl = document.getElementById('tycoon-prop-type');
-        const descEl = document.getElementById('tycoon-prop-desc');
-        const priceEl = document.getElementById('tycoon-prop-price');
-        const rentEl = document.getElementById('tycoon-prop-rent');
-        const cashEl = document.getElementById('tycoon-prop-player-cash');
-        const confirmBtn = document.getElementById('btn-tycoon-prop-confirm');
+        // 1. 住院机制 (关3天)
+        if (p.hospitalDays > 0) {
+          p.hospitalDays--;
+          renderPlayerCards();
+          playSound('click');
+          if (p.hospitalDays === 0) {
+            setLog(`🏥【赛博医院】${p.name} 住院期满出院！下回合恢复正常行动。`);
+          } else {
+            setLog(`🏥【赛博医院】${p.name} 住院隔离中（关3天），还需休养 ${p.hospitalDays} 天！`);
+          }
+          setTimeout(advanceTurn, 850);
+          return;
+        }
 
-        if (idEl) idEl.innerText = `#${tile.index.toString().padStart(2, '0')} / ${tiles.length}`;
-        if (iconEl) iconEl.innerText = tile.icon;
-        if (nameEl) nameEl.innerText = tile.name;
-        if (typeEl) typeEl.innerText = tile.subType;
-        if (cashEl) cashEl.innerHTML = `${getGoldenGearSvg(14)} ${curPlayer.cash.toLocaleString()} 齿轮币`;
+        // 2. 机械囚笼机制 (困人2天，掷双数越狱或交保释金)
+        if (p.cageDays > 0) {
+          const d1 = Math.floor(Math.random() * 6) + 1;
+          const d2 = Math.floor(Math.random() * 6) + 1;
+          updateDualDiceUI(d1, d2, d1 + d2);
+          if (d1 === d2) {
+            p.cageDays = 0;
+            playSound('upgrade');
+            renderPlayerCards();
+            setLog(`🔒【越狱成功】${p.name} 掷出双数 (${d1}+${d2})！成功挣脱机械囚笼！`);
+            startPawnHopMovement(p, d1 + d2, false);
+            return;
+          } else if (p.isAI && p.cash >= 2500) {
+            p.cash -= 800; p.cageDays = 0;
+            playSound('cash');
+            renderPlayerCards();
+            setLog(`🔒【缴纳保释金】${p.name} 支付 ⚙️800 保释金脱离机械囚笼！`);
+            startPawnHopMovement(p, d1 + d2, false);
+            return;
+          } else {
+            p.cageDays--;
+            playSound('bump');
+            renderPlayerCards();
+            setLog(`🔒【机械囚笼】${p.name} 未能掷出双数，继续被困（剩余 ${p.cageDays} 回合）！`);
+            setTimeout(advanceTurn, 850);
+            return;
+          }
+        }
 
-        if (mode === 'buy') {
-          if (badgeEl) badgeEl.innerText = '🏢 街区资产商业购置终端';
-          if (descEl) descEl.innerText = `该地块目前处于无主挂牌状态。购置后将建立你的 Lv.1 基地，今后其他路过玩家需向你支付过路租金！`;
-          if (priceEl) priceEl.innerHTML = `⚙️ ${tile.price.toLocaleString()} 齿轮币`;
-          if (rentEl) rentEl.innerHTML = `⚙️ ${tile.rent.toLocaleString()} 齿轮币 / 进驻`;
-          if (confirmBtn) {
-            confirmBtn.innerText = `⚡ 立即投资购置 (⚙️${tile.price.toLocaleString()})`;
-            confirmBtn.disabled = curPlayer.cash < tile.price;
-            confirmBtn.style.opacity = curPlayer.cash < tile.price ? '0.5' : '1.0';
+        // 3. 正常双骰投掷动画
+        isRollingDice = true;
+        playSound('dice');
+        document.getElementById('rm10-die-1').classList.add('rolling');
+        document.getElementById('rm10-die-2').classList.add('rolling');
+
+        const d1 = Math.floor(Math.random() * 6) + 1;
+        const d2 = Math.floor(Math.random() * 6) + 1;
+        let timer = 0;
+
+        const anim = setInterval(() => {
+          timer += 60;
+          const t1 = Math.floor(Math.random() * 6) + 1;
+          const t2 = Math.floor(Math.random() * 6) + 1;
+          updateDualDiceUI(t1, t2, t1 + t2);
+          if (timer >= 540) {
+            clearInterval(anim);
+            document.getElementById('rm10-die-1').classList.remove('rolling');
+            document.getElementById('rm10-die-2').classList.remove('rolling');
+            updateDualDiceUI(d1, d2, d1 + d2);
+            isRollingDice = false;
+
+            const isDouble = (d1 === d2);
+            if (isDouble) {
+              consecutiveDoubles++;
+              if (consecutiveDoubles >= 3) {
+                consecutiveDoubles = 0;
+                const cageIdx = tiles.findIndex(t => t.type === 'cage');
+                p.pos = cageIdx >= 0 ? cageIdx : 0;
+                p.cageDays = 2;
+                updatePawnsPlacement();
+                renderPlayerCards();
+                playSound('bump');
+                setLog(`🚨【连续三次双数】${p.name} 引擎超速违章，直接关入【机械囚笼】2 天！`);
+                setTimeout(advanceTurn, 1200);
+                return;
+              }
+            } else {
+              consecutiveDoubles = 0;
+            }
+            startPawnHopMovement(p, d1 + d2, isDouble);
+          }
+        }, 60);
+      }
+
+      function startPawnHopMovement(p, steps, bonusTurn) {
+        isMoving = true;
+        let count = 0;
+        let stoppedByTrap = false;
+
+        const stepInterval = setInterval(() => {
+          count++;
+          p.pos = (p.pos + 1) % tiles.length;
+          playSound('hop');
+
+          // 弹性跳步弧线动画
+          p.hopOffsetY = 0.65;
+          setTimeout(() => { p.hopOffsetY = 0; updatePawnsPlacement(); }, 100);
+
+          // 经过起点发薪 + 触发彩票开奖
+          if (p.pos === 0) {
+            p.cash += 2000;
+            roundCount++;
+            playSound('cash');
+            setLog(`🏁【经过起点】${p.name} 领取工资 +⚙️2,000 齿轮币！`);
+            triggerLotteryDraw();
+          }
+
+          // 路过陷阱检测 (路障 / 地雷)
+          const curTile = tiles[p.pos];
+          if (curTile && curTile.trap === 'roadblock') {
+            curTile.trap = null;
+            updateTileTrapMesh(curTile);
+            stoppedByTrap = true;
+            setLog(`🚧【路障拦截】${p.name} 撞上路障，被迫停在【${curTile.name}】！`);
+          } else if (curTile && curTile.trap === 'landmine') {
+            curTile.trap = null;
+            updateTileTrapMesh(curTile);
+            stoppedByTrap = true;
+            sendToHospital(p, '💣 踩中定时地雷炸伤！直接送入赛博朋克医院住院 3 天！');
+            clearInterval(stepInterval);
+            return;
+          }
+
+          updatePawnsPlacement();
+          renderPlayerCards();
+          selectTile(p.pos);
+
+          if (count >= steps || stoppedByTrap) {
+            clearInterval(stepInterval);
+            setTimeout(() => {
+              onPlayerLanded(p, p.pos, bonusTurn && !stoppedByTrap);
+            }, 300);
+          }
+        }, 210);
+      }
+
+      function triggerLotteryDraw() {
+        const winNum = (10 + Math.floor(Math.random() * 89)).toString();
+        const winners = players.filter(p => !p.isBankrupt && p.lotteryTicket === winNum);
+        if (winners.length > 0) {
+          const prize = Math.floor(lotteryPool / winners.length);
+          winners.forEach(w => { w.cash += prize; });
+          playSound('victory');
+          setLog(`🎉【全城彩票开奖】开出幸运号 #${winNum}！${winners.map(w=>w.name).join('、')} 独揽头奖 ⚙️${prize.toLocaleString()} 齿轮币！`);
+          lotteryPool = 3500;
+        } else {
+          lotteryPool += 1000;
+        }
+        updateTopMetaUI();
+      }
+
+      function sendToHospital(p, reasonText) {
+        const hospIdx = tiles.findIndex(t => t.type === 'hospital');
+        p.pos = hospIdx >= 0 ? hospIdx : 0;
+        p.hospitalDays = 3;
+        playSound('bump');
+        updatePawnsPlacement();
+        renderPlayerCards();
+        selectTile(p.pos);
+        if (!p.isAI) {
+          showEventModal('🏥', '强制住院隔离 3 天！', reasonText, () => finishTurn(false));
+        } else {
+          setLog(reasonText);
+          setTimeout(() => finishTurn(false), 1100);
+        }
+      }
+
+      function onPlayerLanded(p, tileIdx, bonusTurn) {
+        const t = tiles[tileIdx];
+        if (!t) { finishTurn(bonusTurn); return; }
+
+        if (t.type === 'emp_grid') {
+          sendToHospital(p, `⚡【电子笼网电击】${p.name} 遭遇高压脉冲电击！直接被送进【赛博医院】住院 3 天！`);
+        } else if (t.type === 'hospital') {
+          if (!p.isAI) {
+            document.getElementById('tycoon-hosp-cash').innerText = `⚙️ ${p.cash.toLocaleString()}`;
+            document.getElementById('modal-tycoon-hospital').classList.remove('hidden');
+            playSound('open');
+          } else {
+            setLog(`🏥【赛博医院】${p.name} 经过医院体检正常。`);
+            setTimeout(() => finishTurn(bonusTurn), 800);
+          }
+        } else if (t.type === 'cage') {
+          p.cageDays = 2;
+          playSound('bump');
+          renderPlayerCards();
+          const msg = `🔒【机械囚笼】${p.name} 落入机械囚笼被困 2 天！`;
+          if (!p.isAI) showEventModal('🔒', '进入机械囚笼！', msg, () => finishTurn(false));
+          else { setLog(msg); setTimeout(() => finishTurn(false), 900); }
+        } else if (t.type === 'bank') {
+          p.cash += 1000;
+          playSound('cash');
+          renderPlayerCards();
+          if (!p.isAI) {
+            openBankModal(p);
+          } else {
+            if (p.cash > 6000) { p.cash -= 2000; p.bankDeposit += 2000; }
+            setLog(`🏦【中央银行】${p.name} 领取红利 +⚙️1,000 并办理了储蓄业务！`);
+            setTimeout(() => finishTurn(bonusTurn), 900);
+          }
+        } else if (t.type === 'shop') {
+          if (!p.isAI) {
+            openShopModal(p);
+          } else {
+            if (p.cash >= 1500 && p.cards.length < 5) {
+              const c = CARD_CATALOG[Math.floor(Math.random() * CARD_CATALOG.length)];
+              p.cash -= c.price; p.cards.push({ ...c });
+              playSound('cash');
+              setLog(`🛠️【道具店】${p.name} 购买了一张【${c.icon} ${c.name}】！`);
+            }
+            renderPlayerCards();
+            setTimeout(() => finishTurn(bonusTurn), 900);
+          }
+        } else if (t.type === 'lottery') {
+          if (p.cash >= 200) {
+            p.cash -= 200; lotteryPool += 500;
+            p.lotteryTicket = (10 + Math.floor(Math.random() * 89)).toString();
+            playSound('cash');
+            updateTopMetaUI(); renderPlayerCards();
+            const msg = `🎰 ${p.name} 花费 ⚙️200 购得幸运彩票号码 #${p.lotteryTicket}（当前奖池 ⚙️${lotteryPool.toLocaleString()}）！`;
+            if (!p.isAI) showEventModal('🎰', '购入幸运彩票！', msg, () => finishTurn(bonusTurn));
+            else { setLog(msg); setTimeout(() => finishTurn(bonusTurn), 900); }
+          } else {
+            setTimeout(() => finishTurn(bonusTurn), 600);
+          }
+        } else if (t.type === 'portal') {
+          const portals = tiles.filter(x => x.type === 'portal' && x.index !== t.index);
+          const dest = portals.length > 0 ? portals[Math.floor(Math.random() * portals.length)] : tiles[(t.index + 8) % tiles.length];
+          p.pos = dest.index;
+          playSound('resonance');
+          updatePawnsPlacement(); selectTile(p.pos);
+          const msg = `🌀【量子折跃】${p.name} 穿越空间虫洞，瞬移至 #${dest.index}【${dest.name}】！`;
+          if (!p.isAI) showEventModal('🌀', '量子传送门激活！', msg, () => finishTurn(bonusTurn));
+          else { setLog(msg); setTimeout(() => finishTurn(bonusTurn), 900); }
+        } else if (t.type === 'reward') {
+          const rnd = Math.random();
+          let msg = '';
+          if (rnd < 0.5) {
+            p.cash += 2000;
+            playSound('cash');
+            msg = `🎁【幸运大丰收】获得赛博都市科研补贴 +⚙️2,000 齿轮币！`;
+          } else {
+            const c = CARD_CATALOG[Math.floor(Math.random() * CARD_CATALOG.length)];
+            if (p.cards.length < 6) p.cards.push({ ...c });
+            playSound('upgrade');
+            msg = `🎁【幸运盲盒】天降好运，获赠稀有道具卡【${c.icon} ${c.name}】！`;
+          }
+          renderPlayerCards(); renderCardHand();
+          if (!p.isAI) showEventModal('🎁', '幸运机会奖励！', msg, () => finishTurn(bonusTurn));
+          else { setLog(msg); setTimeout(() => finishTurn(bonusTurn), 900); }
+        } else if (t.type === 'penalty') {
+          const fine = 1000 + p.propertiesCount * 200;
+          playSound('bump');
+          deductCashOrBankrupt(p, fine, null, `⚠️【厄运惩罚】城市维护与反应堆排热查税，扣除 ⚙️${fine.toLocaleString()} 齿轮币！`, () => finishTurn(bonusTurn));
+        } else if (t.type === 'property') {
+          if (!t.owner) {
+            if (!p.isAI) showPropertyModal(t, 'buy');
+            else {
+              if (p.cash >= t.price * 1.2) {
+                p.cash -= t.price; t.owner = p; t.level = 1; p.propertiesCount++;
+                updateTileBuildingMesh(t); refreshTileTexture(t); playSound('cash');
+                setLog(`🏠【购置地契】${p.name} 斥资 ⚙️${t.price.toLocaleString()} 买下【${t.name}】！`);
+              }
+              renderPlayerCards();
+              setTimeout(() => finishTurn(bonusTurn), 850);
+            }
+          } else if (t.owner.id === p.id) {
+            if (t.level < 3) {
+              if (!p.isAI) showPropertyModal(t, 'upgrade');
+              else {
+                const upCost = calculateUpgradeCost(t);
+                if (p.cash >= upCost * 1.35) {
+                  p.cash -= upCost; t.level++;
+                  updateTileBuildingMesh(t); refreshTileTexture(t); playSound('upgrade');
+                  setLog(`🏗️【加盖升级】${p.name} 将【${t.name}】扩建至 Lv.${t.level}！`);
+                }
+                renderPlayerCards();
+                setTimeout(() => finishTurn(bonusTurn), 850);
+              }
+            } else {
+              setLog(`👑【地标巡视】${p.name} 抵达自家顶级地标【${t.name}】！`);
+              setTimeout(() => finishTurn(bonusTurn), 700);
+            }
+          } else {
+            const rent = calculateRent(t);
+            if (rent === 0) {
+              setLog(`🛑【停业免租】${t.owner.name} 的【${t.name}】已被查封，${p.name} 免费通行！`);
+              setTimeout(() => finishTurn(bonusTurn), 850);
+            } else {
+              deductCashOrBankrupt(p, rent, t.owner, `💸【缴纳过路费】${p.name} 路过 ${t.owner.name} 的【${t.name}】，支付租金 ⚙️${rent.toLocaleString()}！`, () => finishTurn(bonusTurn));
+            }
           }
         } else {
-          // upgrade
-          if (badgeEl) badgeEl.innerText = '🏗️ 街区资产扩建升级终端';
-          const lvNames = { 2: '数据中心双塔', 3: '宏伟赛博摩天大厦' };
-          if (descEl) descEl.innerText = `此产业已由你持有（当前 Lv.${tile.level}）。扩建升级至 Lv.${nextLv}【${lvNames[nextLv] || ''}】，过路租金将提升至 ⚙️${nextRent.toLocaleString()}！`;
-          if (priceEl) priceEl.innerHTML = `⚙️ ${cost.toLocaleString()} 齿轮币 (扩建费)`;
-          if (rentEl) rentEl.innerHTML = `⚙️ ${nextRent.toLocaleString()} 齿轮币 (提升后)`;
-          if (confirmBtn) {
-            confirmBtn.innerText = `⚡ 扩建升级至 Lv.${nextLv} (⚙️${cost.toLocaleString()})`;
-            confirmBtn.disabled = curPlayer.cash < cost;
-            confirmBtn.style.opacity = curPlayer.cash < cost ? '0.5' : '1.0';
-          }
+          setTimeout(() => finishTurn(bonusTurn), 600);
+        }
+      }
+
+      function deductCashOrBankrupt(p, amount, creditor, msg, doneCb) {
+        if (p.cash >= amount) {
+          p.cash -= amount;
+          if (creditor) { creditor.cash += amount; creditor.totalRentCollected += amount; }
+          playSound('cash');
+        } else if (p.cash + p.bankDeposit >= amount) {
+          const diff = amount - p.cash;
+          p.cash = 0; p.bankDeposit -= diff;
+          if (creditor) { creditor.cash += amount; creditor.totalRentCollected += amount; }
+          playSound('cash');
+        } else {
+          const paid = p.cash + p.bankDeposit;
+          if (creditor) { creditor.cash += paid; creditor.totalRentCollected += paid; }
+          p.isBankrupt = true; p.cash = 0; p.bankDeposit = 0;
+          if (p.pawnMesh) p.pawnMesh.visible = false;
+          playSound('bankrupt');
+          tiles.forEach(t => {
+            if (t.owner && t.owner.id === p.id) {
+              t.owner = creditor || null;
+              if (!creditor) t.level = 0;
+              else if (creditor) creditor.propertiesCount++;
+              updateTileBuildingMesh(t); refreshTileTexture(t);
+            }
+          });
+          msg = `💀【破产清退】${p.name} 资金链断裂宣告破产！名下所有资产已清算！`;
+        }
+        renderPlayerCards();
+        setLog(msg);
+        if (!p.isAI && !p.isBankrupt && amount >= 500) {
+          showEventModal('💸', '齿轮币结算', msg, doneCb);
+        } else {
+          setTimeout(doneCb, 950);
+        }
+      }
+
+      function finishTurn(bonusTurn) {
+        isMoving = false;
+        const alive = players.filter(p => !p.isBankrupt);
+        if (players.length > 1 && alive.length <= 1) {
+          triggerTycoonVictory(alive[0] || players[0]);
+          return;
+        }
+        if (bonusTurn && !players[activePlayerIdx].isBankrupt && players[activePlayerIdx].hospitalDays === 0 && players[activePlayerIdx].cageDays === 0) {
+          setLog(`🎲【双数奖励】${players[activePlayerIdx].name} 掷出双数，奖励再投一次！`);
+          if (players[activePlayerIdx].isAI) setTimeout(rollDice, 800);
+          return;
+        }
+        advanceTurn();
+      }
+
+      function advanceTurn() {
+        // 每回合末缩减查封回合 & 发放银行10%利息 (轮转回1P时)
+        let next = (activePlayerIdx + 1) % players.length;
+        let safety = 0;
+        while (players[next].isBankrupt && safety < players.length) {
+          next = (next + 1) % players.length;
+          safety++;
+        }
+        if (next <= activePlayerIdx) {
+          tiles.forEach(t => {
+            if (t.frozenTurns > 0) { t.frozenTurns--; refreshTileTexture(t); }
+          });
+          players.forEach(p => {
+            if (!p.isBankrupt && p.bankDeposit > 0) p.bankDeposit = Math.floor(p.bankDeposit * 1.1);
+          });
         }
 
-        modal.classList.remove('hidden');
+        activePlayerIdx = next;
+        renderPlayerCards();
+        renderCardHand();
+        updateTurnBadge();
+
+        const cur = players[activePlayerIdx];
+        const btn = document.getElementById('btn-tycoon-roll');
+        if (cur.isAI) {
+          if (btn) { btn.disabled = true; btn.innerText = '🤖 AI 思考操作中...'; }
+          setTimeout(() => {
+            const viewEl = document.getElementById('view-game-tycoon');
+            if (!viewEl || viewEl.classList.contains('hidden')) return;
+            // AI 智能使用手牌
+            if (cur.cards.length > 0 && cur.hospitalDays === 0 && cur.cageDays === 0 && Math.random() < 0.35) {
+              const c = cur.cards.shift();
+              if (c.id === 'steal') {
+                const target = players.find(x => x.id !== cur.id && !x.isBankrupt && x.cash >= 1000);
+                if (target) { target.cash -= 1000; cur.cash += 1000; setLog(`💸【AI用卡】${cur.name} 使用掠夺卡抢走 ${target.name} ⚙️1,000！`); }
+              } else if (c.id === 'roadblock') {
+                const ti = (cur.pos + 3) % tiles.length;
+                tiles[ti].trap = 'roadblock'; updateTileTrapMesh(tiles[ti]);
+              }
+            }
+            rollDice();
+          }, 850);
+        } else {
+          if (btn) { btn.disabled = false; btn.innerText = '🎲 掷双骰前进 (SPACE)'; }
+          setLog(`【你的回合】可使用底部道具卡，或按 SPACE 掷双骰前进！`);
+        }
+      }
+
+      // =========================================================================
+      // 10. 弹窗交互控制器
+      // =========================================================================
+      function showPropertyModal(tile, mode) {
+        const p = players[activePlayerIdx];
+        const cost = mode === 'buy' ? tile.price : calculateUpgradeCost(tile);
+        const nextRent = mode === 'buy' ? tile.rent : Math.floor(tile.rent * (tile.level === 1 ? 2.2 : 4.0));
+        pendingPropertyAction = { tile, mode, cost, player: p };
+
+        document.getElementById('tycoon-prop-banner').style.background = tile.color;
+        document.getElementById('tycoon-prop-modal-badge').innerText = mode === 'buy' ? '🏠 地契购置协议' : `🏗️ 产业加盖升级 (Lv.${tile.level + 1})`;
+        document.getElementById('tycoon-prop-tile-id').innerText = `#${tile.index}`;
+        document.getElementById('tycoon-prop-icon').innerText = tile.icon;
+        document.getElementById('tycoon-prop-name').innerText = tile.name;
+        document.getElementById('tycoon-prop-type').innerText = tile.subType;
+        document.getElementById('tycoon-prop-desc').innerText = tile.desc;
+        document.getElementById('tycoon-prop-price').innerText = `⚙️ ${cost.toLocaleString()}`;
+        document.getElementById('tycoon-prop-rent').innerText = `⚙️ ${nextRent.toLocaleString()}`;
+        document.getElementById('tycoon-prop-player-cash').innerText = `⚙️ ${p.cash.toLocaleString()} 齿轮币`;
+
+        const btn = document.getElementById('btn-tycoon-prop-confirm');
+        btn.innerText = mode === 'buy' ? `✅ 买下地契 (⚙️${cost.toLocaleString()})` : `🏗️ 升级加盖 (⚙️${cost.toLocaleString()})`;
+        btn.disabled = p.cash < cost;
+        btn.style.opacity = p.cash < cost ? '0.5' : '1.0';
+
+        document.getElementById('modal-tycoon-property').classList.remove('hidden');
         playSound('open');
       }
 
       function confirmPropertyAction() {
-        if (!pendingPropertyAction) return;
-        const { tile, mode, cost, nextLv, player } = pendingPropertyAction;
-        const modal = document.getElementById('modal-tycoon-property');
-        if (modal) modal.classList.add('hidden');
-
-        if (mode === 'buy') {
-          if (player.cash >= tile.price) {
-            player.cash -= tile.price;
-            tile.owner = player;
-            tile.level = 1;
-            if (tile.isTech) player.techEnterprisesCount++;
-            else player.propertiesCount++;
-            updateTileBuildingMesh(tile);
-            refreshTileTexture(tile);
+        document.getElementById('modal-tycoon-property').classList.add('hidden');
+        if (!pendingPropertyAction) { finishTurn(false); return; }
+        const { tile, mode, cost, player } = pendingPropertyAction;
+        if (player.cash >= cost) {
+          player.cash -= cost;
+          if (mode === 'buy') {
+            tile.owner = player; tile.level = 1; player.propertiesCount++;
             playSound('cash');
-            setLog(`🏢【商业并购】你成功斥资 ⚙️${tile.price.toLocaleString()} 购置了【${tile.name}】！初级基地拔地而起。`);
-          }
-        } else if (mode === 'upgrade') {
-          if (player.cash >= cost && tile.level < 3) {
-            player.cash -= cost;
-            tile.level = nextLv;
-            updateTileBuildingMesh(tile);
-            refreshTileTexture(tile);
+            setLog(`🏠【成功置业】你买下了【${tile.name}】！`);
+          } else {
+            tile.level++;
             playSound('upgrade');
-            setLog(`🏗️【产业升级】你投入 ⚙️${cost.toLocaleString()} 将【${tile.name}】扩建升级至 Lv.${tile.level}！`);
+            setLog(`🏗️【扩建成功】你的【${tile.name}】升级为 Lv.${tile.level}！`);
           }
+          updateTileBuildingMesh(tile); refreshTileTexture(tile);
+          renderPlayerCards(); selectTile(tile.index);
         }
-
         pendingPropertyAction = null;
-        renderPlayerCards();
-        selectTile(tile.index);
-        finishLandingAndAdvance();
+        finishTurn(false);
       }
 
       function cancelPropertyAction() {
-        const modal = document.getElementById('modal-tycoon-property');
-        if (modal) modal.classList.add('hidden');
-        if (pendingPropertyAction) {
-          const { tile, mode } = pendingPropertyAction;
-          if (mode === 'buy') {
-            setLog(`🏙️【街区巡航】你决定暂缓购置【${tile.name}】。`);
-          } else {
-            setLog(`🏙️【街区巡航】你决定保持【${tile.name}】当前规模现状。`);
-          }
-          pendingPropertyAction = null;
-        }
-        finishLandingAndAdvance();
+        document.getElementById('modal-tycoon-property').classList.add('hidden');
+        pendingPropertyAction = null;
+        finishTurn(false);
       }
 
-      function showHospitalModal(player) {
-        const modal = document.getElementById('modal-tycoon-hospital');
-        if (!modal) return;
-        updateHospitalUI();
-        modal.classList.remove('hidden');
+      function openShopModal(p) {
+        document.getElementById('tycoon-shop-cash').innerText = `⚙️ ${p.cash.toLocaleString()} 齿轮币`;
+        const grid = document.getElementById('tycoon-shop-grid');
+        const sample = [...CARD_CATALOG].sort(() => Math.random() - 0.5).slice(0, 4);
+        grid.innerHTML = sample.map(c => `
+          <div class="cyber-mod-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b style="font-size:13px; color:#FDE047;">${c.icon} ${c.name}</b>
+              <span style="font-size:11px; color:#38BDF8; font-family:monospace;">⚙️ ${c.price}</span>
+            </div>
+            <div style="font-size:10px; color:#CBD5E1; line-height:1.4;">${c.desc}</div>
+            <button onclick="TycoonApp.buyCard('${c.id}')" class="scenic-hud-btn" style="justify-content:center; border-color:#F59E0B; color:#FDE047;">购买此卡</button>
+          </div>
+        `).join('');
+        document.getElementById('modal-tycoon-shop').classList.remove('hidden');
         playSound('open');
       }
 
-      function updateHospitalUI() {
+      function buyCard(cardId) {
         const p = players[activePlayerIdx];
-        if (!p) return;
-        const cashEl = document.getElementById('tycoon-hosp-cash');
-        if (cashEl) cashEl.innerHTML = `${getGoldenGearSvg(14)} ${p.cash.toLocaleString()} 齿轮币`;
-
-        // 1. Thruster
-        const bTh = document.getElementById('badge-mod-thruster');
-        const btnTh = document.getElementById('btn-mod-thruster');
-        const cTh = document.getElementById('card-mod-thruster');
-        if (p.cyberMods.thruster) {
-          if (bTh) { bTh.innerText = '✓ 已装配'; bTh.style.color = '#10B981'; bTh.style.borderColor = '#10B981'; }
-          if (btnTh) { btnTh.disabled = true; btnTh.innerText = '已安装'; btnTh.style.opacity = '0.5'; }
-          if (cTh) cTh.classList.add('installed');
-        } else {
-          if (bTh) { bTh.innerText = '未安装'; bTh.style.color = '#38BDF8'; bTh.style.borderColor = '#38BDF8'; }
-          if (btnTh) { btnTh.disabled = p.cash < 1500; btnTh.innerText = '装配引擎'; btnTh.style.opacity = p.cash < 1500 ? '0.5' : '1.0'; }
-          if (cTh) cTh.classList.remove('installed');
-        }
-
-        // 2. Shield
-        const bSh = document.getElementById('badge-mod-shield');
-        const btnSh = document.getElementById('btn-mod-shield');
-        const cSh = document.getElementById('card-mod-shield');
-        if (p.cyberMods.shield > 0) {
-          if (bSh) { bSh.innerText = `剩余 ${p.cyberMods.shield} 层`; bSh.style.color = '#10B981'; bSh.style.borderColor = '#10B981'; }
-          if (cSh) cSh.classList.add('installed');
-        } else {
-          if (bSh) { bSh.innerText = '0 层'; bSh.style.color = '#00E5FF'; bSh.style.borderColor = '#00E5FF'; }
-          if (cSh) cSh.classList.remove('installed');
-        }
-        if (btnSh) { btnSh.disabled = p.cash < 2000; btnSh.style.opacity = p.cash < 2000 ? '0.5' : '1.0'; }
-
-        // 3. Core
-        const bCo = document.getElementById('badge-mod-core');
-        const btnCo = document.getElementById('btn-mod-core');
-        const cCo = document.getElementById('card-mod-core');
-        if (p.cyberMods.core) {
-          if (bCo) { bCo.innerText = '✓ 已装配'; bCo.style.color = '#10B981'; bCo.style.borderColor = '#10B981'; }
-          if (btnCo) { btnCo.disabled = true; btnCo.innerText = '已安装'; btnCo.style.opacity = '0.5'; }
-          if (cCo) cCo.classList.add('installed');
-        } else {
-          if (bCo) { bCo.innerText = '未安装'; bCo.style.color = '#C084FC'; bCo.style.borderColor = '#C084FC'; }
-          if (btnCo) { btnCo.disabled = p.cash < 2500; btnCo.innerText = '装配算力核'; btnCo.style.opacity = p.cash < 2500 ? '0.5' : '1.0'; }
-          if (cCo) cCo.classList.remove('installed');
-        }
-
-        // 4. Cooler
-        const bCl = document.getElementById('badge-mod-cooler');
-        const btnCl = document.getElementById('btn-mod-cooler');
-        const cCl = document.getElementById('card-mod-cooler');
-        if (p.cyberMods.cooler) {
-          if (bCl) { bCl.innerText = '✓ 已装配'; bCl.style.color = '#10B981'; bCl.style.borderColor = '#10B981'; }
-          if (btnCl) { btnCl.disabled = true; btnCl.innerText = '已安装'; btnCl.style.opacity = '0.5'; }
-          if (cCl) cCl.classList.add('installed');
-        } else {
-          if (bCl) { bCl.innerText = '未安装'; bCl.style.color = '#34D399'; bCl.style.borderColor = '#34D399'; }
-          if (btnCl) { btnCl.disabled = p.cash < 1200; btnCl.innerText = '装配散热组'; btnCl.style.opacity = p.cash < 1200 ? '0.5' : '1.0'; }
-          if (cCl) cCl.classList.remove('installed');
-        }
+        const card = CARD_CATALOG.find(c => c.id === cardId);
+        if (!p || !card) return;
+        if (p.cards.length >= 6) { setLog('⚠️ 手牌已达上限 6 张！'); return; }
+        if (p.cash < card.price) { setLog('⚠️ 齿轮币现金不足！'); return; }
+        p.cash -= card.price;
+        p.cards.push({ ...card });
+        playSound('cash');
+        document.getElementById('tycoon-shop-cash').innerText = `⚙️ ${p.cash.toLocaleString()} 齿轮币`;
+        renderPlayerCards(); renderCardHand();
+        setLog(`🛠️【购买道具】成功购入【${card.icon} ${card.name}】！`);
       }
 
-      function buyCyberMod(modKey) {
+      function closeShopModal() {
+        document.getElementById('modal-tycoon-shop').classList.add('hidden');
+        finishTurn(false);
+      }
+
+      function openBankModal(p) {
+        document.getElementById('tycoon-bank-cash').innerText = `⚙️ ${p.cash.toLocaleString()}`;
+        document.getElementById('tycoon-bank-dep').innerText = `⚙️ ${p.bankDeposit.toLocaleString()}`;
+        document.getElementById('modal-tycoon-bank').classList.remove('hidden');
+        playSound('open');
+      }
+
+      function bankAction(act, amt) {
         const p = players[activePlayerIdx];
         if (!p) return;
-        const costs = { thruster: 1500, shield: 2000, core: 2500, cooler: 1200 };
-        const cost = costs[modKey];
-        if (p.cash < cost) return;
-
-        p.cash -= cost;
-        if (modKey === 'shield') {
-          p.cyberMods.shield++;
-        } else {
-          p.cyberMods[modKey] = true;
-        }
-
-        playSound('upgrade');
-        updateHospitalUI();
+        if (act === 'deposit' && p.cash >= amt) { p.cash -= amt; p.bankDeposit += amt; }
+        else if (act === 'withdraw' && p.bankDeposit >= amt) { p.bankDeposit -= amt; p.cash += amt; }
+        else if (act === 'deposit_all') { const d = Math.floor(p.cash / 2); p.cash -= d; p.bankDeposit += d; }
+        else if (act === 'withdraw_all') { p.cash += p.bankDeposit; p.bankDeposit = 0; }
+        playSound('cash');
+        document.getElementById('tycoon-bank-cash').innerText = `⚙️ ${p.cash.toLocaleString()}`;
+        document.getElementById('tycoon-bank-dep').innerText = `⚙️ ${p.bankDeposit.toLocaleString()}`;
         renderPlayerCards();
-        setLog(`🏥【生化义体升级】成功装配【${modKey}】！机体抗性与战术收益提升！`);
+      }
+
+      function closeBankModal() {
+        document.getElementById('modal-tycoon-bank').classList.add('hidden');
+        finishTurn(false);
       }
 
       function closeHospitalModal() {
-        const modal = document.getElementById('modal-tycoon-hospital');
-        if (modal) modal.classList.add('hidden');
-        setLog('🏥【赛博医院】离开生化医疗中心，机体能量充沛，继续大都会征战！');
-        finishLandingAndAdvance();
+        document.getElementById('modal-tycoon-hospital').classList.add('hidden');
+        finishTurn(false);
       }
 
-      function handlePlayerBankruptcy(victim, creditor) {
-        victim.isBankrupt = true;
-        victim.cash = 0;
-        victim.bankDeposit = 0;
-        playSound('bankrupt');
-        if (victim.pawnMesh) victim.pawnMesh.visible = false;
+      function showEventModal(icon, title, desc, cb) {
+        pendingEventCallback = cb;
+        document.getElementById('tycoon-evt-icon').innerText = icon;
+        document.getElementById('tycoon-evt-title').innerText = title;
+        document.getElementById('tycoon-evt-desc').innerText = desc;
+        document.getElementById('modal-tycoon-event').classList.remove('hidden');
+      }
 
-        let releasedCount = 0;
-        tiles.forEach(t => {
-          if (t.owner && t.owner.id === victim.id) {
-            releasedCount++;
-            if (creditor) {
-              t.owner = creditor;
-              if (t.isTech) creditor.techEnterprisesCount++; else creditor.propertiesCount++;
-              updateTileBuildingMesh(t);
-              refreshTileTexture(t);
-            } else {
-              t.owner = null;
-              t.level = 0;
-              updateTileBuildingMesh(t);
-              refreshTileTexture(t);
-            }
-          }
-        });
-
-        if (creditor) {
-          setLog(`💀【破产清算】${victim.name} 资金链彻底断裂宣告破产！名下 ${releasedCount} 处资产已移交给 ${creditor.name}！`);
-        } else {
-          setLog(`💀【破产清算】${victim.name} 资金链彻底断裂宣告破产！名下 ${releasedCount} 处资产全部收归市场！`);
+      function closeEventModal() {
+        document.getElementById('modal-tycoon-event').classList.add('hidden');
+        if (pendingEventCallback) {
+          const cb = pendingEventCallback;
+          pendingEventCallback = null;
+          cb();
         }
-        renderPlayerCards();
       }
 
       function triggerTycoonVictory(winner) {
         playSound('victory');
         lastVictoryMode = 'tycoon';
-
-        let propValue = 0;
-        let propCount = 0;
-        tiles.forEach(t => {
-          if (t.owner && t.owner.id === winner.id) {
-            propCount++;
-            propValue += t.price;
-          }
-        });
-        const totalAssets = winner.cash + winner.bankDeposit + propValue;
-
-        const statsHtml = `
-          <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(245,158,11,0.25); padding-bottom:5px;">
-              <span style="color:#78716C;">最终冠军大亨:</span>
-              <b style="color:#B45309; font-size:14px;">${winner.avatar} ${winner.name}</b>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color:#78716C;">净总资产估值:</span>
-              <b style="color:#10B981; font-family:monospace; font-size:13px;">⚙️ ${totalAssets.toLocaleString()} 齿轮币</b>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color:#78716C;">名下街区/科技企业:</span>
-              <b style="color:#0284C7;">${propCount} 处垄断产业</b>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color:#78716C;">累计收缴过路租金:</span>
-              <b style="color:#F59E0B; font-family:monospace;">⚙️ ${(winner.totalRentCollected || 0).toLocaleString()} 齿轮币</b>
-            </div>
-            <div style="font-size:11px; color:#64748B; margin-top:4px; line-height:1.4;">
-              整座赛博夜之城大都会已被完全垄断掌控，恭喜登顶全城第一商业大亨！
-            </div>
-          </div>
-        `;
-
+        const total = winner.cash + winner.bankDeposit;
         showVictoryModal({
-          mode: 'tycoon',
-          icon: '👑',
-          title: `【${winner.name}】加冕赛博大亨！`,
-          subtitle: `击溃全场竞争对手，彻底垄断夜之城！`,
-          statsHtml
+          mode: 'tycoon', icon: '👑',
+          title: `【${winner.name}】加冕大富翁！`,
+          subtitle: `凭借卓越投资与策略称霸齿轮大都会！`,
+          statsHtml: `<div>最终净现金与存款: <b>⚙️ ${total.toLocaleString()} 齿轮币</b><br>名下地产数量: <b>${winner.propertiesCount} 处</b></div>`
         });
-      }
-
-      function finishLandingAndAdvance() {
-        isMoving = false;
-        advanceTurn();
-      }
-
-      function testRollAndMove() {
-        if (isMoving || isRollingDice || players.length === 0) return;
-        const curPlayer = players[activePlayerIdx];
-        if (curPlayer.isBankrupt) {
-          advanceTurn();
-          return;
-        }
-
-        // 1. 检查住院隔离中机制 (关3天)
-        if (curPlayer.hospitalDays > 0) {
-          playSound('click');
-          curPlayer.hospitalDays--;
-          renderPlayerCards();
-          if (curPlayer.hospitalDays === 0) {
-            setLog(`🏥【赛博医院】${curPlayer.name} 今日机能检修完成，正式出院！下回合恢复自由行动。`);
-          } else {
-            setLog(`🏥【赛博医院】${curPlayer.name} 处于住院隔离状态中（关3天），剩余 ${curPlayer.hospitalDays} 天，跳过本回合！`);
-          }
-          advanceTurn();
-          return;
-        }
-
-        // 2. 检查机械囚笼禁锢机制 (困人)
-        if (curPlayer.cageDays > 0) {
-          playSound('click');
-          curPlayer.cageDays--;
-          renderPlayerCards();
-          setLog(`🔒【机械囚笼】${curPlayer.name} 智能机件锁死中，跳过本回合！`);
-          advanceTurn();
-          return;
-        }
-
-        // 3. 电子 LED 点阵屏掷骰动画
-        isRollingDice = true;
-        playSound('dice');
-        const badgeEl = document.getElementById('cyber-dice-badge');
-        if (badgeEl) {
-          badgeEl.innerText = '⚡ 点阵演算中...';
-          badgeEl.style.background = 'rgba(236, 72, 153, 0.3)';
-          badgeEl.style.borderColor = '#EC4899';
-          badgeEl.style.color = '#F472B6';
-        }
-
-        let rollTimer = 0;
-        let finalRoll = Math.floor(Math.random() * 6) + 1;
-        // 机动力推进引擎保底判定 (至少投出 3 点)
-        if (curPlayer.cyberMods && curPlayer.cyberMods.thruster && finalRoll < 3) {
-          finalRoll = 3;
-        }
-
-        const rollAnim = setInterval(() => {
-          rollTimer += 45;
-          const tempVal = Math.floor(Math.random() * 6) + 1;
-          updateLedDiceDisplay(tempVal);
-
-          if (rollTimer >= 650) {
-            clearInterval(rollAnim);
-            updateLedDiceDisplay(finalRoll);
-            if (badgeEl) {
-              badgeEl.innerText = '✓ 点数锁定';
-              badgeEl.style.background = 'rgba(0, 229, 255, 0.2)';
-              badgeEl.style.borderColor = '#00E5FF';
-              badgeEl.style.color = '#00E5FF';
-            }
-            isRollingDice = false;
-            startPawnHopMovement(curPlayer, finalRoll);
-          }
-        }, 45);
-      }
-
-      function startPawnHopMovement(curPlayer, roll) {
-        isMoving = true;
-        setLog(`🎲【电子点阵判定】${curPlayer.name} 投掷出 ${roll} 点！主角开始行进 ${roll} 格...`);
-
-        let stepCount = 0;
-        const interval = setInterval(() => {
-          stepCount++;
-          curPlayer.pos = (curPlayer.pos + 1) % tiles.length;
-          playSound('hop');
-
-          // 经过起点领取薪水 2,000 齿轮币
-          if (curPlayer.pos === 0) {
-            curPlayer.cash += 2000;
-            playSound('resonance');
-            setLog(`🏁【赛博起点】${curPlayer.name} 经过起点发薪区，领取 2,000 齿轮币津贴！`);
-          }
-
-          updatePawnsPlacement();
-          renderPlayerCards();
-          selectTile(curPlayer.pos);
-
-          if (stepCount >= roll) {
-            clearInterval(interval);
-            setTimeout(() => {
-              onPlayerLanded(curPlayer, curPlayer.pos);
-            }, 350);
-          }
-        }, 200);
-      }
-
-      function onPlayerLanded(p, tileIdx) {
-        const t = tiles[tileIdx];
-        if (!t) { finishLandingAndAdvance(); return; }
-        const S = Math.floor(tiles.length / 4);
-
-        if (t.type === 'emp_grid') {
-          // 检查高压脉冲绝缘护盾
-          if (p.cyberMods && p.cyberMods.shield > 0) {
-            p.cyberMods.shield--;
-            playSound('shield');
-            setLog(`🛡️【绝缘护盾】滋滋——嗡！护盾成功吸收电磁笼网的高压电击，免于住院！(护盾剩余 ${p.cyberMods.shield} 层)`);
-            renderPlayerCards();
-            setTimeout(finishLandingAndAdvance, 1000);
-          } else {
-            playSound('bump');
-            setLog(`⚡【电子笼网】滋滋滋！遭遇高压脉冲触电！${p.name} 机体电路烧毁，被直接送入【赛博医院】隔离住院3天！`);
-            p.pos = S;
-            p.hospitalDays = 3;
-            updatePawnsPlacement();
-            renderPlayerCards();
-            selectTile(S);
-            setTimeout(finishLandingAndAdvance, 1200);
-          }
-        } else if (t.type === 'hospital') {
-          playSound('resonance');
-          if (!p.isAI) {
-            setLog(`🏥【赛博医院】${p.name} 抵达生化医疗中心，正在连接义体改装工位...`);
-            showHospitalModal(p);
-          } else {
-            // AI 在医院决策升级义体
-            if (p.cash >= 4000) {
-              if (p.cyberMods.shield === 0) {
-                p.cash -= 2000; p.cyberMods.shield++;
-                playSound('upgrade');
-                setLog(`🏥【生化改装】${p.name} 在医院充能了【脉冲绝缘护盾】！`);
-              } else if (!p.cyberMods.thruster) {
-                p.cash -= 1500; p.cyberMods.thruster = true;
-                playSound('upgrade');
-                setLog(`🏥【生化改装】${p.name} 在医院装配了【机动力推进引擎】！`);
-              } else if (!p.cyberMods.core) {
-                p.cash -= 2500; p.cyberMods.core = true;
-                playSound('upgrade');
-                setLog(`🏥【生化改装】${p.name} 在医院装配了【量子算力核心】！`);
-              } else if (!p.cyberMods.cooler) {
-                p.cash -= 1200; p.cyberMods.cooler = true;
-                playSound('upgrade');
-                setLog(`🏥【生化改装】${p.name} 在医院装配了【纳米液冷散热单元】！`);
-              } else {
-                setLog(`🏥【赛博医院】${p.name} 机体健康，完成了常规机能维护。`);
-              }
-            } else {
-              setLog(`🏥【赛博医院】${p.name} 机体健康，完成了常规机能维护。`);
-            }
-            renderPlayerCards();
-            setTimeout(finishLandingAndAdvance, 1000);
-          }
-        } else if (t.type === 'cage') {
-          playSound('bump');
-          p.cageDays = 1;
-          renderPlayerCards();
-          setLog(`🔒【机械囚笼】咔嚓！智能锁死！${p.name} 被困入机械囚笼，暂停行动 1 回合！`);
-          setTimeout(finishLandingAndAdvance, 1000);
-        } else if (t.type === 'bank') {
-          playSound('resonance');
-          let divAmount = 1200;
-          if (p.cyberMods && p.cyberMods.core) {
-            divAmount = 1800;
-            setLog(`🏦【中央银行】${p.name} 停驻金库，在【量子算力核心】算力加持下，分红 +1,800 存入银行存款！`);
-          } else {
-            setLog(`🏦【中央银行】${p.name} 停驻于金库，机体能源分红 +1,200 存入银行存款！`);
-          }
-          p.bankDeposit += divAmount;
-          renderPlayerCards();
-          setTimeout(finishLandingAndAdvance, 1000);
-        } else if (t.type === 'lottery') {
-          playSound('firework');
-          p.cash += 800;
-          p.lotteryTicket = Math.floor(Math.random() * 90 + 10).toString();
-          renderPlayerCards();
-          setLog(`🎰【彩票店】${p.name} 抽得霓虹奖金 +800 齿轮币，并购得幸运彩票 #${p.lotteryTicket}！`);
-          setTimeout(finishLandingAndAdvance, 1000);
-        } else if (t.type === 'portal') {
-          playSound('resonance');
-          const targetPortal = (p.pos + 2 * S) % tiles.length;
-          p.pos = targetPortal;
-          updatePawnsPlacement();
-          renderPlayerCards();
-          selectTile(p.pos);
-          setLog(`🌀【量子折跃】空间撕裂！${p.name} 瞬间量子折跃传送至对角传送门 #${targetPortal.toString().padStart(2, '0')}！`);
-          setTimeout(finishLandingAndAdvance, 1200);
-        } else if (t.type === 'item') {
-          playSound('resonance');
-          p.cash += 500;
-          renderPlayerCards();
-          setLog(`🛠️【机械黑市】${p.name} 淘得特种机件，兑现战术赏金 +500 齿轮币！`);
-          setTimeout(finishLandingAndAdvance, 1000);
-        } else if (t.type === 'reward') {
-          playSound('resonance');
-          p.cash += 1500;
-          renderPlayerCards();
-          setLog(`🎁【赛博空投】${p.name} 截获天基空投物资箱，补给金 +1,500 齿轮币！`);
-          setTimeout(finishLandingAndAdvance, 1000);
-        } else if (t.type === 'penalty') {
-          // 检查纳米液冷散热单元
-          if (p.cyberMods && p.cyberMods.cooler) {
-            playSound('resonance');
-            setLog(`🔧【纳米液冷散热】微型核聚变炉过热！但纳米散热单元瞬间排热，免疫了 1,000 齿轮币罚金！`);
-            setTimeout(finishLandingAndAdvance, 1000);
-          } else {
-            playSound('bump');
-            if (p.cash >= 1000) {
-              p.cash -= 1000;
-              setLog(`⚠️【能源过载】微型反应堆过热反冲！${p.name} 扣除紧急排热冷却费 -1,000 齿轮币！`);
-              renderPlayerCards();
-              setTimeout(finishLandingAndAdvance, 1000);
-            } else if (p.cash + p.bankDeposit >= 1000) {
-              const diff = 1000 - p.cash;
-              p.cash = 0;
-              p.bankDeposit -= diff;
-              setLog(`⚠️【能源过载】现金不足，从银行扣划排热冷却费 -1,000 齿轮币！`);
-              renderPlayerCards();
-              setTimeout(finishLandingAndAdvance, 1000);
-            } else {
-              handlePlayerBankruptcy(p, null);
-              setTimeout(finishLandingAndAdvance, 1500);
-            }
-          }
-        } else if (t.type === 'property') {
-          if (!t.owner) {
-            // 无主地产
-            if (!p.isAI) {
-              showPropertyModal({ tile: t, mode: 'buy' });
-            } else {
-              // AI 购地评估
-              if (p.cash >= t.price * 1.25) {
-                p.cash -= t.price;
-                t.owner = p;
-                t.level = 1;
-                if (t.isTech) p.techEnterprisesCount++; else p.propertiesCount++;
-                updateTileBuildingMesh(t);
-                refreshTileTexture(t);
-                playSound('cash');
-                setLog(`🏢【地产并购】${p.name} 斥资 ⚙️${t.price.toLocaleString()} 控股了【${t.name}】！`);
-              } else {
-                setLog(`🏙️【街区巡航】${p.name} 抵达【${t.name}】，因预算规划放弃本次投资。`);
-              }
-              renderPlayerCards();
-              setTimeout(finishLandingAndAdvance, 1000);
-            }
-          } else if (t.owner.id === p.id) {
-            // 自家地产：升级扩建
-            if (t.level < 3) {
-              const upgradeCost = calculateUpgradeCost(t);
-              const nextLv = t.level + 1;
-              const nextRent = Math.floor(t.rent * (nextLv === 2 ? 2.2 : 4.0));
-              if (!p.isAI) {
-                showPropertyModal({ tile: t, mode: 'upgrade', cost: upgradeCost, nextLv, nextRent });
-              } else {
-                if (p.cash >= upgradeCost * 1.35) {
-                  p.cash -= upgradeCost;
-                  t.level = nextLv;
-                  updateTileBuildingMesh(t);
-                  refreshTileTexture(t);
-                  playSound('upgrade');
-                  setLog(`🏗️【产业升级】${p.name} 投入 ⚙️${upgradeCost.toLocaleString()} 将【${t.name}】扩建升级至 Lv.${nextLv}！`);
-                } else {
-                  setLog(`🏙️【街区视察】${p.name} 巡视名下【${t.name} (Lv.${t.level})】，暂未扩建。`);
-                }
-                renderPlayerCards();
-                setTimeout(finishLandingAndAdvance, 1000);
-              }
-            } else {
-              setLog(`👑【顶尖街区】${p.name} 视察了名下的顶级地标【${t.name} (Lv.3)】！`);
-              setTimeout(finishLandingAndAdvance, 1000);
-            }
-          } else {
-            // 敌方地产：缴纳租金
-            const rent = calculateRent(t);
-            if (p.cash >= rent) {
-              p.cash -= rent;
-              t.owner.cash += rent;
-              p.totalRentPaid = (p.totalRentPaid || 0) + rent;
-              t.owner.totalRentCollected = (t.owner.totalRentCollected || 0) + rent;
-              playSound('cash');
-              setLog(`💸【租金缴费】${p.name} 进驻 ${t.owner.name} 的【${t.name} (Lv.${t.level})】，支付过路租金 ⚙️${rent.toLocaleString()}！`);
-              renderPlayerCards();
-              setTimeout(finishLandingAndAdvance, 1100);
-            } else if (p.cash + p.bankDeposit >= rent) {
-              const diff = rent - p.cash;
-              p.cash = 0;
-              p.bankDeposit -= diff;
-              t.owner.cash += rent;
-              p.totalRentPaid = (p.totalRentPaid || 0) + rent;
-              t.owner.totalRentCollected = (t.owner.totalRentCollected || 0) + rent;
-              playSound('cash');
-              setLog(`💸【银行划扣】${p.name} 现金不足，从银行储蓄扣款，向 ${t.owner.name} 结清租金 ⚙️${rent.toLocaleString()}！`);
-              renderPlayerCards();
-              setTimeout(finishLandingAndAdvance, 1100);
-            } else {
-              // 资金彻底断裂，宣告破产！
-              const paid = p.cash + p.bankDeposit;
-              t.owner.cash += paid;
-              handlePlayerBankruptcy(p, t.owner);
-              setTimeout(finishLandingAndAdvance, 1500);
-            }
-          }
-        }
-      }
-
-      function advanceTurn() {
-        // 1. 检查游戏结束与唯一胜者
-        const solventPlayers = players.filter(p => !p.isBankrupt);
-        if (players.length > 1 && solventPlayers.length <= 1) {
-          const winner = solventPlayers[0] || players[0];
-          triggerTycoonVictory(winner);
-          return;
-        }
-
-        // 2. 推进到下一个未破产玩家
-        let nextIdx = (activePlayerIdx + 1) % players.length;
-        let safety = 0;
-        while (players[nextIdx].isBankrupt && safety < players.length) {
-          nextIdx = (nextIdx + 1) % players.length;
-          safety++;
-        }
-        activePlayerIdx = nextIdx;
-        renderPlayerCards();
-        updateTurnBadge();
-
-        const cur = players[activePlayerIdx];
-        const rollBtn = document.getElementById('btn-tycoon-roll');
-
-        if (cur.isAI) {
-          if (rollBtn) {
-            rollBtn.disabled = true;
-            rollBtn.style.opacity = '0.65';
-            rollBtn.innerHTML = '<span>🤖 AI 正在演算决策中...</span>';
-          }
-          // 延迟 850ms 自动触发 AI 行动
-          setTimeout(() => {
-            const viewEl = document.getElementById('view-game-tycoon');
-            if (!viewEl || viewEl.classList.contains('hidden')) return;
-            if (players[activePlayerIdx] && players[activePlayerIdx].isAI && !isMoving && !isRollingDice && !players[activePlayerIdx].isBankrupt) {
-              testRollAndMove();
-            }
-          }, 850);
-        } else {
-          if (rollBtn) {
-            rollBtn.disabled = false;
-            rollBtn.style.opacity = '1.0';
-            rollBtn.innerHTML = '<span>⚡ 启动电子掷骰 (SPACE)</span>';
-          }
-          setLog(`【你的回合】轮到 ${cur.name} 行动！点击骰子或按空格掷骰。`);
-        }
       }
 
       // =========================================================================
-      // 10. 鼠标交互
+      // 11. 鼠标交互与渲染循环
       // =========================================================================
       function bindPointerEvents(domEl) {
         domEl.addEventListener('pointerdown', (e) => {
           if (e.button !== 0) return;
-          isDragging = true;
-          ptrDownX = e.clientX; ptrDownY = e.clientY;
-          lastPtrX = e.clientX; lastPtrY = e.clientY;
-          movedDist = 0;
+          isDragging = true; ptrDownX = e.clientX; ptrDownY = e.clientY;
+          lastPtrX = e.clientX; lastPtrY = e.clientY; movedDist = 0;
         });
-
         window.addEventListener('pointermove', (e) => {
-          const viewEl = document.getElementById('view-game-tycoon');
-          if (!viewEl || viewEl.classList.contains('hidden')) return;
-
+          const v = document.getElementById('view-game-tycoon');
+          if (!v || v.classList.contains('hidden')) return;
           if (isDragging) {
-            const dx = e.clientX - lastPtrX;
-            const dy = e.clientY - lastPtrY;
+            const dx = e.clientX - lastPtrX, dy = e.clientY - lastPtrY;
             movedDist += Math.hypot(dx, dy);
-            lastPtrX = e.clientX;
-            lastPtrY = e.clientY;
-
+            lastPtrX = e.clientX; lastPtrY = e.clientY;
             if (movedDist > 6) {
-              if (cameraMode === 'isometric' || cameraMode === 'follow') {
+              if (cameraMode !== 'orbit') {
                 cameraMode = 'orbit';
-                const btn = document.getElementById('btn-tycoon-cam');
-                if (btn) btn.innerText = '📐 视角: 3D自由轨道 (可拖拽旋转)';
+                document.getElementById('btn-tycoon-cam').innerText = '📐 视角: 自由拖拽';
               }
               targetYaw -= dx * 0.0055;
-              targetPitch = Math.max(0.25, Math.min(1.48, targetPitch + dy * 0.0050));
-            }
-          }
-
-          if (!isDragging && renderer && camera && raycaster) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            const ndc = new THREE.Vector2(
-              ((e.clientX - rect.left) / rect.width) * 2 - 1,
-              -((e.clientY - rect.top) / rect.height) * 2 + 1
-            );
-            raycaster.setFromCamera(ndc, camera);
-            const hits = raycaster.intersectObjects(tileMeshes);
-            if (hits.length > 0 && hits[0].object.userData.tileIndex !== undefined) {
-              const hIdx = hits[0].object.userData.tileIndex;
-              const ht = tiles[hIdx];
-              if (ht && hoverBoxMesh) {
-                hoverBoxMesh.position.set(ht.x, 0.18, ht.z);
-                hoverBoxMesh.rotation.y = ht.yaw;
-                hoverBoxMesh.visible = true;
-                domEl.style.cursor = 'pointer';
-              }
-            } else {
-              if (hoverBoxMesh) hoverBoxMesh.visible = false;
-              domEl.style.cursor = isDragging ? 'grabbing' : 'grab';
+              targetPitch = Math.max(0.25, Math.min(1.48, targetPitch + dy * 0.005));
             }
           }
         });
-
         window.addEventListener('pointerup', (e) => {
           if (!isDragging) return;
           isDragging = false;
-          const viewEl = document.getElementById('view-game-tycoon');
-          if (!viewEl || viewEl.classList.contains('hidden')) return;
-
           if (movedDist < 6 && renderer && camera && raycaster) {
             const rect = renderer.domElement.getBoundingClientRect();
-            const ndc = new THREE.Vector2(
-              ((e.clientX - rect.left) / rect.width) * 2 - 1,
-              -((e.clientY - rect.top) / rect.height) * 2 + 1
-            );
+            const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
             raycaster.setFromCamera(ndc, camera);
             const hits = raycaster.intersectObjects(tileMeshes);
             if (hits.length > 0 && hits[0].object.userData.tileIndex !== undefined) {
-              playSound('click');
-              selectTile(hits[0].object.userData.tileIndex);
+              playSound('click'); selectTile(hits[0].object.userData.tileIndex);
             }
           }
         });
-
         domEl.addEventListener('wheel', (e) => {
           e.preventDefault();
-          const zoomDelta = e.deltaY * 0.045;
-          targetDist = Math.max(16.0, Math.min(cfg.mapSize === 128 ? 110.0 : 75.0, targetDist + zoomDelta));
+          targetDist = Math.max(14.0, Math.min(cfg.mapSize === 128 ? 100.0 : 70.0, targetDist + e.deltaY * 0.04));
         }, { passive: false });
       }
 
-      // =========================================================================
-      // 11. 动画主循环 (闪烁城市灯火、旋转全息能源球、巡航飞艇)
-      // =========================================================================
       let lastTime = performance.now();
       function startRenderLoop() {
         if (animFrameId) cancelAnimationFrame(animFrameId);
-
         function tick(now) {
           animFrameId = requestAnimationFrame(tick);
           const dt = Math.min((now - lastTime) / 1000, 0.1);
           lastTime = now;
-
-          const viewEl = document.getElementById('view-game-tycoon');
-          if (!viewEl || viewEl.classList.contains('hidden')) return;
-
-          // 1. 摄像机更新
+          const v = document.getElementById('view-game-tycoon');
+          if (!v || v.classList.contains('hidden')) return;
           updateCameraPosition();
-
-          // 2. 赛博城市霓虹灯闪烁与空中飞艇巡航 (图2灵魂视效)
-          if (cityData && cityData.userData) {
-            const { beacons, centerHub, shipGrp, orbitR } = cityData.userData;
-
-            // 楼顶航空警示灯按频率闪烁
-            if (beacons) {
-              beacons.forEach(b => {
-                const val = Math.sin(now * 0.001 * b.speed + b.phase);
-                b.mesh.material.opacity = (val > 0.1) ? 1.0 : 0.18;
-              });
-            }
-
-            // 中心全息能源球旋转
-            if (centerHub && centerHub.userData && centerHub.userData.orbMesh) {
-              centerHub.userData.orbMesh.rotation.y += dt * 0.8;
-              centerHub.userData.orbRing.rotation.z += dt * 1.4;
-            }
-
-            // 巡航飞艇绕城飞行
-            if (shipGrp) {
-              cityData.userData.shipAngle = (cityData.userData.shipAngle || 0) + dt * 0.35;
-              const sAng = cityData.userData.shipAngle;
-              shipGrp.position.x = Math.cos(sAng) * orbitR;
-              shipGrp.position.z = Math.sin(sAng) * orbitR;
-              shipGrp.rotation.y = -sAng + Math.PI / 2;
-            }
+          if (centerSculpture) {
+            centerSculpture.rotation.y += dt * 0.5;
           }
-
-          // 3. 特殊地标自转
-          const sec = now * 0.001;
-          markersGroup.children.forEach(grp => {
-            if (grp.userData.isHospital) {
-              grp.position.y = 1.0 + Math.sin(sec * 3.0) * 0.12;
-              grp.rotation.y += dt * 0.8;
-            } else if (grp.userData.isEmp) {
-              grp.rotation.z += dt * 2.2;
-            } else if (grp.userData.isSpinning) {
-              grp.rotation.y += dt * (grp.userData.rotSpeed || 1.5);
-            }
-          });
-
-          // 4. 棋子悬浮律动
-          players.forEach(p => {
-            if (p.pawnMesh) {
-              p.pawnMesh.children[0].rotation.y += dt * 0.8;
-              p.pawnMesh.children[2].rotation.z += dt * 1.2;
-            }
-          });
-
           renderer.render(scene, camera);
         }
-
         tick(performance.now());
-      }
-
-      function buildCyberSparks() {
-        const box = document.getElementById('tycoon-ambient-sparks');
-        if (!box) return;
-        box.innerHTML = '';
-        for (let i = 0; i < 30; i++) {
-          const dot = document.createElement('div');
-          dot.className = 'cyber-spark-dot';
-          const size = 3 + Math.random() * 4;
-          dot.style.width = size + 'px';
-          dot.style.height = size + 'px';
-          dot.style.left = (Math.random() * 100) + '%';
-          dot.style.top = (Math.random() * 100) + '%';
-          dot.style.animationDuration = (3.0 + Math.random() * 4.0) + 's';
-          dot.style.animationDelay = (Math.random() * 3) + 's';
-          box.appendChild(dot);
-        }
       }
 
       function exitToMenu() {
@@ -8854,92 +7989,51 @@
       }
 
       function launchFromWizard() {
-        const mapSizeRadio = document.querySelector('input[name="tycoon-map-size"]:checked');
-        if (mapSizeRadio) cfg.mapSize = parseInt(mapSizeRadio.value) || 64;
+        const m = document.querySelector('input[name="tycoon-map-size"]:checked');
+        if (m) cfg.mapSize = parseInt(m.value) || 64;
+        const p = document.getElementById('sel-tycoon-player-count');
+        if (p) cfg.playerCount = parseInt(p.value) || 4;
+        const c = document.getElementById('sel-tycoon-start-cash');
+        if (c) cfg.startCash = parseInt(c.value) || 15000;
 
-        const pCountSelect = document.getElementById('sel-tycoon-player-count');
-        if (pCountSelect) cfg.playerCount = parseInt(pCountSelect.value) || 4;
-
-        const cashSelect = document.getElementById('sel-tycoon-start-cash');
-        if (cashSelect) cfg.startCash = parseInt(cashSelect.value) || 15000;
-
-        document.getElementById('view-menu').classList.add('hidden');
-        document.getElementById('view-game-aero').classList.add('hidden');
-        document.getElementById('view-game-gomoku').classList.add('hidden');
+        ['view-menu', 'view-game-aero', 'view-game-gomoku'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.classList.add('hidden');
+        });
         document.getElementById('view-game-tycoon').classList.remove('hidden');
-
         ensureStageInitialized();
         rebuildBoardScene();
-        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格赛博大都会！已开启图2赛博全景大都会视角，中央霓虹夜景与大棋盘一览无余。`);
+        setLog(`【机械大亨启动】已加载 ${cfg.mapSize} 格大富翁棋盘！使用下方道具卡或按空格掷双骰吧！`);
       }
 
       return {
         start: (opts = {}) => {
-          if (opts && opts.mapSize) cfg.mapSize = opts.mapSize;
-          if (opts && opts.playerCount) cfg.playerCount = opts.playerCount;
-          if (opts && opts.startCash) cfg.startCash = opts.startCash;
-          document.getElementById('view-menu').classList.add('hidden');
-          const aero = document.getElementById('view-game-aero'); if (aero) aero.classList.add('hidden');
-          const gomoku = document.getElementById('view-game-gomoku'); if (gomoku) gomoku.classList.add('hidden');
+          if (opts.mapSize) cfg.mapSize = opts.mapSize;
+          if (opts.playerCount) cfg.playerCount = opts.playerCount;
+          if (opts.startCash) cfg.startCash = opts.startCash;
+          ['view-menu', 'view-game-aero', 'view-game-gomoku'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.classList.add('hidden');
+          });
           document.getElementById('view-game-tycoon').classList.remove('hidden');
           ensureStageInitialized();
           rebuildBoardScene();
         },
+        restart: () => { ensureStageInitialized(); rebuildBoardScene(); },
+        launchFromWizard, exitToMenu, toggleCamera, focusSelectedTile, selectTile,
+        rollDice, testRollAndMove: rollDice,
+        useCard, executeRemoteRoll,
+        confirmPropertyAction, cancelPropertyAction,
+        buyCard, closeShopModal, bankAction, closeBankModal,
+        closeHospitalModal, closeEventModal,
+        testForceVictory: () => triggerTycoonVictory(players[0]),
         getState: () => ({
-          mapSize: cfg.mapSize,
+          mapSize: cfg.mapSize, roundCount, lotteryPool, activePlayerIdx, cameraMode,
           players: players.map(p => ({
-            id: p.id,
-            name: p.name,
-            color: p.color,
-            avatar: p.avatar,
-            isAI: p.isAI,
-            cash: p.cash,
-            bankDeposit: p.bankDeposit,
-            lotteryTicket: p.lotteryTicket,
-            propertiesCount: p.propertiesCount,
-            techEnterprisesCount: p.techEnterprisesCount,
-            hospitalDays: p.hospitalDays,
-            cageDays: p.cageDays,
-            pos: p.pos,
-            isBankrupt: p.isBankrupt,
-            cyberMods: p.cyberMods
-          })),
-          tilesCount: tiles.length,
-          activePlayerIdx,
-          cameraMode
+            id: p.id, name: p.name, cash: p.cash, bankDeposit: p.bankDeposit,
+            pos: p.pos, propertiesCount: p.propertiesCount, cardsCount: p.cards.length,
+            hospitalDays: p.hospitalDays, cageDays: p.cageDays, isBankrupt: p.isBankrupt
+          }))
         }),
-        getTiles: () => tiles,
-        getRawPlayers: () => players,
-        launchFromWizard,
-        exitToMenu,
-        toggleCamera,
-        focusSelectedTile,
-        triggerSteamBurstManual,
-        testRollAndMove,
-        selectTile,
-        confirmPropertyAction,
-        cancelPropertyAction,
-        showHospitalModal,
-        buyCyberMod,
-        closeHospitalModal,
-        restart: () => {
-          ensureStageInitialized();
-          rebuildBoardScene();
-          setLog(`【全新对局】已重新开启 ${cfg.mapSize} 格赛博大都会！各方主角已注入 ⚙️${cfg.startCash.toLocaleString()} 启动金！`);
-        },
-        testForceVictory: () => {
-          const winner = players[0] || { name: '蓝调黑客', avatar: '⚡', cash: 99999, bankDeposit: 50000 };
-          triggerTycoonVictory(winner);
-        },
-        _debugState: () => ({
-          cfg,
-          players,
-          tilesCount: tiles.length,
-          selectedTileIdx,
-          activePlayerIdx,
-          cameraMode,
-          isMoving
-        })
+        getTiles: () => tiles
       };
     })();
   </script>
